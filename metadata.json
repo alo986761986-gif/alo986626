@@ -1,0 +1,6 @@
+{
+  "name": "Beatfy",
+  "description": "Una piattaforma musicale avanzata in stile Spotify con podcast esclusivi, radio AI personalizzata, equalizzatore Hi-Fi, playlist collaborative, streaming offline e integrazione smart home.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

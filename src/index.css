@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Vertical slider support for interactive Equalizer */
+.vertical-range {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  vertical-align: bottom;
+}
+
+/* Custom scrollbars for clean Spotify-like visual feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Extra small micro-typography classes for dashboards */
+.text-2xs {
+  font-size: 0.7rem;
+}
+.text-3xs {
+  font-size: 0.65rem;
+}
+.text-4xs {
+  font-size: 0.55rem;
+}
+.text-5xs {
+  font-size: 0.5rem;
+}
+.z-55 {
+  z-index: 55;
+}
+
