@@ -12,6 +12,10 @@ const rand=(a,b)=>a+Math.random()*(b-a);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const norm=a=>Math.atan2(Math.sin(a),Math.cos(a));
 const length=(x,y)=>Math.hypot(x,y);
+// Shared growth curve with Android's GameEngine.growthScale(score).
+const growthScale=score=>1+1.5*(1-Math.exp(-Math.max(0,score-260)/900));
+const headRadius=score=>20*growthScale(score);
+const collisionRadius=(headScore,bodyScore)=>13*growthScale(headScore)+10*growthScale(bodyScore);
 function pos(){const a=rand(0,TAU),r=Math.sqrt(Math.random())*(R-150);return [Math.cos(a)*r,Math.sin(a)*r];}
 function addFood(x,y,c,e){if(x===undefined)[x,y]=pos();food.push({x,y,c:c===undefined?Math.floor(rand(0,8)):c,e:e||Math.floor(rand(6,16)),r:rand(2.8,4.5)});}
 function refill(){while(food.length<MAX_FOOD)addFood();if(food.length>650)food.splice(0,food.length-650);}
@@ -70,10 +74,12 @@ function step(){
     s.carry=(s.carry+moved)%6.8;
     if(accelerated){s.size=Math.max(25,s.size-DT*.95);s.score=Math.max(170,s.score-DT*5);}
     if(s.trail.length>Math.ceil(s.size))s.trail.length=Math.ceil(s.size);
-    if(s.x*s.x+s.y*s.y>R*R){kill(s);continue;}
+    const border=R-headRadius(s.score)*.7;
+    if(s.x*s.x+s.y*s.y>border*border){kill(s);continue;}
     for(let i=food.length-1;i>=0;i--){
       const f=food[i],xx=s.x-f.x,yy=s.y-f.y;
-      if(xx*xx+yy*yy<250){
+      const reach=headRadius(s.score)*.74+f.r;
+      if(xx*xx+yy*yy<reach*reach){
         s.score+=f.e;s.size+=f.e/11;food.splice(i,1);break;
       }
     }
@@ -86,7 +92,8 @@ function step(){
       if(Math.abs(other.x-s.x)>850||Math.abs(other.y-s.y)>850)continue;
       for(let i=5;i<other.trail.length;i+=3){
         let pt=other.trail[i],dx=s.x-pt[0],dy=s.y-pt[1];
-        if(dx*dx+dy*dy<380){collision=true;break;}
+        const hit=collisionRadius(s.score,other.score);
+        if(dx*dx+dy*dy<hit*hit){collision=true;break;}
       }
       if(collision)break;
     }
@@ -184,7 +191,7 @@ const server=http.createServer((req,res)=>{
   if(req.url==='/health'||req.url==='/stats'){
     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store',
       'access-control-allow-origin':'*'});
-    res.end(JSON.stringify({ok:true,game:'TRISH BOLL',version:'5.0',
+    res.end(JSON.stringify({ok:true,game:'TRISH BOLL',version:'5.6',
       onlinePlayers:Array.from(snakes.values()).filter(s=>!s.bot).length,
       capacity:MAX_PLAYERS,uptime:Math.floor((Date.now()-started)/1000)}));return;
   }
@@ -218,4 +225,4 @@ function start(){
   server.listen(PORT,'0.0.0.0',()=>console.log('TRISH_BOLL_MULTIPLAYER_READY port='+PORT));
 }
 if(require.main===module)start();
-module.exports={server,start,step,snakes,food,clients};
+module.exports={server,start,step,snakes,food,clients,growthScale,collisionRadius};
