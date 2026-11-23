@@ -23,6 +23,20 @@ public final class GameEngine {
     };
     static final int CAP=320;
     static final float SPACING=6.2f;
+    /**
+     * Character growth: collecting food increases both length and diameter.
+     * Bounded at 2.5x so larger snakes remain playable on small Android screens.
+     * The production server uses the identical curve for collision authority.
+     */
+    public static float growthScale(float score){
+        float gained=Math.max(0f,score-260f);
+        return 1f+1.5f*(1f-(float)Math.exp(-gained/900f));
+    }
+    public static float bodyRadius(float score){return 10f*growthScale(score);}
+    public static float headRadius(float score){return 20f*growthScale(score);}
+    public static float collisionRadius(float headScore,float bodyScore){
+        return 13f*growthScale(headScore)+10f*growthScale(bodyScore);
+    }
     static final float TAU=(float)(Math.PI*2);
     final Random random = new Random();
     final ArrayList<Snake> bots = new ArrayList<Snake>();
@@ -192,7 +206,11 @@ public final class GameEngine {
         float speed=(s.bot?125f:142f);
         if(mode==TURBO)speed*=1.5f;
         boolean running=accelerate && s.len>27;
-        if(running){speed*=1.58f;s.len=Math.max(27f,s.len-2.5f*dt);}
+        if(running){
+            speed*=1.58f;
+            s.len=Math.max(27f,s.len-2.5f*dt);
+            s.score=Math.max(170f,s.score-5f*dt);
+        }
         float oldX=s.x,oldY=s.y;
         s.x+=(float)Math.cos(s.a)*speed*dt;
         s.y+=(float)Math.sin(s.a)*speed*dt;
@@ -210,12 +228,13 @@ public final class GameEngine {
         if(s.acc>=SPACING)s.acc%=SPACING;
         int max=(int)Math.min(CAP-1,Math.max(23,s.len));
         if(s.count>max)s.count=max;
-        if(length(s.x,s.y)>arenaRadius-10f){
+        if(length(s.x,s.y)>arenaRadius-headRadius(s.score)*.7f){
             eliminate(s);return;
         }
         for(int i=foods.size()-1;i>=0;i--){
             Food f=foods.get(i);float dx=s.x-f.x,dy=s.y-f.y;
-            if(dx*dx+dy*dy<290){
+            float reach=headRadius(s.score)*.74f + f.r;
+            if(dx*dx+dy*dy<reach*reach){
                 foods.remove(i);s.score+=f.energy;s.len+=.70f;
                 if(s==player){
                     foodEaten++;lastFoodPoints+=f.energy;
@@ -238,7 +257,8 @@ public final class GameEngine {
             int size=other.count;
             for(int i=7;i<size;i+=3){
                 float xx=s.x-other.tx(i),yy=s.y-other.ty(i);
-                if(xx*xx+yy*yy<19*19){
+                float reach=collisionRadius(s.score,other.score);
+                if(xx*xx+yy*yy<reach*reach){
                     eliminate(s);
                     if(s!=player&&other==player){
                         kills++;newKillCount++;earnedCoins+=12;
