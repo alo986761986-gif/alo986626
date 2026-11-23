@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/><meta name="theme-color" content="#070e24"/><title>TRISH BOLL • Neon Arena</title>
+<style>
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#070e24;color:white;font-family:Arial,Helvetica,sans-serif;touch-action:none;user-select:none}canvas{display:block;width:100%;height:100%}
+#menu,#dead,#paused{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#20285c 0%,#101937 48%,#060b1e 100%);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:15px;z-index:4;overflow:auto}
+h1{font-size:clamp(36px,8vw,85px);margin:0;color:#76faff;text-shadow:0 0 22px #1de9f1,4px 4px 0 #9937ed;letter-spacing:4px}
+h1 b{color:#ff75f4}h2{font-size:clamp(26px,5vw,42px);margin:10px;text-align:center}
+.sub{font-size:clamp(10px,2.5vw,16px);color:#c7c6f7;letter-spacing:3px;margin-bottom:16px}
+.panel{background:#111b3dcc;border:1px solid #6370a888;padding:16px 22px;border-radius:22px;text-align:center;max-width:500px;width:min(92vw,500px);box-shadow:0 0 40px #0006}
+input{width:100%;background:#0a1332;border:1px solid #5565a9;border-radius:12px;color:#fff;font-size:18px;padding:12px;margin:8px auto;text-align:center}
+button{cursor:pointer;border:0;color:white;font-weight:800;background:linear-gradient(120deg,#125acc,#9b2ef5);padding:13px 20px;border-radius:13px;font-size:clamp(13px,2.2vw,18px);box-shadow:0 4px 18px #432bc177}
+button:active{transform:scale(.97)}button.alt{background:#253358;margin-top:10px;box-shadow:none;border:1px solid #5266a5}
+#menu button{width:100%;margin-top:8px}#skins{display:flex;gap:8px;justify-content:center;padding:10px 0;flex-wrap:wrap}#skins button{width:30px;height:30px;border-radius:50%;padding:0;border:3px solid #a6c3d466;box-shadow:0 0 12px currentColor}#skins button.selected{border-color:white;transform:scale(1.24)}
+#hud{position:absolute;inset:0;pointer-events:none;z-index:2}#top{position:absolute;left:12px;top:10px;background:#09132dbb;border-radius:14px;padding:10px 14px;font-size:14px;text-shadow:0 0 8px #57ffff}#rank{position:absolute;right:10px;top:8px;border-radius:13px;background:#09132dcc;padding:9px 13px;min-width:145px;font-size:12px}#rank b{color:#6af9ff;font-size:14px}#rank div{margin-top:5px}#boost{pointer-events:auto;position:absolute;right:4%;bottom:11%;width:95px;height:95px;border-radius:100%;background:radial-gradient(circle,#ff9a51,#c13d86);border:4px solid #ffdebe;box-shadow:0 0 26px #ec438b99;font-size:16px}#pause{pointer-events:auto;position:absolute;left:14px;bottom:12px;background:#202a50e0}#mini{pointer-events:none;position:absolute;right:10px;bottom:8px;width:110px;height:110px;border-radius:50%;background:#101d3fcc;border:2px solid #4c6c9c}
+#tip{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:11px;opacity:.6;white-space:nowrap}
+#dead,#paused{display:none;background:#08112aee}.label{color:#87f4ff}#scoreBig{font-size:40px;margin:6px;color:#ffda6e}.note{font-size:12px;opacity:.65;margin-top:12px;text-align:center}#version{position:absolute;bottom:8px;right:14px;font-size:10px;color:#8493bb}#onlineNote{color:#b0c0de;font-size:12px;margin:10px 0}
+@media(max-height:450px){#menu .panel{padding:7px 18px}h1{font-size:38px}.sub{margin-bottom:6px}#skins{padding:3px 0}input{font-size:15px;margin:4px auto;padding:8px}#menu button{padding:10px}}
+</style></head><body>
+<canvas id="arena"></canvas>
+<div id="hud" style="display:none"><div id="top">TRISH BOLL ◉ &nbsp; <span id="score">LUNGHEZZA 280</span></div><div id="rank"><b>CLASSIFICA</b><div id="rankRows"></div></div><button id="boost">BOOST ⚡</button><button id="pause">Ⅱ PAUSA</button><canvas id="mini" width="110" height="110"></canvas><div id="tip">TRASCINA PER STERZARE • TIENI PREMUTO BOOST</div></div>
+<div id="menu"><h1>TRISH <b>BOLL</b></h1><div class="sub">NEON SNAKE ARENA</div><div class="panel"><div class="label">IL TUO SERPENTE</div><input id="nick" maxlength="14" placeholder="Campione" value="Campione"/><div class="label">SCEGLI IL COLORE</div><div id="skins"></div><button id="start">▶ GIOCA ORA</button><p id="onlineNote">Arena offline con serpenti rivali automatici. Il multiplayer pubblico verrà attivato separatamente.</p></div><div id="version">VERSIONE 3.0 • ANDROID NATIVE BUILD</div></div>
+<div id="dead"><h2>FINE PARTITA</h2><div>HAI RAGGIUNTO</div><div id="scoreBig">280</div><button id="again">↻ RIGIOCA</button><button class="alt" id="home">TORNA AL MENU</button></div>
+<div id="paused"><h2>IN PAUSA</h2><button id="resume">▶ RIPRENDI</button><button class="alt" id="quit">TORNA AL MENU</button></div>
+<script>
+(function(){
+"use strict";
+var $=function(x){return document.getElementById(x);},canvas=$("arena"),ctx=canvas.getContext("2d"),mini=$("mini"),mc=mini.getContext("2d");
+if(!ctx||!mc){$("onlineNote").textContent="Il componente grafico Android non è disponibile. Aggiorna Android System WebView.";return;}
+var colors=["#43e9fa","#a771ff","#ffa846","#58f1a0","#ff6db0","#fafe7d","#6c9dff","#ff8163"],botNames=["VIPER","LUNA","NOVA","SPARK","NITRO","ORBIT","BLAZE","PIXEL","GHOST","CANDY"],TAU=Math.PI*2;
+var W=1,H=1,dpr=1,viewX=0,viewY=0,zoom=1,world=1800,selected=0,player=null,bots=[],foods=[],parts=[],playing=false,paused=false,last=0,raf=0,angle=0,boost=false,elapsed=0,score=280;
+var low=/Android [4-9](?:[.; ])/.test(navigator.userAgent)||((navigator.hardwareConcurrency||8)<5),botCount=low?6:10,foodTarget=low?110:180;
+function safeGet(k,d){try{var v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}}
+function safeSet(k,v){try{localStorage.setItem(k,String(v));}catch(e){}}
+selected=Math.max(0,Math.min(7,parseInt(safeGet("trishSkin","0"),10)||0));$("nick").value=safeGet("trishNick","Campione");
+function resize(){W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);dpr=Math.min(devicePixelRatio||1,low?1:1.5,1280/W,780/H);dpr=Math.max(.5,dpr);canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+window.addEventListener("resize",resize);resize();
+for(var i=0;i<colors.length;i++){(function(k){var b=document.createElement("button");b.style.background=colors[k];b.style.color=colors[k];b.title="Colore "+(k+1);b.onclick=function(){selected=k;safeSet("trishSkin",k);skin();};$("skins").appendChild(b);})(i);}
+function skin(){var x=$("skins").children;for(var i=0;i<x.length;i++)x[i].className=(i===selected?"selected":"");}skin();
+function rnd(a,b){return a+Math.random()*(b-a);}
+function dist(x,y){return Math.sqrt(x*x+y*y);}
+function randomPoint(){var t=rnd(0,TAU),r=Math.sqrt(Math.random())*(world-100);return {x:Math.cos(t)*r,y:Math.sin(t)*r};}
+function snake(name,color,isBot,x,y){var points=[];var a=rnd(-Math.PI,Math.PI);for(var i=1;i<34;i++)points.push({x:x-Math.cos(a)*i*6,y:y-Math.sin(a)*i*6});return {name:name,color:color,bot:isBot,x:x,y:y,a:a,desired:a,points:points,max:34,score:280,speed:110+rnd(0,15),dead:false,aiTime:0};}
+function food(x,y,col){var p=x===undefined?randomPoint():{x:x,y:y};foods.push({x:p.x,y:p.y,col:col||colors[Math.floor(rnd(0,colors.length))],r:rnd(2.5,4.5)});}
+function populate(){while(foods.length<foodTarget)food();}
+function start(){playing=true;paused=false;elapsed=0;score=280;boost=false;foods=[];parts=[];bots=[];angle=0;viewX=0;viewY=0;zoom=1;var name=($("nick").value||"Campione").trim().slice(0,14)||"Campione";safeSet("trishNick",name);player=snake(name,colors[selected],false,0,0);player.a=0;player.desired=0;for(var i=0;i<botCount;i++){var p=randomPoint();bots.push(snake(botNames[i],colors[(i+1)%8],true,p.x,p.y));}populate();$("menu").style.display="none";$("dead").style.display="none";$("paused").style.display="none";$("hud").style.display="block";last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);}
+function menu(){playing=false;paused=false;boost=false;cancelAnimationFrame(raf);$("menu").style.display="flex";$("hud").style.display="none";$("dead").style.display="none";$("paused").style.display="none";}
+function die(){playing=false;cancelAnimationFrame(raf);$("scoreBig").textContent=score;$("hud").style.display="none";$("dead").style.display="flex";}
+function togglePause(){if(!playing)return;paused=true;boost=false;$("paused").style.display="flex";cancelAnimationFrame(raf);}
+function resume(){paused=false;$("paused").style.display="none";last=0;raf=requestAnimationFrame(frame);}
+function near(x,y,xx,yy,r){var dx=x-xx,dy=y-yy;return dx*dx+dy*dy<r*r;}
+function wrapAngle(a){while(a>Math.PI)a-=TAU;while(a<-Math.PI)a+=TAU;return a;}
+function stepSnake(s,dt){if(s.dead)return;
+ if(s.bot){s.aiTime-=dt;if(s.aiTime<=0){s.aiTime=rnd(.3,.8);var t=rnd(-.6,.6),bx=0,by=0,d=dist(s.x,s.y);if(d>world-240){bx=-s.x;by=-s.y;t=wrapAngle(Math.atan2(by,bx)-s.a);}else{var best=null,bestD=1e12;for(var i=0;i<foods.length;i+=2){var f=foods[i],dd=(f.x-s.x)*(f.x-s.x)+(f.y-s.y)*(f.y-s.y);if(dd<bestD){bestD=dd;best=f;}}if(best)t=wrapAngle(Math.atan2(best.y-s.y,best.x-s.x)-s.a)+rnd(-.2,.2);}s.desired=s.a+t;}}
+ else s.desired=angle;
+ var delta=wrapAngle(s.desired-s.a),limit=(s.bot?2.4:3.7)*dt;s.a+=Math.max(-limit,Math.min(limit,delta));
+ var speed=s.speed*(s===player&&boost&&s.max>26?1.65:1);s.x+=Math.cos(s.a)*speed*dt;s.y+=Math.sin(s.a)*speed*dt;
+ s.points.unshift({x:s.x,y:s.y});while(s.points.length>s.max)s.points.pop();
+ if(s===player&&boost&&s.max>26){s.max=Math.max(26,s.max-dt*5);if(Math.random()<.4)food(s.x-s.points.length*1.3,s.y,s.color);}
+ if(dist(s.x,s.y)>world-10){if(s===player)die();else {s.dead=true;return;}}
+ for(var f=foods.length-1;f>=0;f--){if(near(s.x,s.y,foods[f].x,foods[f].y,18)){foods.splice(f,1);s.max+=2;s.score+=9;if(s===player)score=s.score;}}
+ var targets=[player].concat(bots);for(var j=0;j<targets.length;j++){var other=targets[j];if(other===s||!other||other.dead)continue;for(var k=8;k<other.points.length;k+=5){var p=other.points[k];if(near(s.x,s.y,p.x,p.y,15)){if(s===player){die();return;}s.dead=true;break;}}if(s.dead)break;}
+ }
+function logic(dt){elapsed+=dt;stepSnake(player,dt);if(!playing)return;for(var i=0;i<bots.length;i++){var b=bots[i];stepSnake(b,dt);if(b.dead){var p=randomPoint();bots[i]=snake(botNames[i],colors[(i+1)%8],true,p.x,p.y);}}populate();viewX+=(player.x-viewX)*Math.min(1,dt*5);viewY+=(player.y-viewY)*Math.min(1,dt*5);zoom+=(Math.max(.65,1-player.max/300)-zoom)*Math.min(1,dt*2);}
+function visible(x,y,r){return Math.abs(x-viewX)<W/(zoom*2)+r&&Math.abs(y-viewY)<H/(zoom*2)+r;}
+function draw(){ctx.fillStyle="#0a1330";ctx.fillRect(0,0,W,H);ctx.save();ctx.translate(W/2-viewX*zoom,H/2-viewY*zoom);ctx.scale(zoom,zoom);
+ var step=68,x0=Math.floor((viewX-W/zoom)/step)*step,y0=Math.floor((viewY-H/zoom)/step)*step;
+ ctx.strokeStyle="#364f8440";ctx.lineWidth=1;ctx.beginPath();for(var x=x0;x<viewX+W/zoom;x+=step){ctx.moveTo(x,viewY-H/zoom);ctx.lineTo(x,viewY+H/zoom);}for(var y=y0;y<viewY+H/zoom;y+=step){ctx.moveTo(viewX-W/zoom,y);ctx.lineTo(viewX+W/zoom,y);}ctx.stroke();
+ ctx.beginPath();ctx.arc(0,0,world,0,TAU);ctx.strokeStyle="#43edffd9";ctx.lineWidth=8;if(!low){ctx.shadowColor="#34ccff";ctx.shadowBlur=18;}ctx.stroke();ctx.shadowBlur=0;
+ for(var i=0;i<foods.length;i++){var f=foods[i];if(!visible(f.x,f.y,15))continue;ctx.fillStyle=f.col;if(!low){ctx.shadowColor=f.col;ctx.shadowBlur=10;}ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,TAU);ctx.fill();ctx.shadowBlur=0;}
+ var all=bots.concat([player]);for(var j=0;j<all.length;j++){var s=all[j];if(!s||s.dead||!visible(s.x,s.y,240))continue;ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(s.x,s.y);for(var k=0;k<s.points.length;k++){ctx.lineTo(s.points[k].x,s.points[k].y);}ctx.strokeStyle="#050c20";ctx.lineWidth=26;ctx.stroke();ctx.strokeStyle=s.color;ctx.lineWidth=19;if(!low){ctx.shadowColor=s.color;ctx.shadowBlur=11;}ctx.stroke();ctx.shadowBlur=0;
+ ctx.beginPath();ctx.arc(s.x,s.y,13,0,TAU);ctx.fillStyle=s.color;ctx.fill();
+ var ex=Math.cos(s.a+Math.PI/2)*6,ey=Math.sin(s.a+Math.PI/2)*6;ctx.fillStyle="#07122e";ctx.beginPath();ctx.arc(s.x+Math.cos(s.a)*6+ex,s.y+Math.sin(s.a)*6+ey,3.2,0,TAU);ctx.arc(s.x+Math.cos(s.a)*6-ex,s.y+Math.sin(s.a)*6-ey,3.2,0,TAU);ctx.fill();}
+ ctx.restore();
+ $("score").textContent="LUNGHEZZA "+score;
+ var ranks=bots.concat([player]).sort(function(a,b){return b.score-a.score;});var lines=[];for(var a=0;a<Math.min(5,ranks.length);a++){lines.push((a+1)+". "+ranks[a].name+" • "+ranks[a].score);} $("rankRows").textContent=lines.join(" | ");
+ mc.fillStyle="#0c183b";mc.fillRect(0,0,110,110);mc.strokeStyle="#8ab9f2";mc.beginPath();mc.arc(55,55,52,0,TAU);mc.stroke();var factor=51/world;for(var m=0;m<all.length;m++){var z=all[m];if(!z||z.dead)continue;mc.fillStyle=z===player?"#ffffff":z.color;mc.beginPath();mc.arc(55+z.x*factor,55+z.y*factor,z===player?4:2.5,0,TAU);mc.fill();}
+}
+function frame(now){if(!playing||paused)return;try{var dt=last?Math.min(.045,(now-last)/1000):.016;last=now;logic(dt);if(playing){draw();raf=requestAnimationFrame(frame);}}catch(e){playing=false;cancelAnimationFrame(raf);$("hud").style.display="none";$("menu").style.display="flex";$("onlineNote").textContent="Errore motore di gioco: "+String(e&&e.message||e);}}
+var touch=null;
+canvas.addEventListener("touchstart",function(e){if(!playing)return;var t=e.changedTouches[0];touch=t.identifier;angle=Math.atan2(t.clientY-H/2,t.clientX-W/2);e.preventDefault();},{passive:false});
+canvas.addEventListener("touchmove",function(e){for(var i=0;i<e.changedTouches.length;i++){var t=e.changedTouches[i];if(t.identifier===touch){angle=Math.atan2(t.clientY-H/2,t.clientX-W/2);e.preventDefault();break;}}},{passive:false});
+canvas.addEventListener("mousemove",function(e){if(playing){angle=Math.atan2(e.clientY-H/2,e.clientX-W/2);}});
+function down(e){boost=true;e.preventDefault();}function up(e){boost=false;if(e)e.preventDefault();}
+$("boost").addEventListener("touchstart",down,{passive:false});$("boost").addEventListener("touchend",up,{passive:false});$("boost").addEventListener("touchcancel",up,{passive:false});$("boost").addEventListener("mousedown",down);document.addEventListener("mouseup",up);
+$("start").onclick=start;$("again").onclick=start;$("home").onclick=menu;$("pause").onclick=togglePause;$("resume").onclick=resume;$("quit").onclick=menu;
+window.trishBack=function(){if(paused)resume();else if(playing)togglePause();else menu();};
+})();
+</script>
+</body></html>
