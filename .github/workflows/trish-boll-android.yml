@@ -1,7 +1,7 @@
 name: TRISH BOLL Android build and launch test
 on:
   push:
-    branches: [trish-boll-android-native-fix]
+    branches: [trish-boll-v4-native-premium]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +28,7 @@ jobs:
           ls -lh app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: TRISH_BOLL_v3_ANDROID5_APK
+          name: TRISH_BOLL_v4_NATIVE_PREMIUM_APK
           path: trish-boll-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
   launch-test:
