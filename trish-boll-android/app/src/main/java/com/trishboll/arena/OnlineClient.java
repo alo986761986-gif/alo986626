@@ -52,6 +52,7 @@ public final class OnlineClient {
     private OutputStream output;
     private String url,playerName;
     private int skin;
+    private int steerSensitivity=4;
     private String playerId="";
     private int livePlayers=0;
     public OnlineClient(Listener l){listener=l;}
@@ -62,9 +63,10 @@ public final class OnlineClient {
     public void input(float a,boolean boost){
         angle=a;boosting=boost;
     }
-    public synchronized void connect(String endpoint,String nick,int color){
+    public synchronized void connect(String endpoint,String nick,int color,int sensitivity){
         disconnect();
         url=endpoint;playerName=nick;skin=Math.max(0,Math.min(7,color));
+        steerSensitivity=Math.max(1,Math.min(5,sensitivity));
         active=true;joined=false;playerId="";livePlayers=0;
         final long thisConnection=++connectionId;
         main.post(new Runnable(){public void run(){listener.onConnecting();}});
@@ -148,6 +150,7 @@ public final class OnlineClient {
             if(!expectedString.equals(accept))throw new IllegalStateException("Risposta WebSocket non autenticata");
             JSONObject join=new JSONObject();
             join.put("t","join");join.put("name",playerName);join.put("skin",skin);
+            join.put("sensitivity",steerSensitivity);
             sendFrame(1,join.toString().getBytes(StandardCharsets.UTF_8));
             long inputAt=0,pingAt=System.currentTimeMillis();
             WebSocketFrameReader reader=new WebSocketFrameReader(in,current);
