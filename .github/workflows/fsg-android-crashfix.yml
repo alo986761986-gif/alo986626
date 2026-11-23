@@ -32,6 +32,18 @@ jobs:
           mkdir -p four-sports-game-src
           base64 -d fsg_source.b64 | tar -xJ -C four-sports-game-src
           test -s four-sports-game-src/android/app/src/main/java/com/foursportsgame/arena/MainActivity.java
+      - name: Remove Java lambda instructions incompatible with direct D8 invocation
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('four-sports-game-src/android/app/src/main/java/com/foursportsgame/arena/MainActivity.java')
+          s=p.read_text()
+          s=s.replace('view.post(() -> showFailure("Il motore grafico si e\' interrotto. Aggiorna Android System WebView e riapri FOUR SPORTS GAME."));', 'view.post(new Runnable() { @Override public void run() { showFailure("Il motore grafico si e\' interrotto. Aggiorna Android System WebView e riapri FOUR SPORTS GAME."); } });')
+          s=s.replace('result -> { if (!"true".equals(result)) finish(); }', 'new android.webkit.ValueCallback<String>() { @Override public void onReceiveValue(String result) { if (!"true".equals(result)) finish(); } }')
+          assert '->' not in s
+          p.write_text(s)
+          PY
       - name: Build and sign APK directly with official Android tools
         shell: bash
         run: |
