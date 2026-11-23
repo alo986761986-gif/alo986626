@@ -31,7 +31,12 @@ public final class GameView extends View implements GameEngine.Events {
     // movement and collision rules remain unchanged for online and offline.
     static final float PREMIUM_HEAD_RADIUS=20f; // previous inner radius: 14
     static final float PREMIUM_PREVIEW_HEAD_RADIUS=27f;
-    private final Path snakePath=new Path(); // reused: avoids per-frame path allocations
+    private final Path snakePath=new Path();
+    private final Path foodPath=new Path();
+    private int controlMode=1; // 0 touch-aim, 1 on-screen arrow pad
+    private int sensitivity=4; // 1..5
+    private int directionPointer=-1;
+    private int directionButton=-1; // reused: avoids per-frame path allocations
     private final GameEngine game;
     private final OnlineWorld onlineWorld;
     private final OnlineClient onlineClient;
@@ -71,7 +76,7 @@ public final class GameView extends View implements GameEngine.Events {
                 onlineWorld.reset(onlineClient.playerId());
                 onlineMode=true;screen=GAME;prevTime=0;scoreAwarded=0;
                 cameraX=0;cameraY=0;cameraZoom=1;steer=0;boost=false;
-                onlineStatus="Connesso!";if(audio)sound.play(GameSound.START);invalidate();
+                onlineStatus="Connesso!";directionPointer=-1;directionButton=-1;if(audio)sound.play(GameSound.START);invalidate();
             }
             @Override public void onWorld(org.json.JSONObject snapshot){
                 onlineWorld.apply(snapshot);
@@ -100,6 +105,8 @@ public final class GameView extends View implements GameEngine.Events {
         audio=prefs.getBoolean("audio",true);
         vibration=prefs.getBoolean("vibration",true);
         quality=clampInt(prefs.getInt("quality",1),0,2);
+        sensitivity=clampInt(prefs.getInt("sensitivity",4),1,5);
+        controlMode=clampInt(prefs.getInt("controls",1),0,1);
         nick=prefs.getString("nickname","PLAYER");
         if(nick==null||nick.trim().isEmpty())nick="PLAYER";
         setLayerType(View.LAYER_TYPE_SOFTWARE,null); // stable Android 5 fallback for complex strokes/shadows
@@ -116,7 +123,8 @@ public final class GameView extends View implements GameEngine.Events {
     public void save(){
         prefs.edit().putInt("skin",skin).putInt("mode",mode).putInt("coins",coins).putInt("record",record)
             .putBoolean("audio",audio).putBoolean("vibration",vibration).putInt("quality",quality)
-            .putString("nickname",nick).putString("multiplayer_url",serverUrl).apply();
+            .putString("nickname",nick).putString("multiplayer_url",serverUrl)
+            .putInt("sensitivity",sensitivity).putInt("controls",controlMode).apply();
     }
     public boolean goBack(){
         if(screen==GAME){if(onlineMode){leaveOnline();screen=MENU;}else{screen=PAUSE;boost=false;}return true;}
@@ -127,8 +135,9 @@ public final class GameView extends View implements GameEngine.Events {
         leaveOnline();
         boolean eco=quality==0||Runtime.getRuntime().maxMemory()<110L*1024L*1024L;
         game.reset(mode,skin,nick,eco);
+        game.player.turnRate=3.8f+(sensitivity-1)*.8f;
         screen=GAME;scoreAwarded=0;prevTime=0;cameraX=0;cameraY=0;cameraZoom=1;
-        steer=game.player.a;boost=false;boostPointer=-1;joystickPointer=-1;
+        steer=game.player.a;boost=false;boostPointer=-1;joystickPointer=-1;directionPointer=-1;directionButton=-1;
         lastMode=modeName();notice="";
         if(audio)sound.play(GameSound.START);
         save();
@@ -377,9 +386,7 @@ public final class GameView extends View implements GameEngine.Events {
             int col=GameEngine.COLORS[f.color%8];
             float shimmer=quality>0?1f+.12f*(float)Math.sin(uiTime*2.7f+f.phase):1f;
             float rr=f.r*shimmer;
-            circle(c,f.x,f.y,rr*2.45f,Color.argb(42,Color.red(col),Color.green(col),Color.blue(col)));
-            circle(c,f.x,f.y,rr,col);
-            circle(c,f.x-rr*.2f,f.y-rr*.2f,rr*.43f,0xddffffff);
+            drawFoodShape(c,f.x,f.y,rr,col,(Math.abs((int)f.x*13+(int)f.y*17+f.color*23))%6);
         }
         for(int i=0;i<game.particles.size();i++){
             GameEngine.Particle part=game.particles.get(i);
@@ -392,6 +399,50 @@ public final class GameView extends View implements GameEngine.Events {
         if(game.player!=null&&game.player.alive)drawSnake(c,game.player,left,right,top,bottom);
         c.restore();
     }
+    /** Six collectible shapes, shared by local and remote worlds. Visual-only. */
+    private void drawFoodShape(Canvas c,float x,float y,float radius,int col,int type){
+        circle(c,x,y,radius*2.25f,
+            Color.argb(48,Color.red(col),Color.green(col),Color.blue(col)));
+        foodPath.reset();
+        float r=Math.max(2.5f,radius*1.32f);
+        if(type==0){ // energy sphere
+            circle(c,x,y,r,col);
+        }else if(type==1){ // diamond
+            foodPath.moveTo(x,y-r*1.45f);
+            foodPath.lineTo(x+r,y);foodPath.lineTo(x,y+r*1.45f);
+            foodPath.lineTo(x-r,y);foodPath.close();
+        }else if(type==2){ // crystal triangle
+            foodPath.moveTo(x,y-r*1.45f);
+            foodPath.lineTo(x+r*1.25f,y+r);
+            foodPath.lineTo(x-r*1.25f,y+r);foodPath.close();
+        }else if(type==3){ // little star
+            for(int i=0;i<10;i++){
+                float ang=(float)(i*Math.PI/5f-Math.PI/2f);
+                float radius2=(i%2==0?r*1.52f:r*.65f);
+                float px=x+(float)Math.cos(ang)*radius2;
+                float py=y+(float)Math.sin(ang)*radius2;
+                if(i==0)foodPath.moveTo(px,py);else foodPath.lineTo(px,py);
+            }foodPath.close();
+        }else if(type==4){ // energy hexagon
+            for(int i=0;i<6;i++){
+                float ang=(float)(i*Math.PI/3f);
+                float px=x+(float)Math.cos(ang)*r*1.2f;
+                float py=y+(float)Math.sin(ang)*r*1.2f;
+                if(i==0)foodPath.moveTo(px,py);else foodPath.lineTo(px,py);
+            }foodPath.close();
+        }else{ // mini heart
+            foodPath.moveTo(x,y+r*1.25f);
+            foodPath.cubicTo(x-r*2.3f,y-r*.3f,x-r*.85f,y-r*1.7f,x,y-r*.55f);
+            foodPath.cubicTo(x+r*.85f,y-r*1.7f,x+r*2.3f,y-r*.3f,x,y+r*1.25f);
+            foodPath.close();
+        }
+        if(type!=0){
+            p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.FILL);p.setColor(col);
+            c.drawPath(foodPath,p);
+        }
+        circle(c,x-r*.27f,y-r*.27f,Math.max(1.2f,r*.25f),0xcaffffff);
+    }
+
     private void drawSnake(Canvas c,GameEngine.Snake snake,float left,float right,float top,float bottom){
         if(snake.x<left-580||snake.x>right+580||snake.y<top-580||snake.y>bottom+580)return;
         final int col=GameEngine.COLORS[snake.color%8];
@@ -415,18 +466,45 @@ public final class GameView extends View implements GameEngine.Events {
         p.setStrokeWidth(6);p.setColor(0x77ffffff);c.drawPath(snakePath,p);
         p.setStyle(Paint.Style.FILL);
 
-        // Subtle scale marks (player only) in Balanced / High quality.
-        // The ECO preset avoids the extra draw calls on old devices.
-        if(quality>0 && playerHead){
-            for(int i=7;i<Math.min(snake.count,90);i+=(quality==2?9:16)){
-                float px=snake.tx(i),py=snake.ty(i);
-                circle(c,px,py,2.7f,0x79ffffff);
-            }
-        }
+        // Eight visibly different snake skins, including remote multiplayer players.
+        // Patterns are derived from the existing skin ID and need no server protocol changes.
+        drawSkinPattern(c,snake);
         drawPremiumHead(c,snake.x,snake.y,snake.a,col,playerHead);
         if(quality!=0){
             text(c,snake.name,snake.x-30,snake.y-43,15,WHITE,true);
         }
+    }
+
+    private void drawSkinPattern(Canvas c,GameEngine.Snake snake){
+        if(quality==0)return;
+        int type=snake.color%8;
+        int n=Math.min(snake.count,145);
+        int step=quality==2?7:12;
+        for(int i=9;i<n;i+=step){
+            float x=snake.tx(i),y=snake.ty(i);
+            switch(type){
+                case 0: // Arctic: glacial reflective beads
+                    circle(c,x,y,2.6f,0xbaffffff);break;
+                case 1: // Galaxy: indigo stars
+                    drawTinyStar(c,x,y,3.8f,0xfff4a6ff);break;
+                case 2: // Fire: amber embers
+                    circle(c,x,y,3.3f,0xffffdb66);break;
+                case 3: // Bio: glowing segmented rings
+                    circle(c,x,y,4.3f,0xaae2ffb6);circle(c,x,y,1.8f,0xff165536);break;
+                case 4: // Candy: alternating stripes
+                    circle(c,x,y,4f,(i/step)%2==0?0xffffe6f7:0xffff82be);break;
+                case 5: // Thunder: golden sparkles
+                    drawTinyStar(c,x,y,3.5f,0xffffffae);break;
+                case 6: // Cyber: electric blue circuits
+                    circle(c,x,y,3.4f,0xffd3e8ff);break;
+                default: // Lava: red volcanic scales
+                    circle(c,x,y,3.3f,(i/step)%2==0?0xffffde83:0xffff6747);break;
+            }
+        }
+    }
+    private void drawTinyStar(Canvas c,float x,float y,float size,int color){
+        line(c,x-size,y,x+size,y,color,1.7f);
+        line(c,x,y-size,x,y+size,color,1.7f);
     }
 
     private void drawPremiumHead(Canvas c,float x,float y,float angle,int col,boolean isPlayer){
@@ -499,6 +577,24 @@ public final class GameView extends View implements GameEngine.Events {
         box(c,534,665,220,38,10,0xb6091e37);
         center(c,"TRASCINA PER GIRARE",644,689,14,MUTED,true);
         drawMap(c);
+        if(controlMode==1)drawDirectionPad(c);
+    }
+    private void drawDirectionPad(Canvas c){
+        // Four 56px controls: large targets compatible with Android 5 landscape.
+        int[] xs={322,322,260,384};
+        int[] ys={478,602,540,540};
+        String[] labels={"▲","▼","◀","▶"};
+        for(int i=0;i<4;i++){
+            boolean active=directionButton==i;
+            circle(c,xs[i],ys[i],34,active?0xdd2479ca:0xb10c2546);
+            p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(active?3:2);
+            p.setColor(active?CYAN:0xff77acdf);
+            c.drawCircle(xs[i],ys[i],34,p);p.setStyle(Paint.Style.FILL);
+            center(c,labels[i],xs[i],ys[i]+10,28,active?WHITE:0xffb6e7ff,true);
+        }
+        circle(c,322,540,18,0x914da9ca);
+        center(c,"D-PAD",322,699,13,MUTED,true);
     }
     private void drawMap(Canvas c){
         circle(c,1186,318,69,0xd40a1531);
@@ -555,7 +651,7 @@ public final class GameView extends View implements GameEngine.Events {
     }
     private void drawSkins(Canvas c){
         screenPanel(c,"SKIN E PREMI");
-        text(c,"GUADAGNA MONETE GIOCANDO PER SBLOCCARE I COLORI",265,191,18,MUTED,true);
+        text(c,"8 SKIN: ARTICO, GALASSIA, FUOCO, BIO, CANDY, TUONO, CYBER, LAVA",260,191,16,MUTED,true);
         for(int i=0;i<8;i++){
             int x=300+(i%4)*178,y=238+(i/4)*145;
             boolean locked=i>=3 && coins<(i-2)*50 && i!=skin;
@@ -588,8 +684,15 @@ public final class GameView extends View implements GameEngine.Events {
         }
         button(c,"AUDIO: "+(audio?"ON":"OFF"),293,372,330,64,false);
         button(c,"VIBRAZIONE: "+(vibration?"ON":"OFF"),645,372,330,64,false);
-        text(c,"La modalita ECO migliora fluidita e temperatura sui telefoni piu vecchi.",280,496,17,MUTED,false);
-        button(c,"INDIETRO",395,560,490,70,true);
+        text(c,"SENSIBILITA STERZATA: "+sensitivity+"/5",282,482,20,CYAN,true);
+        for(int i=0;i<5;i++){
+            float x=285+i*142;
+            box(c,x,497,118,34,10,sensitivity==i+1?0xff287dc6:0xff213252);
+            border(c,x,497,118,34,10,sensitivity==i+1?CYAN:0xff415b82,1.6f);
+            center(c,""+(i+1),x+59,522,17,WHITE,true);
+        }
+        button(c,controlMode==1?"COMANDI: FRECCE":"COMANDI: TOUCH",304,544,676,48,false);
+        button(c,"INDIETRO",395,611,490,48,true);
     }
     private boolean hit(float x,float y,float left,float top,float width,float height){
         return x>=left&&x<=left+width&&y>=top&&y<=top+height;
@@ -626,7 +729,13 @@ public final class GameView extends View implements GameEngine.Events {
             for(int i=0;i<3;i++)if(hit(x,y,279+i*244,240,219,75)){quality=i;playClick();save();return;}
             if(hit(x,y,293,372,330,64)){audio=!audio;save();playClick();return;}
             if(hit(x,y,645,372,330,64)){vibration=!vibration;playClick();save();return;}
-            if(hit(x,y,395,560,490,70)){screen=MENU;playClick();return;}
+            for(int i=0;i<5;i++)if(hit(x,y,285+i*142,497,118,34)){
+                sensitivity=i+1;playClick();save();return;
+            }
+            if(hit(x,y,304,544,676,48)){
+                controlMode=1-controlMode;playClick();save();return;
+            }
+            if(hit(x,y,395,611,490,48)){screen=MENU;playClick();return;}
         }else if(screen==SKINS){
             for(int i=0;i<8;i++){
                 int xx=300+(i%4)*178,yy=238+(i/4)*145;
@@ -643,32 +752,72 @@ public final class GameView extends View implements GameEngine.Events {
     }
     private float xLogical(float x){return (x-ox)/Math.max(.01f,sx);}
     private float yLogical(float y){return (y-oy)/Math.max(.01f,sy);}
+    private int directionHit(float x,float y){
+        int[] px={322,322,260,384},py={478,602,540,540};
+        for(int i=0;i<4;i++){
+            float dx=x-px[i],dy=y-py[i];
+            if(dx*dx+dy*dy<43f*43f)return i;
+        }
+        return -1;
+    }
+    private void applyDirection(int index){
+        // Cardinal controls: up, down, left, right (absolute screen axes).
+        if(index==0)steer=-(float)Math.PI/2;
+        else if(index==1)steer=(float)Math.PI/2;
+        else if(index==2)steer=(float)Math.PI;
+        else if(index==3)steer=0f;
+        directionButton=index;
+    }
+    private void aimFromTouch(float x,float y){
+        // Aim directly relative to the center player (no old 90px drag threshold).
+        float dx=x-640,dy=y-360;
+        if(dx*dx+dy*dy>16f*16f)steer=(float)Math.atan2(dy,dx);
+    }
     @Override public boolean onTouchEvent(MotionEvent event){
         try{
             int action=event.getActionMasked(),index=event.getActionIndex();
             if(action==MotionEvent.ACTION_DOWN||action==MotionEvent.ACTION_POINTER_DOWN){
                 float x=xLogical(event.getX(index)),y=yLogical(event.getY(index));
                 int pointer=event.getPointerId(index);
-                if(screen==GAME && hit(x,y,1090,480,190,220)){
+                if(screen==GAME&&hit(x,y,1090,480,190,220)){
                     boostPointer=pointer;boost=true;invalidate();return true;
                 }
-                if(screen==GAME && !hit(x,y,17,646,165,58)){
-                    if(joystickPointer<0){joystickPointer=pointer;dragAnchorX=x;dragAnchorY=y;dragX=x;dragY=y;}
-                    return true;
+                if(screen==GAME&&controlMode==1){
+                    int which=directionHit(x,y);
+                    if(which>=0){directionPointer=pointer;applyDirection(which);invalidate();return true;}
+                }
+                if(screen==GAME&&!hit(x,y,17,646,165,58)){
+                    if(joystickPointer<0){
+                        joystickPointer=pointer;dragAnchorX=x;dragAnchorY=y;
+                        dragX=x;dragY=y;
+                        if(controlMode==0)aimFromTouch(x,y);
+                    }
+                    invalidate();return true;
                 }
                 tap(x,y);invalidate();return true;
             }
             if(action==MotionEvent.ACTION_MOVE){
+                if(screen==GAME&&directionPointer>=0){
+                    int idx=event.findPointerIndex(directionPointer);
+                    if(idx>=0){
+                        int which=directionHit(xLogical(event.getX(idx)),yLogical(event.getY(idx)));
+                        if(which>=0)applyDirection(which);
+                    }
+                }
                 if(screen==GAME&&joystickPointer>=0){
                     int idx=event.findPointerIndex(joystickPointer);
                     if(idx>=0){
                         float x=xLogical(event.getX(idx)),y=yLogical(event.getY(idx));
-                        float dx=x-dragAnchorX,dy=y-dragAnchorY;
-                        if(dx*dx+dy*dy>90){
-                            steer=(float)Math.atan2(dy,dx);
-                            dragX=x;dragY=y;
-                            dragAnchorX=x;dragAnchorY=y;
+                        if(controlMode==0){
+                            aimFromTouch(x,y);
+                        }else {
+                            float dx=x-dragAnchorX,dy=y-dragAnchorY;
+                            if(dx*dx+dy*dy>18f*18f){
+                                steer=(float)Math.atan2(dy,dx);
+                                dragAnchorX=x;dragAnchorY=y;
+                            }
                         }
+                        dragX=x;dragY=y;
                     }
                 }
                 return true;
@@ -676,9 +825,13 @@ public final class GameView extends View implements GameEngine.Events {
             if(action==MotionEvent.ACTION_UP||action==MotionEvent.ACTION_POINTER_UP||action==MotionEvent.ACTION_CANCEL){
                 int pointer=event.getPointerId(index);
                 if(pointer==boostPointer){boostPointer=-1;boost=false;}
+                if(pointer==directionPointer){directionPointer=-1;directionButton=-1;}
                 if(pointer==joystickPointer)joystickPointer=-1;
-                if(action==MotionEvent.ACTION_CANCEL){joystickPointer=-1;boostPointer=-1;boost=false;}
-                return true;
+                if(action==MotionEvent.ACTION_CANCEL){
+                    joystickPointer=-1;directionPointer=-1;directionButton=-1;
+                    boostPointer=-1;boost=false;
+                }
+                invalidate();return true;
             }
         }catch(Exception ex){android.util.Log.w("TRISH_BOLL_NATIVE","Touch exception",ex);}
         return true;
