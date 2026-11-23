@@ -1,4 +1,4 @@
-name: Four Sports Game Android 2.0 Premium
+name: Four Sports Game Android 3.0 Ultra
 on:
   push:
     branches: [four-sports-game-crashfix]
@@ -30,10 +30,13 @@ jobs:
         shell: bash
         run: |
           mkdir -p four-sports-game-src
-          base64 -d fsg_v2_source.b64 | tar -xJ -C four-sports-game-src
+          base64 -d fsg_v3_source.b64 | tar -xJ -C four-sports-game-src
           test -s four-sports-game-src/android/app/src/main/java/com/foursportsgame/arena/MainActivity.java
           test -s four-sports-game-src/android/app/src/main/assets/premium.js
           test -s four-sports-game-src/android/app/src/main/assets/premium.css
+          test -s four-sports-game-src/android/app/src/main/assets/engine3.js
+          test -s four-sports-game-src/android/app/src/main/assets/ultra.js
+          test -s four-sports-game-src/android/app/src/main/assets/ultra.css
       - name: Remove Java lambda instructions incompatible with direct D8 invocation
         shell: bash
         run: |
@@ -60,18 +63,18 @@ jobs:
           test -s "$OUT/dex/classes.dex"
           sed -i 's#<manifest xmlns:android=#<manifest package="com.foursportsgame.arena" xmlns:android=#' "$ROOT/src/main/AndroidManifest.xml"
           "$BT/aapt2" compile --dir "$ROOT/src/main/res" -o "$OUT/resources.zip"
-          "$BT/aapt2" link -o "$OUT/unsigned.apk" -I "$PLATFORM" --manifest "$ROOT/src/main/AndroidManifest.xml" --min-sdk-version 21 --target-sdk-version 28 --version-code 3 --version-name 2.0.0 "$OUT/resources.zip"
+          "$BT/aapt2" link -o "$OUT/unsigned.apk" -I "$PLATFORM" --manifest "$ROOT/src/main/AndroidManifest.xml" --min-sdk-version 21 --target-sdk-version 28 --version-code 4 --version-name 3.0.0 "$OUT/resources.zip"
           cp "$OUT/dex/classes.dex" "$OUT/"
           cp "$ROOT"/src/main/assets/* "$OUT/assets/"
           (cd "$OUT" && zip -0 -q unsigned.apk classes.dex && zip -0 -q unsigned.apk assets/*)
           "$BT/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
           keytool -genkeypair -alias foursportsgame -keyalg RSA -keysize 2048 -validity 3650 -keystore "$OUT/debug-release.jks" -storepass changeit -keypass changeit -dname "CN=FOUR SPORTS GAME,O=Four Sports Game,C=IT" -noprompt
-          "$BT/apksigner" sign --ks "$OUT/debug-release.jks" --ks-key-alias foursportsgame --ks-pass pass:changeit --key-pass pass:changeit --out "$OUT/FOUR_SPORTS_GAME_2_0_PREMIUM.apk" "$OUT/aligned.apk"
+          "$BT/apksigner" sign --ks "$OUT/debug-release.jks" --ks-key-alias foursportsgame --ks-pass pass:changeit --key-pass pass:changeit --out "$OUT/FOUR_SPORTS_GAME_3_0_ULTRA.apk" "$OUT/aligned.apk"
       - name: Verify APK, signature, manifest and assets
         shell: bash
         run: |
           set -euo pipefail
-          APK=four-sports-build/FOUR_SPORTS_GAME_2_0_PREMIUM.apk
+          APK=four-sports-build/FOUR_SPORTS_GAME_3_0_ULTRA.apk
           BT="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
           unzip -t "$APK" | tail -1
@@ -79,22 +82,27 @@ jobs:
           unzip -l "$APK" | grep 'assets/index.html'
           unzip -l "$APK" | grep 'assets/premium.js'
           unzip -l "$APK" | grep 'assets/premium.css'
+          unzip -l "$APK" | grep 'assets/engine3.js'
+          unzip -l "$APK" | grep 'assets/ultra.js'
+          unzip -l "$APK" | grep 'assets/ultra.css'
           "$BT/apksigner" verify --verbose "$APK"
           "$BT/aapt" dump badging "$APK" | grep -E 'package:|launchable-activity:|sdkVersion:'
       - name: Upload signed APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FOUR_SPORTS_GAME_2_0_PREMIUM_APK
-          path: four-sports-build/FOUR_SPORTS_GAME_2_0_PREMIUM.apk
+          name: FOUR_SPORTS_GAME_3_0_ULTRA_APK
+          path: four-sports-build/FOUR_SPORTS_GAME_3_0_ULTRA.apk
           if-no-files-found: error
       - name: Publish APK for direct download
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p downloads
-          cp four-sports-build/FOUR_SPORTS_GAME_2_0_PREMIUM.apk downloads/FOUR_SPORTS_GAME_2_0_PREMIUM.apk
+          cp four-sports-build/FOUR_SPORTS_GAME_3_0_ULTRA.apk downloads/FOUR_SPORTS_GAME_3_0_ULTRA.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/FOUR_SPORTS_GAME_2_0_PREMIUM.apk
-          git commit -m "Publish installable FOUR SPORTS GAME 2.0 Premium APK"
+          git add downloads/FOUR_SPORTS_GAME_3_0_ULTRA.apk
+          git commit -m "Publish installable FOUR SPORTS GAME 3.0 Ultra APK"
+          git fetch origin four-sports-game-crashfix
+          git rebase origin/four-sports-game-crashfix
           git push origin HEAD:four-sports-game-crashfix
