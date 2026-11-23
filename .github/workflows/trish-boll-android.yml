@@ -44,7 +44,7 @@ jobs:
           if-no-files-found: error
   launch-test:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: macos-15
     timeout-minutes: 35
     permissions:
       contents: read
