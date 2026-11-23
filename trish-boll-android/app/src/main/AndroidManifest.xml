@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:allowBackup="false" android:label="TRISH BOLL"
+    <application android:allowBackup="false" android:label="TRISH BOLL" android:icon="@drawable/ic_launcher"
         android:theme="@android:style/Theme.Material.NoActionBar"
         android:hardwareAccelerated="true" android:largeHeap="false">
         <activity android:name=".MainActivity" android:exported="true"
