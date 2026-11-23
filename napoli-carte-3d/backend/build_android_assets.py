@@ -10,8 +10,11 @@ root = Path(__file__).resolve().parents[1]
 html = (root/'frontend/index.html').read_text(encoding='utf-8')
 profile_css=(root/'frontend/profile.css').read_text(encoding='utf-8')
 profile_js=(root/'frontend/profile.js').read_text(encoding='utf-8')
+realtime_css=(root/'frontend/realtime.css').read_text(encoding='utf-8')
+realtime_js=(root/'frontend/realtime.js').read_text(encoding='utf-8')
 html=html.replace('</head>','<style id="nc22-profile-css">'+profile_css+'</style></head>',1)
-html=html.replace('</body>','<script id="nc22-profile-js">'+profile_js+'</script></body>',1)
+html=html.replace('</body>','<script id="nc22-profile-js">'+profile_js+'</script><script id="nc23-realtime-js">'+realtime_js+'</script></body>',1)
+html=html.replace('</head>','<style id="nc23-realtime-css">'+realtime_css+'</style></head>',1)
 engine = (root/'backend/engine.js').read_text(encoding='utf-8')
 assert "module.exports={join,state,action,opts,leave,profile,friend,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};" in engine
 engine = engine.replace("if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};", "return {join,state,action,opts,profile,friend,statusInfo,RULES};")
