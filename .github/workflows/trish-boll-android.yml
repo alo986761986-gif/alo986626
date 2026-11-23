@@ -1,9 +1,7 @@
 name: TRISH BOLL Android build and launch test
 on:
   push:
-    branches:
-      - trish-boll-android-native-fix
-  workflow_dispatch:
+    branches: [trish-boll-android-native-fix]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,22 +16,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Install Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build genuine Android APK
+      - name: Compile Android with preinstalled SDK
         run: gradle --no-daemon :app:assembleDebug --stacktrace
-      - name: Verify output
+      - name: Verify APK is present
         run: |
           test -s app/build/outputs/apk/debug/app-debug.apk
           ls -lh app/build/outputs/apk/debug/app-debug.apk
-          $ANDROID_HOME/build-tools/35.0.0/aapt dump badging app/build/outputs/apk/debug/app-debug.apk | head -25
-      - name: Upload installable APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: TRISH_BOLL_v3.0_ANDROID5_DEBUG_APK
+          name: TRISH_BOLL_v3_ANDROID5_APK
           path: trish-boll-android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
   launch-test:
@@ -51,14 +45,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build app for device test
+      - name: Compile app for emulator
         run: gradle --no-daemon :app:assembleDebug
-      - name: Boot Android emulator and run startup smoke test
-        uses: reactivecircus/android-emulator-runner@v2
+      - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 23
           target: google_apis
@@ -70,18 +62,8 @@ jobs:
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb logcat -c
             adb shell am start -n com.trishboll.arena/.MainActivity
-            sleep 10
-            adb shell pidof com.trishboll.arena > /tmp/trish-pid.txt
-            test -s /tmp/trish-pid.txt
-            echo "ANDROID_LAUNCH_PASS pid=$(cat /tmp/trish-pid.txt)"
+            sleep 12
+            adb shell pidof com.trishboll.arena > /tmp/pid.txt
+            test -s /tmp/pid.txt
+            echo "ANDROID_LAUNCH_PASS pid=$(cat /tmp/pid.txt)"
             adb logcat -d -v brief | grep -E 'FATAL EXCEPTION|TrishBollAndroid|com.trishboll.arena' | tail -100 || true
-      - name: Upload logs
-        if: always()
-        run: adb logcat -d -v time > emulator-launch-log.txt || true
-      - name: Upload emulator diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: TRISH_BOLL_ANDROID_LAUNCH_LOGS
-          path: trish-boll-android/emulator-launch-log.txt
-          if-no-files-found: ignore
