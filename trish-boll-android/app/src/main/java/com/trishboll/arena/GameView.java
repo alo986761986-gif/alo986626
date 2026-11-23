@@ -27,6 +27,11 @@ public final class GameView extends View implements GameEngine.Events {
     static final int MENU=0,GAME=1,PAUSE=2,RESULT=3,HELP=4,SKINS=5,SETTINGS=6,ONLINE_SETUP=7;
     static final int BG=0xff071027,PANEL=0xff101d3d,CYAN=0xff73f4ff,PINK=0xffff6ad4,WHITE=0xfff7f8ff,MUTED=0xffa5b7d7,GOLD=0xffffd675;
     static final float SW=1280f,SH=720f;
+    // Visual-only update: the head is larger and more expressive, while
+    // movement and collision rules remain unchanged for online and offline.
+    static final float PREMIUM_HEAD_RADIUS=20f; // previous inner radius: 14
+    static final float PREMIUM_PREVIEW_HEAD_RADIUS=27f;
+    private final Path snakePath=new Path(); // reused: avoids per-frame path allocations
     private final GameEngine game;
     private final OnlineWorld onlineWorld;
     private final OnlineClient onlineClient;
@@ -290,18 +295,26 @@ public final class GameView extends View implements GameEngine.Events {
     }
     private void drawPreviewSnake(Canvas c,float x,float y,float sc,int col){
         c.save();c.translate(x,y);c.scale(sc,sc);
+        // Preview uses the same round, expressive character design as the arena.
         for(int i=28;i>=0;i--){
             float ang=i*.24f+uiTime*.6f;
             float rad=55+i*1.6f;
             float px=(float)Math.cos(ang)*rad-i*3.5f;
             float py=(float)Math.sin(ang)*rad*.55f;
-            circle(c,px,py,16,0xff0d1834);
+            if(quality>0)circle(c,px,py,18,Color.argb(42,Color.red(col),Color.green(col),Color.blue(col)));
+            circle(c,px,py,16,0xff09142b);
             circle(c,px,py,13,col);
-            if(i%3==0)circle(c,px-4,py-5,3,0x99ffffff);
+            if(i%3==0)circle(c,px-4,py-5,3,0x88ffffff);
         }
-        circle(c,90,0,23,0xff071027);circle(c,90,0,19,col);
-        circle(c,100,-10,7,WHITE);circle(c,100,9,7,WHITE);
-        circle(c,102,-10,3,0xff0a1740);circle(c,102,9,3,0xff0a1740);
+        // Head is intentionally about 35% larger than the old preview.
+        circle(c,90,0,PREMIUM_PREVIEW_HEAD_RADIUS+6,0x4839c8ff);
+        circle(c,90,0,PREMIUM_PREVIEW_HEAD_RADIUS+3,0xff0a1837);
+        circle(c,90,0,PREMIUM_PREVIEW_HEAD_RADIUS,col);
+        circle(c,81,-11,10,0x70ffffff);
+        circle(c,104,-11,8,WHITE);circle(c,104,10,8,WHITE);
+        circle(c,108,-11,4,0xff092246);circle(c,108,10,4,0xff092246);
+        circle(c,109,-13,1.5f,0xffffffff);circle(c,109,8,1.5f,0xffffffff);
+        circle(c,110,0,3.2f,0xff103253);
         c.restore();
     }
     private void drawMenu(Canvas c){
@@ -311,6 +324,16 @@ public final class GameView extends View implements GameEngine.Events {
         text(c,"BOLL",410,155,70,PINK,true);
         text(c,"NEON SNAKE ARENA",190,188,20,MUTED,false);
         if(!notice.isEmpty())text(c,notice,193,218,17,GOLD,true);
+        // Soft neon orbit accent makes the hero character stand out.
+        if(quality>0){
+            circle(c,840,290,166,0x151e9ed9);
+            p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(2.3f);p.setColor(0x524deaff);
+            c.drawCircle(840,290,153,p);
+            p.setColor(0x3bc76fff);p.setStrokeWidth(1.5f);
+            c.drawCircle(840,290,182,p);
+            p.setStyle(Paint.Style.FILL);
+        }
         drawPreviewSnake(c,730,274,1.55f,GameEngine.COLORS[skin]);
         box(c,180,250,415,168,24,0xff172346);
         text(c,"SCEGLI UNA MODALITA",205,290,18,MUTED,true);
@@ -334,7 +357,7 @@ public final class GameView extends View implements GameEngine.Events {
         button(c,"GIOCA ONLINE",619,520,240,77,false);
         button(c,"OPZIONI",870,520,215,77,false);
         text(c,"RECORD  "+record+"     MONETE  "+coins,202,628,17,GOLD,true);
-        text(c,"VERSIONE 5.1 • AUTO-SERVER",707,628,14,MUTED,false);
+        text(c,"VERSIONE 5.3 • PREMIUM HEAD",707,628,14,MUTED,false);
     }
     private void drawArena(Canvas c){
         c.drawColor(0xff071329);
@@ -352,8 +375,11 @@ public final class GameView extends View implements GameEngine.Events {
             GameEngine.Food f=game.foods.get(i);
             if(f.x<left-20||f.x>right+20||f.y<top-20||f.y>bottom+20)continue;
             int col=GameEngine.COLORS[f.color%8];
-            circle(c,f.x,f.y,f.r*2.35f,Color.argb(46,Color.red(col),Color.green(col),Color.blue(col)));
-            circle(c,f.x,f.y,f.r,col);circle(c,f.x-1,f.y-1,f.r*.4f,0xddffffff);
+            float shimmer=quality>0?1f+.12f*(float)Math.sin(uiTime*2.7f+f.phase):1f;
+            float rr=f.r*shimmer;
+            circle(c,f.x,f.y,rr*2.45f,Color.argb(42,Color.red(col),Color.green(col),Color.blue(col)));
+            circle(c,f.x,f.y,rr,col);
+            circle(c,f.x-rr*.2f,f.y-rr*.2f,rr*.43f,0xddffffff);
         }
         for(int i=0;i<game.particles.size();i++){
             GameEngine.Particle part=game.particles.get(i);
@@ -368,26 +394,85 @@ public final class GameView extends View implements GameEngine.Events {
     }
     private void drawSnake(Canvas c,GameEngine.Snake snake,float left,float right,float top,float bottom){
         if(snake.x<left-580||snake.x>right+580||snake.y<top-580||snake.y>bottom+580)return;
-        int col=GameEngine.COLORS[snake.color%8];
-        Path path=new Path();
-        path.moveTo(snake.x,snake.y);
-        for(int i=0;i<snake.count;i++)path.lineTo(snake.tx(i),snake.ty(i));
-        p.reset();p.setAntiAlias(true);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);p.setStyle(Paint.Style.STROKE);
-        p.setStrokeWidth(26);p.setColor(0xff071020);c.drawPath(path,p);
-        p.setStrokeWidth(19);p.setColor(col);c.drawPath(path,p);
-        p.setStrokeWidth(6);p.setColor(0x66ffffff);c.drawPath(path,p);
+        final int col=GameEngine.COLORS[snake.color%8];
+        final boolean playerHead=snake==game.player;
+        // One reusable path per frame: avoids repeated allocations on Android 5.
+        snakePath.reset();
+        snakePath.moveTo(snake.x,snake.y);
+        for(int i=0;i<snake.count;i++)snakePath.lineTo(snake.tx(i),snake.ty(i));
+
+        p.reset();p.setAntiAlias(true);
+        p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
+        p.setStyle(Paint.Style.STROKE);
+        if(quality>0){
+            p.setStrokeWidth(34);
+            p.setColor(Color.argb(42,Color.red(col),Color.green(col),Color.blue(col)));
+            c.drawPath(snakePath,p);
+        }
+        p.setStrokeWidth(27);p.setColor(0xff061026);c.drawPath(snakePath,p);
+        p.setStrokeWidth(20);p.setColor(col);c.drawPath(snakePath,p);
+        // A bright, directional highlight fakes 3D volume at almost no cost.
+        p.setStrokeWidth(6);p.setColor(0x77ffffff);c.drawPath(snakePath,p);
         p.setStyle(Paint.Style.FILL);
-        circle(c,snake.x,snake.y,17,0xff101733);
-        circle(c,snake.x,snake.y,14,col);
-        float vx=(float)Math.cos(snake.a),vy=(float)Math.sin(snake.a);
-        float qx=-vy,qy=vx;
-        float eye1x=snake.x+vx*9+qx*7,eye1y=snake.y+vy*9+qy*7;
-        float eye2x=snake.x+vx*9-qx*7,eye2y=snake.y+vy*9-qy*7;
-        circle(c,eye1x,eye1y,5,WHITE);circle(c,eye2x,eye2y,5,WHITE);
-        circle(c,eye1x+vx*2,eye1y+vy*2,2,0xff04122b);
-        circle(c,eye2x+vx*2,eye2y+vy*2,2,0xff04122b);
+
+        // Subtle scale marks (player only) in Balanced / High quality.
+        // The ECO preset avoids the extra draw calls on old devices.
+        if(quality>0 && playerHead){
+            for(int i=7;i<Math.min(snake.count,90);i+=(quality==2?9:16)){
+                float px=snake.tx(i),py=snake.ty(i);
+                circle(c,px,py,2.7f,0x79ffffff);
+            }
+        }
+        drawPremiumHead(c,snake.x,snake.y,snake.a,col,playerHead);
         if(quality!=0){
-            text(c,snake.name,snake.x-25,snake.y-30,15,WHITE,true);
+            text(c,snake.name,snake.x-30,snake.y-43,15,WHITE,true);
+        }
+    }
+
+    private void drawPremiumHead(Canvas c,float x,float y,float angle,int col,boolean isPlayer){
+        float vx=(float)Math.cos(angle),vy=(float)Math.sin(angle);
+        float qx=-vy,qy=vx;
+        // The playable character's head is visually around 43% larger.
+        // Head scale is presentation-only; game collision sizes are preserved.
+        float radius=PREMIUM_HEAD_RADIUS;
+        if(quality>0){
+            circle(c,x,y,radius+9,
+                Color.argb(isPlayer?55:33,Color.red(col),Color.green(col),Color.blue(col)));
+        }
+        circle(c,x,y,radius+4,0xff061027);
+        circle(c,x,y,radius+1.2f,0xff244c6d);
+        circle(c,x,y,radius,col);
+
+        // Faux 3D lighting: broad glossy forehead and soft cheek highlights.
+        circle(c,x-vx*6-qx*5,y-vy*6-qy*5,8.3f,0x56ffffff);
+        circle(c,x-vx*8+qx*5,y-vy*8+qy*5,4.3f,0x4cffffff);
+
+        // Two large eyes look forward in the direction of travel.
+        float eyeX=x+vx*8.2f,eyeY=y+vy*8.2f;
+        float lx=eyeX+qx*8f,ly=eyeY+qy*8f;
+        float rx=eyeX-qx*8f,ry=eyeY-qy*8f;
+        circle(c,lx,ly,6.5f,0xff0a2445);
+        circle(c,rx,ry,6.5f,0xff0a2445);
+        circle(c,lx,ly,5.5f,WHITE);
+        circle(c,rx,ry,5.5f,WHITE);
+        circle(c,lx+vx*2.4f,ly+vy*2.4f,2.8f,0xff081a3b);
+        circle(c,rx+vx*2.4f,ry+vy*2.4f,2.8f,0xff081a3b);
+        circle(c,lx+vx*3.0f-qx*0.8f,ly+vy*3.0f-qy*0.8f,1.15f,WHITE);
+        circle(c,rx+vx*3.0f-qx*0.8f,ry+vy*3.0f-qy*0.8f,1.15f,WHITE);
+
+        // Tiny smile and nostril add personality without distracting from play.
+        float mouthX=x+vx*15f,mouthY=y+vy*15f;
+        line(c,mouthX+qx*3.2f,mouthY+qy*3.2f,
+            mouthX,mouthY,0xff0b3050,2.1f);
+        line(c,mouthX,mouthY,
+            mouthX-qx*3.2f,mouthY-qy*3.2f,0xff0b3050,2.1f);
+
+        if(quality>0 && isPlayer && boost){
+            p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);
+            p.setStrokeWidth(2.2f);p.setColor(0xa7fffae3);
+            float pulse=radius+10f+(float)Math.sin(uiTime*14f)*2f;
+            c.drawCircle(x,y,pulse,p);
+            p.setStyle(Paint.Style.FILL);
         }
     }
     private void drawHUD(Canvas c){
