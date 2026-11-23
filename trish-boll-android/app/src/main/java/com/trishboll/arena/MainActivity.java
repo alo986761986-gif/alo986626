@@ -2,88 +2,46 @@ package com.trishboll.arena;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.view.Gravity;
-import android.view.View;
 import android.view.WindowManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
+import android.content.pm.ActivityInfo;
+import android.util.Log;
 import android.widget.TextView;
+import android.view.Gravity;
 
 public final class MainActivity extends Activity {
-    private static final String TAG = "TrishBollAndroid";
-    private WebView webView;
-    private boolean destroyed = false;
-
-    @Override public void onCreate(Bundle state) {
-        super.onCreate(state);
+    private GameView game;
+    @Override public void onCreate(Bundle saved) {
+        super.onCreate(saved);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-            WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        showNativeScreen("TRISH BOLL", "Caricamento del gioco...");
-        // Show native content first. Never let WebView startup be the first UI operation.
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override public void run() { if (!destroyed) startGameSafely(); }
-        });
-    }
-
-    private void showNativeScreen(String title, String description) {
-        TextView message = new TextView(this);
-        message.setGravity(Gravity.CENTER);
-        message.setTextSize(20);
-        message.setTextColor(0xffffffff);
-        message.setBackgroundColor(0xff0a1126);
-        message.setPadding(32, 32, 32, 32);
-        message.setText(title + "\n\n" + description);
-        setContentView(message);
-    }
-
-    private void startGameSafely() {
+                             WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().getDecorView().setSystemUiVisibility(
+             android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            |android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            |android.view.View.SYSTEM_UI_FLAG_FULLSCREEN);
         try {
-            WebView view = new WebView(this);
-            webView = view;
-            WebSettings settings = view.getSettings();
-            settings.setJavaScriptEnabled(true);
-            settings.setDomStorageEnabled(true);
-            settings.setAllowFileAccess(true);
-            settings.setJavaScriptCanOpenWindowsAutomatically(false);
-            settings.setSupportZoom(false);
-            if (Build.VERSION.SDK_INT <= 23) {
-                view.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-            }
-            view.setWebViewClient(new WebViewClient());
-            view.setWebChromeClient(new WebChromeClient());
-            view.setBackgroundColor(0xff0a1126);
-            setContentView(view);
-            view.loadUrl("file:///android_asset/index.html");
-        } catch (Throwable error) {
-            Log.e(TAG, "WebView failed", error);
-            showNativeScreen("TRISH BOLL - ERRORE DI AVVIO",
-                "Il motore Android WebView non e disponibile.\n" +
-                "Aggiorna Android System WebView e Google Chrome dal Play Store.\n\n" +
-                error.getClass().getSimpleName() + ": " + String.valueOf(error.getMessage()));
+            game=new GameView(this);
+            setContentView(game);
+        } catch(Throwable error) {
+            Log.e("TRISH_BOLL_NATIVE","Fatal native initialization",error);
+            TextView message=new TextView(this);
+            message.setGravity(Gravity.CENTER);
+            message.setTextSize(19f);
+            message.setTextColor(0xffffffff);
+            message.setBackgroundColor(0xff071027);
+            message.setText("TRISH BOLL\n\nErrore di inizializzazione.\n"
+                +"Riavvia il telefono oppure aggiorna il sistema Android.\n\n"
+                +error.getClass().getSimpleName()+": "+error.getMessage());
+            setContentView(message);
         }
     }
-
     @Override public void onBackPressed() {
-        if (webView != null) {
-            try { webView.loadUrl("javascript:window.trishBack&&window.trishBack()"); return; }
-            catch (Throwable ignored) { }
-        }
+        if(game!=null && game.goBack()){game.invalidate();return;}
         super.onBackPressed();
     }
-
-    @Override protected void onDestroy() {
-        destroyed = true;
-        if (webView != null) {
-            try { webView.stopLoading(); webView.destroy(); }
-            catch (Throwable ignored) { }
-            webView = null;
-        }
+    @Override protected void onPause(){super.onPause();if(game!=null)game.save();}
+    @Override protected void onResume(){super.onResume();if(game!=null)game.wake();}
+    @Override protected void onDestroy(){
+        if(game!=null){game.save();game.halt();game=null;}
         super.onDestroy();
     }
 }
