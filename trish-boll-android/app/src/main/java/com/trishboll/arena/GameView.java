@@ -34,6 +34,7 @@ public final class GameView extends View implements GameEngine.Events {
     private boolean onlineMode=false;
     private String serverUrl="",onlineStatus="Server non configurato";
     private int playersOnline=0;
+    private int serverRequestId=0;
     private final SharedPreferences prefs;
     private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF r=new RectF();
@@ -128,17 +129,29 @@ public final class GameView extends View implements GameEngine.Events {
         save();
     }
     private void leaveOnline(){
+        serverRequestId++;
         onlineClient.disconnect();
         onlineMode=false;playersOnline=0;boost=false;
     }
     private void connectOnline(){
-        if(serverUrl==null||!serverUrl.trim().startsWith("wss://")){
-            onlineStatus="Inserisci prima un server sicuro wss://";
-            screen=ONLINE_SETUP;invalidate();return;
-        }
         leaveOnline();
-        screen=ONLINE_SETUP;onlineStatus="Connessione in corso...";
-        onlineClient.connect(serverUrl.trim(),nick,skin);
+        screen=ONLINE_SETUP;
+        onlineStatus="Ricerca automatica server globale...";
+        final int requestId=++serverRequestId;
+        ServerDiscovery.resolve(new ServerDiscovery.Callback(){
+            @Override public void onResult(String endpoint,String status){
+                if(requestId!=serverRequestId || screen!=ONLINE_SETUP)return;
+                if(endpoint==null||endpoint.isEmpty()){
+                    onlineStatus=status;
+                    invalidate();
+                    return;
+                }
+                serverUrl=endpoint;
+                onlineStatus="Connessione all'arena mondiale...";
+                onlineClient.connect(endpoint,nick,skin);
+                invalidate();
+            }
+        });
         invalidate();
     }
     private void editNickname(){
@@ -321,7 +334,7 @@ public final class GameView extends View implements GameEngine.Events {
         button(c,"GIOCA ONLINE",619,520,240,77,false);
         button(c,"OPZIONI",870,520,215,77,false);
         text(c,"RECORD  "+record+"     MONETE  "+coins,202,628,17,GOLD,true);
-        text(c,"VERSIONE 5.0 • MULTIPLAYER",707,628,14,MUTED,false);
+        text(c,"VERSIONE 5.1 • AUTO-SERVER",707,628,14,MUTED,false);
     }
     private void drawArena(Canvas c){
         c.drawColor(0xff071329);
@@ -471,12 +484,12 @@ public final class GameView extends View implements GameEngine.Events {
     private void drawOnlineSetup(Canvas c){
         screenPanel(c,"MULTIPLAYER ONLINE");
         center(c,"Gioca contro persone reali nella stessa arena",640,214,22,MUTED,false);
-        center(c,"SERVER: "+(serverUrl.isEmpty()?"NON CONFIGURATO":serverUrl.length()>51?serverUrl.substring(0,51)+"...":serverUrl),640,289,17,CYAN,false);
+        center(c,"SERVER GLOBALE AUTOMATICO",640,289,20,CYAN,true);
         center(c,onlineStatus.length()>68?onlineStatus.substring(0,68):onlineStatus,640,333,19,GOLD,true);
-        button(c,"CONNETTITI",395,381,490,63,true);
-        button(c,"INDIRIZZO SERVER",395,462,490,63,false);
+        button(c,"CERCA SERVER ONLINE",395,381,490,63,true);
+        button(c,"AGGIORNA CONNESSIONE",395,462,490,63,false);
         button(c,"GIOCA OFFLINE",395,545,490,63,false);
-        center(c,"Il multiplayer richiede un server wss:// pubblico attivo",640,645,16,MUTED,false);
+        center(c,"Nessuna configurazione manuale: server unico per tutti i giocatori",640,645,16,MUTED,false);
     }
     private void drawSettings(Canvas c){
         screenPanel(c,"IMPOSTAZIONI");
@@ -508,7 +521,7 @@ public final class GameView extends View implements GameEngine.Events {
                 else{notice="Servono "+((i-2)*50)+" monete per sbloccare questa skin";}return;
             }
             if(hit(x,y,200,520,389,77)){start();return;}
-            if(hit(x,y,619,520,240,77)){screen=ONLINE_SETUP;onlineStatus=serverUrl.isEmpty()?"Server non configurato":"Pronto per connettersi";playClick();return;}
+            if(hit(x,y,619,520,240,77)){playClick();connectOnline();return;}
             if(hit(x,y,870,520,215,77)){screen=SETTINGS;playClick();return;}
             if(hit(x,y,185,441,92,38)){screen=SKINS;return;}
             if(hit(x,y,690,431,330,55)){editNickname();return;}
@@ -522,7 +535,7 @@ public final class GameView extends View implements GameEngine.Events {
             if(hit(x,y,431,524,418,59)){leaveOnline();screen=MENU;playClick();return;}
         }else if(screen==ONLINE_SETUP){
             if(hit(x,y,395,381,490,63)){connectOnline();return;}
-            if(hit(x,y,395,462,490,63)){editServer();return;}
+            if(hit(x,y,395,462,490,63)){connectOnline();return;}
             if(hit(x,y,395,545,490,63)){start();return;}
         }else if(screen==SETTINGS){
             for(int i=0;i<3;i++)if(hit(x,y,279+i*244,240,219,75)){quality=i;playClick();save();return;}
