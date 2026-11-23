@@ -101,7 +101,7 @@ public final class OnlineClient {
             Socket tcp=new Socket();
             tcp.connect(new InetSocketAddress(host,port),9000);
             tcp.setSoTimeout(15000);
-            SSLSocket ssl=(SSLSocket)SSLSocketFactory.getDefault()
+            SSLSocket ssl=(SSLSocket)((SSLSocketFactory)SSLSocketFactory.getDefault())
                 .createSocket(tcp,host,port,true);
             javax.net.ssl.SSLParameters params=ssl.getSSLParameters();
             params.setEndpointIdentificationAlgorithm("HTTPS");
