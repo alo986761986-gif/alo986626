@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "enabled": false,
+  "websocket_url": "",
+  "region": "global",
+  "message": "Il server multiplayer pubblico e in attesa di attivazione."
+}
