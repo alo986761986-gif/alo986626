@@ -34,6 +34,9 @@ jobs:
       - name: Validate all 40 authentic Neapolitan cards
         working-directory: napoli-carte-3d
         run: node tests/cards.test.js
+      - name: Validate profile avatars, photo privacy and online friendships
+        working-directory: napoli-carte-3d
+        run: node tests/profile.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py
