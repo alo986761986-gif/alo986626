@@ -31,6 +31,9 @@ jobs:
       - name: Run online matchmaking engine tests
         working-directory: napoli-carte-3d
         run: node tests/online.test.js
+      - name: Validate all 40 authentic Neapolitan cards
+        working-directory: napoli-carte-3d
+        run: node tests/cards.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py
