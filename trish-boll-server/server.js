@@ -23,7 +23,7 @@ function newSnake(id,name,color,bot,owner){
   }
   const trail=[];
   for(let i=1;i<size;i++)trail.push([x-Math.cos(a)*i*6.8,y-Math.sin(a)*i*6.8]);
-  return {id,name,color,bot,owner,x,y,a,dir:a,trail,size,score:size*7,carry:0,boost:false,brain:0,alive:true};
+  return {id,name,color,bot,owner,x,y,a,dir:a,trail,size,score:size*7,carry:0,boost:false,brain:0,alive:true,turnRate:bot?3.15:5.4};
 }
 function kill(s){
   if(!s.alive)return;
@@ -57,7 +57,7 @@ function step(){
   for(const s of all){
     if(!s.alive)continue;
     if(s.bot)botAI(s);
-    s.a+=clamp(norm(s.dir-s.a),-3.15*DT,3.15*DT);
+    s.a+=clamp(norm(s.dir-s.a),-s.turnRate*DT,s.turnRate*DT);
     const accelerated=s.boost&&s.size>25;
     const speed=(s.bot?127:145)*(accelerated?1.7:1);
     const oldX=s.x,oldY=s.y;
@@ -144,7 +144,10 @@ function message(c,b){
     let name=String(m.name||'Giocatore').replace(/[<>\r\n\u0000-\u001f]/g,'').trim().slice(0,14)||'Giocatore';
     let color=Number.isInteger(m.skin)?clamp(m.skin,0,7):0;
     let id='p'+(++serial).toString(36);
-    snakes.set(id,newSnake(id,name,color,false,c));c.player=id;
+    const player=newSnake(id,name,color,false,c);
+    const sensitivity=Number.isInteger(m.sensitivity)?clamp(m.sensitivity,1,5):4;
+    player.turnRate=3.5+(sensitivity-1)*.72;
+    snakes.set(id,player);c.player=id;
     send(c,{t:'joined',id,r:R,max:MAX_PLAYERS});
     send(c,{t:'food',f:food.map(f=>[Math.round(f.x),Math.round(f.y),f.c,f.e,+f.r.toFixed(1)])});
   }else if(m.t==='input'&&c.player){
