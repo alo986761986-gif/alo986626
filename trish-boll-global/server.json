@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "enabled": false,
-  "websocket_url": "",
+  "enabled": true,
+  "websocket_url": "wss://trish-boll-global-arena.onrender.com/ws",
   "region": "global",
-  "message": "Il server multiplayer pubblico e in attesa di attivazione."
+  "capacity": 30,
+  "message": "TRISH BOLL Arena mondiale attiva",
+  "health_url": "https://trish-boll-global-arena.onrender.com/health"
 }
