@@ -103,10 +103,18 @@ public final class OnlineClient {
             tcp.setSoTimeout(15000);
             SSLSocket ssl=(SSLSocket)((SSLSocketFactory)SSLSocketFactory.getDefault())
                 .createSocket(tcp,host,port,true);
-            javax.net.ssl.SSLParameters params=ssl.getSSLParameters();
-            params.setEndpointIdentificationAlgorithm("HTTPS");
-            ssl.setSSLParameters(params);
+            if(android.os.Build.VERSION.SDK_INT>=24){
+                javax.net.ssl.SSLParameters params=ssl.getSSLParameters();
+                params.setEndpointIdentificationAlgorithm("HTTPS");
+                ssl.setSSLParameters(params);
+            }
             ssl.startHandshake();
+            // API 21-23 lack SSLParameters.setEndpointIdentificationAlgorithm.
+            // Always verify the certificate's hostname using Android's default verifier.
+            if(!javax.net.ssl.HttpsURLConnection.getDefaultHostnameVerifier()
+                    .verify(host,ssl.getSession())){
+                throw new javax.net.ssl.SSLPeerUnverifiedException("Certificato TLS non valido per "+host);
+            }
             current=ssl;socket=ssl;
             InputStream in=new BufferedInputStream(ssl.getInputStream());
             OutputStream out=new BufferedOutputStream(ssl.getOutputStream());
