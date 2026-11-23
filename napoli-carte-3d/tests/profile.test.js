@@ -1,0 +1,31 @@
+'use strict';
+const assert=require('node:assert/strict');
+const e=require('../backend/engine.js');
+const a=e.join({game:'scopa',seats:2,name:'Alice',private:true});
+const b=e.join({game:'scopa',seats:2,name:'Bob',invite:a.code});
+const jpeg='data:image/jpeg;base64,'+Buffer.concat([Buffer.from([255,216,255,224]),Buffer.alloc(390,25),Buffer.from([255,217])]).toString('base64');
+e.profile(a.token,{name:'Alice Regina',avatarId:11,photo:jpeg,photoMode:'avatar'});
+assert.equal(e.state(b.token).players[0].avatarId,11);
+assert.equal(e.state(b.token).players[0].name,'Alice Regina');
+assert.equal(e.state(b.token).players[0].photo,null);
+e.profile(a.token,{photoMode:'room'});
+assert.equal(e.state(b.token).players[0].photo,jpeg);
+e.profile(a.token,{photoMode:'friends'});
+assert.equal(e.state(b.token).players[0].photo,null);
+e.friend(b.token,0,'request');
+assert.equal(e.state(a.token).players[1].friendStatus,'incoming');
+e.friend(a.token,1,'accept');
+assert.equal(e.state(b.token).players[0].photo,jpeg);
+e.friend(a.token,1,'remove');
+assert.equal(e.state(b.token).players[0].photo,null);
+e.profile(a.token,{photoMode:'public'});
+assert.equal(e.state(b.token).players[0].photo,jpeg);
+e.profile(a.token,{photo:null});
+assert.equal(e.state(b.token).players[0].photo,null);
+assert.throws(()=>e.profile(a.token,{photo:'data:image/svg+xml;base64,'+Buffer.alloc(400).toString('base64')}),/Formato foto/);
+assert.throws(()=>e.profile(a.token,{avatarId:30}),/Avatar non valido/);
+for(const game of ['scopa','scopone','briscola','sette','asso','ruba']){
+ const z=e.join({game,seats:game==='scopone'?4:2,name:'CPU Mode',bot:true});
+ assert.equal(e.profile(z.token,{avatarId:9}).players[0].avatarId,9);
+}
+console.log('NAPOLI v2.2 avatar, private photo and mutual friend privacy tests passed');
