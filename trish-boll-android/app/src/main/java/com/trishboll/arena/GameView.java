@@ -228,7 +228,10 @@ public final class GameView extends View implements GameEngine.Events {
                     float lerp=Math.min(.13f,dt*6);
                     cameraX+=(game.player.x-cameraX)*lerp;
                     cameraY+=(game.player.y-cameraY)*lerp;
-                    float target=mode==1?.91f:Math.max(.61f,1.04f-game.player.len/650);
+                    // Keep the growing body clearly visible without zooming it away.
+                    float growth=GameEngine.growthScale(game.player.score);
+                    float target=(mode==1?.94f:1.02f) - (growth-1f)*.15f;
+                    target=Math.max(.79f,Math.min(1.05f,target));
                     cameraZoom+=(target-cameraZoom)*Math.min(1,dt*3);
                 }
                 if(game.dead&&!onlineMode){screen=RESULT;finishGame();}
@@ -366,7 +369,7 @@ public final class GameView extends View implements GameEngine.Events {
         button(c,"GIOCA ONLINE",619,520,240,77,false);
         button(c,"OPZIONI",870,520,215,77,false);
         text(c,"RECORD  "+record+"     MONETE  "+coins,202,628,17,GOLD,true);
-        text(c,"VERSIONE 5.3 • PREMIUM HEAD",707,628,14,MUTED,false);
+        text(c,"VERSIONE 5.6 • CRESCITA REALE",707,628,14,MUTED,false);
     }
     private void drawArena(Canvas c){
         c.drawColor(0xff071329);
@@ -447,6 +450,7 @@ public final class GameView extends View implements GameEngine.Events {
         if(snake.x<left-580||snake.x>right+580||snake.y<top-580||snake.y>bottom+580)return;
         final int col=GameEngine.COLORS[snake.color%8];
         final boolean playerHead=snake==game.player;
+        final float growth=GameEngine.growthScale(snake.score);
         // One reusable path per frame: avoids repeated allocations on Android 5.
         snakePath.reset();
         snakePath.moveTo(snake.x,snake.y);
@@ -456,49 +460,56 @@ public final class GameView extends View implements GameEngine.Events {
         p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);
         p.setStyle(Paint.Style.STROKE);
         if(quality>0){
-            p.setStrokeWidth(34);
+            p.setStrokeWidth(34*growth);
             p.setColor(Color.argb(42,Color.red(col),Color.green(col),Color.blue(col)));
             c.drawPath(snakePath,p);
         }
-        p.setStrokeWidth(27);p.setColor(0xff061026);c.drawPath(snakePath,p);
-        p.setStrokeWidth(20);p.setColor(col);c.drawPath(snakePath,p);
+        p.setStrokeWidth(27*growth);p.setColor(0xff061026);c.drawPath(snakePath,p);
+        p.setStrokeWidth(20*growth);p.setColor(col);c.drawPath(snakePath,p);
         // A bright, directional highlight fakes 3D volume at almost no cost.
-        p.setStrokeWidth(6);p.setColor(0x77ffffff);c.drawPath(snakePath,p);
+        p.setStrokeWidth(6*growth);p.setColor(0x77ffffff);c.drawPath(snakePath,p);
         p.setStyle(Paint.Style.FILL);
 
         // Eight visibly different snake skins, including remote multiplayer players.
         // Patterns are derived from the existing skin ID and need no server protocol changes.
         drawSkinPattern(c,snake);
+        // Scale the entire head, including its eyes, smile and boost glow.
+        c.save();
+        c.translate(snake.x,snake.y);
+        c.scale(growth,growth);
+        c.translate(-snake.x,-snake.y);
         drawPremiumHead(c,snake.x,snake.y,snake.a,col,playerHead);
+        c.restore();
         if(quality!=0){
-            text(c,snake.name,snake.x-30,snake.y-43,15,WHITE,true);
+            text(c,snake.name,snake.x-30*growth,snake.y-35*growth-8,15,WHITE,true);
         }
     }
 
     private void drawSkinPattern(Canvas c,GameEngine.Snake snake){
         if(quality==0)return;
         int type=snake.color%8;
+        float g=GameEngine.growthScale(snake.score);
         int n=Math.min(snake.count,145);
         int step=quality==2?7:12;
         for(int i=9;i<n;i+=step){
             float x=snake.tx(i),y=snake.ty(i);
             switch(type){
                 case 0: // Arctic: glacial reflective beads
-                    circle(c,x,y,2.6f,0xbaffffff);break;
+                    circle(c,x,y,2.6f*g,0xbaffffff);break;
                 case 1: // Galaxy: indigo stars
-                    drawTinyStar(c,x,y,3.8f,0xfff4a6ff);break;
+                    drawTinyStar(c,x,y,3.8f*g,0xfff4a6ff);break;
                 case 2: // Fire: amber embers
-                    circle(c,x,y,3.3f,0xffffdb66);break;
+                    circle(c,x,y,3.3f*g,0xffffdb66);break;
                 case 3: // Bio: glowing segmented rings
-                    circle(c,x,y,4.3f,0xaae2ffb6);circle(c,x,y,1.8f,0xff165536);break;
+                    circle(c,x,y,4.3f*g,0xaae2ffb6);circle(c,x,y,1.8f*g,0xff165536);break;
                 case 4: // Candy: alternating stripes
-                    circle(c,x,y,4f,(i/step)%2==0?0xffffe6f7:0xffff82be);break;
+                    circle(c,x,y,4f*g,(i/step)%2==0?0xffffe6f7:0xffff82be);break;
                 case 5: // Thunder: golden sparkles
-                    drawTinyStar(c,x,y,3.5f,0xffffffae);break;
+                    drawTinyStar(c,x,y,3.5f*g,0xffffffae);break;
                 case 6: // Cyber: electric blue circuits
-                    circle(c,x,y,3.4f,0xffd3e8ff);break;
+                    circle(c,x,y,3.4f*g,0xffd3e8ff);break;
                 default: // Lava: red volcanic scales
-                    circle(c,x,y,3.3f,(i/step)%2==0?0xffffde83:0xffff6747);break;
+                    circle(c,x,y,3.3f*g,(i/step)%2==0?0xffffde83:0xffff6747);break;
             }
         }
     }
