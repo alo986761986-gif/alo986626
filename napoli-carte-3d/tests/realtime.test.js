@@ -1,0 +1,37 @@
+'use strict';
+const assert=require('node:assert/strict'),e=require('../backend/engine.js'),live=require('../backend/realtime.js');
+for(const game of ['scopa','scopone','briscola','sette','asso','ruba']){
+ const seats=game==='scopone'?4:2;
+ const a=e.join({game,seats,name:'Alice',private:true}),players=[a];
+ for(let i=1;i<seats;i++)players.push(e.join({game,seats,name:'Guest '+i,invite:a.code}));
+ const b=players[1],s=live.poll(a.token,0,0);
+ assert.equal(s.users.length,seats);assert.equal(s.status,'playing');
+ assert.throws(()=>live.chat('invalid','hey'),/Sessione non valida/);
+ assert.throws(()=>live.chat(a.token,' '),/Scrivi un messaggio/);
+ assert.throws(()=>live.chat(a.token,'x'.repeat(421)),/420 caratteri/);
+ const sent=live.chat(a.token,'Buona partita!');assert.equal(sent.ok,true);
+ let received=live.poll(b.token,0,0);
+ assert.equal(received.chat.length,1);assert.equal(received.chat[0].text,'Buona partita!');
+ assert.equal(live.poll(b.token,received.chatSeq,0).chat.length,0);
+ assert.throws(()=>live.signal(a.token,1,'offer','{}'),/Entrambi devono attivare/);
+ live.voice(a.token,true);live.voice(b.token,true);
+ assert.deepEqual(live.poll(b.token,0,0).voiceSeats,[0,1]);
+ live.signal(a.token,1,'offer',JSON.stringify({type:'offer',sdp:'v=0'}));
+ received=live.poll(b.token,0,0);
+ assert.equal(received.signals[0].type,'offer');
+ assert.equal(live.poll(a.token,0,0).signals.length,0);
+ live.signal(b.token,0,'answer',JSON.stringify({type:'answer',sdp:'v=0'}));
+ assert.equal(live.poll(a.token,0,0).signals[0].type,'answer');
+ assert.throws(()=>live.signal(b.token,seats,'offer','{}'),/Destinatario voce/);
+ live.voice(a.token,false);
+ assert.deepEqual(live.poll(b.token,0,0).voiceSeats,[1]);
+ assert.throws(()=>live.signal(b.token,0,'candidate','{}'),/Entrambi devono attivare/);
+ const isolated=e.join({game,seats,name:'Other room',private:true});
+ assert.equal(live.poll(isolated.token,0,0).chat.length,0);
+ console.log('REALTIME CHAT+VOICE PASS',game,seats);
+}
+const x=e.join({game:'scopa',seats:2,name:'Rate limit',private:true});
+for(let i=0;i<3;i++)live.chat(x.token,'hello '+i);
+assert.throws(()=>live.chat(x.token,'overflow'),/Troppi messaggi/);
+const cfg=live.rtcConfig(x.token);assert.equal(cfg.ok,true);assert.ok(cfg.iceServers.length);
+console.log('All six games: authenticated realtime chat, signaling, isolation and rate limiting PASS');
