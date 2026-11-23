@@ -23,8 +23,8 @@ const isTeams = r => r.seats===4 && ['scopa','scopone','briscola','asso'].includ
 const teamFor = (r,seat)=>isTeams(r)?seat%2:seat;
 const labelFor = (r,i)=>isTeams(r)?`Squadra ${i+1}`:r.players[i]?.name||`Giocatore ${i+1}`;
 function log(r,s){r.log.unshift(s); if(r.log.length>8)r.log.length=8;}
-function newRoom(game,seats){const r={id:uid(),game,seats,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],scores:[],result:null,log:[],created:now(),updated:now()}; rooms.set(r.id,r); return r;}
-function addPlayer(r,name,bot){const p={token:bot?null:uid(),name:String(name||'Giocatore').trim().slice(0,19)||'Giocatore',bot:!!bot,hand:[],pile:[]};r.players.push(p);if(p.token)playerRoom.set(p.token,r.id);return p;}
+function newRoom(game,seats){const r={id:uid(),game,seats,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],friendRequests:new Set(),friendPairs:new Set(),scores:[],result:null,log:[],created:now(),updated:now()}; rooms.set(r.id,r); return r;}
+function addPlayer(r,name,bot){const p={token:bot?null:uid(),name:String(name||'Giocatore').trim().slice(0,19)||'Giocatore',bot:!!bot,avatarId:bot?r.players.length%12:0,photo:null,photoMode:'avatar',profileVersion:0,hand:[],pile:[]};r.players.push(p);if(p.token)playerRoom.set(p.token,r.id);return p;}
 function deal(r,count){for(let k=0;k<count;k++)for(let p of r.players)if(r.deck.length)p.hand.push(r.deck.pop());}
 function start(r){r.deck=shuffle(deck40());r.table=[];r.trick=[];r.turn=0;r.scopes=Array(r.seats).fill(0);r.lastCapture=null;r.stood=Array(r.seats).fill(false);r.scores=[];r.result=null;r.status='playing';r.log=[];for(const p of r.players){p.hand=[];p.pile=[];}
  if(r.game==='scopa'||r.game==='asso'||r.game==='ruba'){r.table=r.deck.splice(-4);deal(r,3);}
@@ -58,6 +58,53 @@ function join({game,seats,name,bot,invite,private: privateRoom}){
  return {token:me.token,roomId:r.id,code:r.code||null};
 }
 function auth(token){const r=rooms.get(playerRoom.get(String(token||'')));if(!r)throw new Error('Sessione scaduta o server riavviato. Torna alla lobby.');const seat=r.players.findIndex(p=>p.token===token);if(seat<0)throw new Error('Sessione non valida');r.updated=now();return {r,seat};}
+
+function validPhoto(photo){
+ if(photo===null||photo==='')return null;
+ if(typeof photo!=='string'||photo.length>95000)throw new Error('Foto troppo grande');
+ const m=/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/.exec(photo);
+ if(!m)throw new Error('Formato foto non valido: usa JPEG, PNG o WebP');
+ const bytes=typeof Buffer!=='undefined'?Buffer.from(m[2],'base64'):Uint8Array.from(atob(m[2]),c=>c.charCodeAt(0));
+ if(bytes.length>66000||bytes.length<128)throw new Error('Foto non valida: massimo 65 KB');
+ const jpg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
+ const png=[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
+ const webp=String.fromCharCode(...bytes.subarray(0,4))==='RIFF'&&String.fromCharCode(...bytes.subarray(8,12))==='WEBP';
+ if(!(m[1]==='jpeg'&&jpg||m[1]==='png'&&png||m[1]==='webp'&&webp))throw new Error('Foto non valida');
+ return 'data:image/'+m[1]+';base64,'+m[2];
+}
+function profile(token,data){
+ const {r,seat}=auth(token),p=r.players[seat];
+ if(!data||typeof data!=='object'||Array.isArray(data))throw new Error('Profilo non valido');
+ if(Object.prototype.hasOwnProperty.call(data,'avatarId')){const x=Number(data.avatarId);if(!Number.isInteger(x)||x<0||x>11)throw new Error('Avatar non valido');p.avatarId=x;}
+ if(Object.prototype.hasOwnProperty.call(data,'name')){const n=String(data.name).trim().replace(/[<>\r\n\t]/g,'').slice(0,19);if(!n)throw new Error('Nickname non valido');p.name=n;}
+ if(Object.prototype.hasOwnProperty.call(data,'photoMode')){if(!['avatar','public','room','friends'].includes(data.photoMode))throw new Error('Privacy foto non valida');p.photoMode=data.photoMode;}
+ if(Object.prototype.hasOwnProperty.call(data,'photo'))p.photo=validPhoto(data.photo);
+ p.profileVersion++;return state(token);
+}
+function friend(token,target,operation){
+ const {r,seat}=auth(token);target=Number(target);
+ if(!Number.isInteger(target)||target<0||target>=r.players.length||target===seat||r.players[target].bot)throw new Error('Giocatore non disponibile');
+ const key=[seat,target].sort((a,b)=>a-b).join(':');
+ if(operation==='request'){
+  if(!r.friendPairs.has(key)){if(r.friendRequests.has(target+':'+seat)){r.friendPairs.add(key);r.friendRequests.delete(target+':'+seat);r.friendRequests.delete(seat+':'+target);}else r.friendRequests.add(seat+':'+target);}
+ }else if(operation==='accept'){
+  if(!r.friendRequests.has(target+':'+seat))throw new Error('Nessuna richiesta di amicizia da accettare');
+  r.friendPairs.add(key);r.friendRequests.delete(target+':'+seat);r.friendRequests.delete(seat+':'+target);
+ }else if(operation==='remove'){r.friendPairs.delete(key);r.friendRequests.delete(target+':'+seat);r.friendRequests.delete(seat+':'+target);}else throw new Error('Operazione non supportata');
+ return state(token);
+}
+function friendStatus(r,viewer,target){
+ if(viewer===target)return 'self';const key=[viewer,target].sort((a,b)=>a-b).join(':');
+ if(r.friendPairs.has(key))return 'friend';
+ if(r.friendRequests.has(target+':'+viewer))return 'incoming';
+ if(r.friendRequests.has(viewer+':'+target))return 'outgoing';
+ return 'none';
+}
+function sharedPhoto(r,viewer,target){
+ const p=r.players[target];if(!p||!p.photo)return null;
+ if(viewer===target||p.photoMode==='public'||p.photoMode==='room'&&r.private||p.photoMode==='friends'&&friendStatus(r,viewer,target)==='friend')return p.photo;
+ return null;
+}
 function scopaChoices(r,card){if(r.game==='asso'&&card.v===1&&r.table.length)return [{type:'table',picks:r.table.map(c=>c.id),label:'Asso: prendi tutto'}];
  const equal=r.table.filter(c=>c.v===card.v);if(equal.length)return equal.map(c=>({type:'table',picks:[c.id],label:`Prendi ${cardText(c)}`}));
  const opts=[];function gen(pos,sum,arr){if(opts.length>=36||sum>card.v)return;if(sum===card.v&&arr.length){opts.push({type:'table',picks:[...arr],label:`Prendi ${arr.length} carte`});return;}
@@ -126,10 +173,10 @@ function botStep(r){let limit=300;while(r.status==='playing'&&r.players[r.turn]?
  }else{
  const card=p.hand[0];if(!card)break;const ch=getChoices(r,seat,card.id)[0];play(r,seat,{card:card.id,...ch});
  }}if(limit<=0)log(r,'Limite mosse automatiche raggiunto.');}
-function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
+function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
 function action(token,move){const {r,seat}=auth(token);play(r,seat,move);botStep(r);return state(token);}
 function opts(token,card){const {r,seat}=auth(token);botStep(r);return {options:getChoices(r,seat,card)};}
 function housekeeping(){let n=now();for(const r of rooms.values())if(n-r.updated>6*60*60*1000){rooms.delete(r.id);for(const p of r.players)if(p.token)playerRoom.delete(p.token);}}
 function leave(token){const {r,seat}=auth(token);if(r.status==='waiting'){const p=r.players.splice(seat,1)[0];if(p.token)playerRoom.delete(p.token);if(!r.players.length)rooms.delete(r.id);else log(r,`${p.name} ha abbandonato la sala.`);}return {ok:true};}
 function statusInfo(){const v=[...rooms.values()];return {ok:true,title:'Napoli Carte 3D',onlinePlayers:v.reduce((n,r)=>n+r.players.filter(p=>!p.bot).length,0),activeTables:v.filter(r=>r.status==='playing').length,waitingTables:v.filter(r=>r.status==='waiting').length,games:GAME_IDS};}
-if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};
+if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};
