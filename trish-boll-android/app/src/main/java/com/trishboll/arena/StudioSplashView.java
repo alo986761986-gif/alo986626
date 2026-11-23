@@ -42,7 +42,7 @@ public final class StudioSplashView extends View {
     private void finish() {
         if (done) return;
         done = true;
-        if (finished != null) finished.onFinished();
+        if (finished != null) post(new Runnable() { @Override public void run() { finished.onFinished(); } });
     }
     @Override protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
