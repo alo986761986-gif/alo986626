@@ -162,7 +162,7 @@ public final class GameView extends View implements GameEngine.Events {
                 }
                 serverUrl=endpoint;
                 onlineStatus="Connessione all'arena mondiale...";
-                onlineClient.connect(endpoint,nick,skin);
+                onlineClient.connect(endpoint,nick,skin,sensitivity);
                 invalidate();
             }
         });
