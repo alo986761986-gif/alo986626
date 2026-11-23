@@ -1,0 +1,24 @@
+name: Napoli Carte 3D - Import traditional public domain deck
+on:
+  workflow_dispatch:
+  push:
+    branches: [napoli-carte-3d-build]
+    paths:
+      - '.github/workflows/napoli-deck-source.yml'
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions: {contents: read}
+    steps:
+      - name: Download original complete Neapolitan 40-card deck
+        run: |
+          curl --fail --location --retry 4 --retry-delay 3 --connect-timeout 20 --max-time 150 \
+            'https://upload.wikimedia.org/wikipedia/commons/c/c4/Carte_napoletane_al_completo.jpg' -o napoletane-original.jpg
+          echo '86c87ccb01fc9f02cda01157a3cef73fc4ca1342  napoletane-original.jpg' | sha1sum -c -
+          file napoletane-original.jpg
+      - name: Upload source image for crop and offline embedding
+        uses: actions/upload-artifact@v4
+        with:
+          name: napoletane-public-domain-original
+          path: napoletane-original.jpg
+          retention-days: 5
