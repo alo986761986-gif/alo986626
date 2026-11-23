@@ -162,7 +162,7 @@ function read(c,chunk){
     if(!fin||!masked){end(c);return;}
     let len=b[1]&127,off=2;
     if(len===126){if(b.length<4)return;len=b.readUInt16BE(2);off=4;}
-    if(len===127){if(b.length<10)return;let n=b.readBigUInt64BE(2);
+    else if(len===127){if(b.length<10)return;let n=b.readBigUInt64BE(2);
       if(n>4096n){end(c);return;}len=Number(n);off=10;
     }
     if(len>4096){end(c);return;}
