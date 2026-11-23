@@ -1,0 +1,1 @@
+{"name":"trish-boll-online","version":"5.0.0","private":true,"description":"TRISH BOLL realtime authoritative multiplayer arena","engines":{"node":">=20"},"scripts":{"start":"node server.js","test":"node test_online.js"}}
