@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.join(__dirname,'..');
+const get=p=>fs.readFileSync(path.join(root,p),'utf8');
+const js=get('frontend/realtime.js'),css=get('frontend/realtime.css');
+const main=get('android/app/src/main/java/it/napolicarte/game/MainActivity.java');
+const manifest=get('android/app/src/main/AndroidManifest.xml');
+assert(js.includes("root.parentNode.insertBefore(host,root)"));
+assert(css.includes("position:relative!important")&&css.includes("inset:auto!important"));
+assert(js.includes("getUserMedia({audio:true,video:false})"));
+assert(js.includes("NotReadableError"));
+assert(manifest.includes("android.permission.MODIFY_AUDIO_SETTINGS"));
+assert(manifest.includes("android.permission.RECORD_AUDIO"));
+assert(main.includes("WebViewAssetLoader.AssetsPathHandler(this)"));
+assert(main.includes('web.loadUrl(BASE_URL+"index.html")'));
+assert(!main.includes("web.loadDataWithBaseURL"));
+assert(get('android/app/build.gradle').includes("androidx.webkit:webkit:1.10.0"));
+console.log('v2.4 layout/microphone/asset-loader regression tests PASS');

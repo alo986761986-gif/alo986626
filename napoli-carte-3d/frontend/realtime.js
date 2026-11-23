@@ -1,4 +1,4 @@
-/* Napoli Carte 3D 2.3 - text chat + WebRTC peer audio, all six card games */
+/* Napoli Carte 3D 2.4 - text chat + WebRTC peer audio, all six card games */
 (function(){'use strict';if(window.NC23_REALTIME_READY)return;window.NC23_REALTIME_READY=true;
 const oldGame=window.drawGame,oldLobby=window.drawLobby,oldLeave=window.lobby;
 let timer=null,busy=false,active='',room='',seat=-1,chatSeq=0,signalSeq=0,users=[],voiceSeats=[],mic=null,enabled=false,ice=[{urls:'stun:stun.l.google.com:19302'}],peers=new Map(),muted=new Set(),opened=false,unread=0;
@@ -14,7 +14,9 @@ function mount(){if(el('nc23-live'))return;
  '<div class="nc23-chat-panel" id="nc23-chat-panel" hidden><div class="nc23-head"><div><strong>💬 Chat della partita</strong><small>Solo i giocatori al tavolo</small></div><button type="button" id="nc23-chat-close" aria-label="Chiudi chat">×</button></div>'+
  '<div class="nc23-chat-list" id="nc23-chat-list" role="log" aria-live="polite"></div><form id="nc23-chat-form" class="nc23-chat-form"><input id="nc23-chat-input" type="text" maxlength="420" autocomplete="off" placeholder="Scrivi un messaggio…" aria-label="Messaggio" required><button type="submit">Invia</button></form>'+
  '<div class="nc23-help"><span id="nc23-voice-state">🎙️ Microfono spento</span><div id="nc23-peer-mutes"></div></div></div>';
- document.body.appendChild(host);
+ const root=document.getElementById('root');
+ if(root&&root.parentNode)root.parentNode.insertBefore(host,root);
+ else document.body.appendChild(host);
  el('nc23-toggle-chat').onclick=()=>toggle(!opened);
  el('nc23-chat-close').onclick=()=>toggle(false);
  el('nc23-toggle-mic').onclick=()=>enabled?disableMic():enableMic();
@@ -29,10 +31,29 @@ function removePeer(id){const x=peers.get(id);if(!x)return;peers.delete(id);try{
 function clean(){for(const id of [...peers.keys()])removePeer(id);if(mic){for(const track of mic.getTracks())track.stop();mic=null}enabled=false;voiceSeats=[];const b=el('nc23-toggle-mic');if(b){b.textContent='🎙️ Attiva microfono';b.setAttribute('aria-pressed','false');b.classList.remove('nc23-mic-on');b.classList.add('nc23-mic-off')}status('🎙️ Microfono spento')}
 async function disableMic(){if(!enabled)return;try{await api23('voice',{enabled:false})}catch(e){}clean()}
 async function enableMic(){if(!ok())return message('Entra prima in una partita online');if(!navigator.mediaDevices?.getUserMedia||typeof RTCPeerConnection!=='function')return message('Microfono/WebRTC non disponibile. Aggiorna Android System WebView.');const b=el('nc23-toggle-mic');b.disabled=true;try{
- mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false});
+ // Minimal microphone capture first: complex DSP constraints can break Android WebView.
+ let stream;
+ try{stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false})}
+ catch(first){
+  if(!['NotReadableError','TrackStartError','AbortError'].includes(first.name))throw first;
+  await new Promise(resolve=>setTimeout(resolve,400));
+  if(!ok())return;
+  stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+ }
+ mic=stream;
+ try{
+  const track=mic.getAudioTracks()[0];
+  if(track&&typeof track.applyConstraints==='function')
+   await track.applyConstraints({echoCancellation:true,noiseSuppression:true,autoGainControl:true});
+ }catch(e){console.info('Optional audio enhancements unavailable');}
  if(!ok()){clean();return}
  const cfg=await api23('rtc-config',{});ice=cfg.iceServers||ice;await api23('voice',{enabled:true});enabled=true;mic.getTracks().forEach(t=>t.addEventListener('ended',()=>{if(enabled)disableMic()}));b.textContent='🎙️ Microfono ON';b.setAttribute('aria-pressed','true');b.classList.add('nc23-mic-on');b.classList.remove('nc23-mic-off');status('🎙️ Microfono acceso · In attesa degli altri');await poll();
- }catch(e){clean();const reason=e.name==='NotAllowedError'?'Permesso microfono negato: abilitalo su Android':e.message||'Microfono non disponibile';status('⚠️ '+reason);message(reason)}finally{b.disabled=false}}
+ }catch(e){clean();const name=e&&e.name||'';
+ const reason=(name==='NotAllowedError'||name==='PermissionDeniedError')
+  ?'Microfono non autorizzato: attiva il permesso Microfono nelle impostazioni Android.'
+  :(['NotReadableError','TrackStartError','AbortError'].includes(name)||/Could not start audio/i.test(e.message||''))
+  ?'Il microfono non si avvia: chiudi altre app che lo usano, controlla il permesso e aggiorna Android System WebView.'
+  :(e.message||'Microfono non disponibile');status('⚠️ '+reason);message(reason)}finally{b.disabled=false}}
 function makePeer(id){if(!enabled||!mic)return null;let x=peers.get(id);if(x)return x;const pc=new RTCPeerConnection({iceServers:ice});const audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('playsinline','');audio.muted=muted.has(id);audio.className='nc23-remote-audio';document.body.appendChild(audio);x={pc,audio,candidates:[],offered:false};peers.set(id,x);for(const t of mic.getAudioTracks())pc.addTrack(t,mic);
  pc.onicecandidate=e=>{if(e.candidate)api23('signal',{to:id,type:'candidate',payload:JSON.stringify(e.candidate.toJSON?e.candidate.toJSON():e.candidate)}).catch(()=>{})};
  pc.ontrack=e=>{const stream=e.streams?.[0];if(stream)audio.srcObject=stream;else{const media=new MediaStream();media.addTrack(e.track);audio.srcObject=media}audio.play().catch(()=>status('🔊 Tocca Microfono per autorizzare la riproduzione'))};

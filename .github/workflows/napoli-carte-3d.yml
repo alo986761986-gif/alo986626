@@ -40,6 +40,9 @@ jobs:
       - name: Test live chat and WebRTC room privacy in six games
         working-directory: napoli-carte-3d
         run: node tests/realtime.test.js
+      - name: Validate non-overlapping controls and microphone compatibility
+        working-directory: napoli-carte-3d
+        run: node tests/ui-audio24.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py

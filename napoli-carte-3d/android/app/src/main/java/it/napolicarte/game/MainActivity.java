@@ -17,6 +17,9 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
+import android.webkit.WebResourceRequest;
+import androidx.webkit.WebViewAssetLoader;
 import androidx.core.content.FileProvider;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -24,7 +27,7 @@ import java.io.InputStream;
 
 public final class MainActivity extends Activity {
     private static final int PHOTO_REQUEST=2215;
-    private static final String BASE_URL="https://appassets.androidplatform.net/";
+    private static final String BASE_URL="https://appassets.androidplatform.net/assets/";
     private WebView web;
     private ValueCallback<Uri[]> pendingFiles;
     private Uri cameraUri;
@@ -40,7 +43,7 @@ public final class MainActivity extends Activity {
         }
     }
     private void openGame(){
-        try{web.loadDataWithBaseURL(BASE_URL,loadGame(),"text/html","UTF-8",BASE_URL);}
+        try{web.loadUrl(BASE_URL+"index.html");}
         catch(Exception e){new AlertDialog.Builder(this).setTitle("Errore gioco")
             .setMessage(e.getMessage()).setPositiveButton("RIPROVA",(d,w)->openGame())
             .setNegativeButton("ESCI",(d,w)->finish()).show();}
@@ -109,7 +112,13 @@ public final class MainActivity extends Activity {
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        final WebViewAssetLoader assetLoader=new WebViewAssetLoader.Builder()
+            .addPathHandler("/assets/",new WebViewAssetLoader.AssetsPathHandler(this))
+            .build();
         web.setWebViewClient(new WebViewClient(){
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest request){
+                return assetLoader.shouldInterceptRequest(request.getUrl());
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view,String url){
                 return !url.startsWith(BASE_URL);
             }
