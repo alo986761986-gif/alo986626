@@ -8,6 +8,14 @@ public class GameEngineSmokeTest {
     public void onGameOver(){deaths++;}
   }
   public static void main(String[] args){
+    check(Math.abs(GameEngine.growthScale(260)-1f)<.001f,"initial scale");
+    check(GameEngine.growthScale(900)>1.5f,"head and body must grow with score");
+    check(GameEngine.growthScale(2000)>GameEngine.growthScale(900),"growth must be monotonic");
+    check(GameEngine.growthScale(9000)<=2.501f,"growth cap");
+    check(GameEngine.bodyRadius(1500)>GameEngine.bodyRadius(260),"body thickness growth");
+    check(GameEngine.headRadius(1500)>GameEngine.headRadius(260),"head growth");
+    check(GameEngine.collisionRadius(1500,1500)>GameEngine.collisionRadius(260,260),"larger bodies need larger collision radius");
+
     for(int mode=0;mode<4;mode++) {
       Count listener=new Count();
       GameEngine engine=new GameEngine(listener);
