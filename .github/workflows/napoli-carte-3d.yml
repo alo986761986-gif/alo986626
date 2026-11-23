@@ -37,6 +37,9 @@ jobs:
       - name: Validate profile avatars, photo privacy and online friendships
         working-directory: napoli-carte-3d
         run: node tests/profile.test.js
+      - name: Test live chat and WebRTC room privacy in six games
+        working-directory: napoli-carte-3d
+        run: node tests/realtime.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py
