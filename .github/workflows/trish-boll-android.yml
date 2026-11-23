@@ -2,6 +2,13 @@ name: TRISH BOLL Android build and launch test
 on:
   push:
     branches: [trish-boll-v4-native-premium]
+    paths:
+      - 'trish-boll-android/**'
+      - '.github/workflows/trish-boll-android.yml'
+  workflow_dispatch:
+concurrency:
+  group: trish-boll-v5-android
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
