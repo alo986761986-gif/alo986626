@@ -150,7 +150,7 @@ public final class OnlineClient {
             join.put("t","join");join.put("name",playerName);join.put("skin",skin);
             sendFrame(1,join.toString().getBytes(StandardCharsets.UTF_8));
             long inputAt=0,pingAt=System.currentTimeMillis();
-            current.setSoTimeout(110);
+            WebSocketFrameReader reader=new WebSocketFrameReader(in,current);
             while(active && token==connectionId && socket==current){
                 long now=System.currentTimeMillis();
                 if(joined && now-inputAt>=100){
@@ -163,34 +163,17 @@ public final class OnlineClient {
                     sendFrame(9,new byte[]{0x54,0x42});
                     pingAt=now;
                 }
-                try{
-                    int first=in.read();if(first<0)break;
-                    current.setSoTimeout(9000);
-                    int second=read(in);
-                    int op=first&15;
-                    if((first&0x80)==0)throw new IllegalStateException("Frame frammentato non supportato");
-                    if((second&0x80)!=0)throw new IllegalStateException("Frame server non valido");
-                    long length=second&127;
-                    if(length==126)length=(read(in)<<8)|read(in);
-                    else if(length==127){
-                        length=0;for(int i=0;i<8;i++)length=(length<<8)|read(in);
-                    }
-                    if(length>1100000||length<0)throw new IllegalStateException("Pacchetto troppo grande");
-                    byte[] body=new byte[(int)length];int offset=0;
-                    while(offset<body.length){
-                        int n=in.read(body,offset,body.length-offset);
-                        if(n<0)throw new IllegalStateException("Connessione chiusa durante il pacchetto");
-                        offset+=n;
-                    }
-                    if(op==8)break;
-                    if(op==9){sendFrame(10,body);continue;}
-                    if(op==10)continue;
-                    if(op==1)receive(new JSONObject(new String(body,StandardCharsets.UTF_8)));
-                    current.setSoTimeout(110);
-                }catch(SocketTimeoutException timeout){
-                    // Timing out in the middle of a frame indicates an incomplete message.
-                    if(current.getSoTimeout()!=110)throw timeout;
+                // Correct RFC6455 decoder: joins continuation frames instead of
+                // treating TCP chunks or legal fragmented messages as failures.
+                WebSocketFrameReader.Message frame=reader.next();
+                if(frame==null)continue;
+                if(frame.opcode==8)break; // Server closed the socket.
+                if(frame.opcode==9){sendFrame(10,frame.data);continue;} // Ping -> Pong.
+                if(frame.opcode==10)continue; // Pong/heartbeat.
+                if(frame.opcode==1){
+                    receive(new JSONObject(new String(frame.data,StandardCharsets.UTF_8)));
                 }
+                // Binary messages are ignored: this game uses text JSON only.
             }
             if(active && token==connectionId)notifyError("Connessione persa. Puoi rientrare o giocare offline.");
         }catch(Exception error){
@@ -199,9 +182,6 @@ public final class OnlineClient {
         }finally{
             if(current!=null)try{current.close();}catch(Exception ignored){}
         }
-    }
-    private int read(InputStream in)throws Exception {
-        int b=in.read();if(b<0)throw new IllegalStateException("Connessione interrotta");return b;
     }
     private void sendFrame(int type,byte[] payload)throws Exception{
         if(payload.length>65000)throw new IllegalStateException("Messaggio troppo lungo");
