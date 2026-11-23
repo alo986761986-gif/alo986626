@@ -24,10 +24,16 @@ import java.util.Random;
  * All interface elements are drawn in logical 1280x720 game-space.
  */
 public final class GameView extends View implements GameEngine.Events {
-    static final int MENU=0,GAME=1,PAUSE=2,RESULT=3,HELP=4,SKINS=5,SETTINGS=6;
+    static final int MENU=0,GAME=1,PAUSE=2,RESULT=3,HELP=4,SKINS=5,SETTINGS=6,ONLINE_SETUP=7;
     static final int BG=0xff071027,PANEL=0xff101d3d,CYAN=0xff73f4ff,PINK=0xffff6ad4,WHITE=0xfff7f8ff,MUTED=0xffa5b7d7,GOLD=0xffffd675;
     static final float SW=1280f,SH=720f;
     private final GameEngine game;
+    private final OnlineWorld onlineWorld;
+    private final OnlineClient onlineClient;
+    private final Context context;
+    private boolean onlineMode=false;
+    private String serverUrl="",onlineStatus="Server non configurato";
+    private int playersOnline=0;
     private final SharedPreferences prefs;
     private final Paint p=new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF r=new RectF();
@@ -49,9 +55,38 @@ public final class GameView extends View implements GameEngine.Events {
 
     public GameView(Context context){
         super(context);
+        this.context=context;
         prefs=context.getSharedPreferences("trishboll_native_v4",Context.MODE_PRIVATE);
         game=new GameEngine(this);
+        onlineWorld=new OnlineWorld(game);
+        onlineClient=new OnlineClient(new OnlineClient.Listener(){
+            @Override public void onConnecting(){onlineStatus="Connessione al server...";invalidate();}
+            @Override public void onReady(){
+                onlineWorld.reset(onlineClient.playerId());
+                onlineMode=true;screen=GAME;prevTime=0;scoreAwarded=0;
+                cameraX=0;cameraY=0;cameraZoom=1;steer=0;boost=false;
+                onlineStatus="Connesso!";if(audio)sound.play(GameSound.START);invalidate();
+            }
+            @Override public void onWorld(org.json.JSONObject snapshot){
+                onlineWorld.apply(snapshot);
+                playersOnline=onlineClient.livePlayers();
+                invalidate();
+            }
+            @Override public void onFood(org.json.JSONArray data){
+                onlineWorld.applyFoods(data);invalidate();
+            }
+            @Override public void onDeath(int score){
+                if(game.player!=null)game.player.score=score;
+                screen=RESULT;boost=false;onlineClient.disconnect();
+                finishGame();invalidate();
+            }
+            @Override public void onDisconnect(String reason){
+                onlineMode=false;screen=ONLINE_SETUP;boost=false;
+                onlineStatus=reason;invalidate();
+            }
+        });
         sound=new GameSound(context);
+        serverUrl=prefs.getString("multiplayer_url","");
         mode=clampInt(prefs.getInt("mode",0),0,3);
         skin=clampInt(prefs.getInt("skin",0),0,7);
         coins=Math.max(0,prefs.getInt("coins",0));
@@ -70,19 +105,20 @@ public final class GameView extends View implements GameEngine.Events {
         initialized=true;
     }
     private static int clampInt(int x,int a,int b){return Math.max(a,Math.min(b,x));}
-    public void halt(){uiActive=false;removeCallbacks(redraw);sound.close();}
+    public void halt(){uiActive=false;onlineClient.disconnect();removeCallbacks(redraw);sound.close();}
     public void wake(){uiActive=true;prevTime=0;postInvalidateDelayed(40);}
     public void save(){
         prefs.edit().putInt("skin",skin).putInt("mode",mode).putInt("coins",coins).putInt("record",record)
             .putBoolean("audio",audio).putBoolean("vibration",vibration).putInt("quality",quality)
-            .putString("nickname",nick).apply();
+            .putString("nickname",nick).putString("multiplayer_url",serverUrl).apply();
     }
     public boolean goBack(){
         if(screen==GAME){screen=PAUSE;boost=false;return true;}
-        if(screen==PAUSE||screen==RESULT||screen==SETTINGS||screen==SKINS||screen==HELP){screen=MENU;return true;}
+        if(screen==PAUSE||screen==RESULT||screen==SETTINGS||screen==SKINS||screen==HELP||screen==ONLINE_SETUP){leaveOnline();screen=MENU;return true;}
         return false;
     }
     private void start(){
+        leaveOnline();
         boolean eco=quality==0||Runtime.getRuntime().maxMemory()<110L*1024L*1024L;
         game.reset(mode,skin,nick,eco);
         screen=GAME;scoreAwarded=0;prevTime=0;cameraX=0;cameraY=0;cameraZoom=1;
@@ -90,6 +126,42 @@ public final class GameView extends View implements GameEngine.Events {
         lastMode=modeName();notice="";
         if(audio)sound.play(GameSound.START);
         save();
+    }
+    private void leaveOnline(){
+        onlineClient.disconnect();
+        onlineMode=false;playersOnline=0;boost=false;
+    }
+    private void connectOnline(){
+        if(serverUrl==null||!serverUrl.trim().startsWith("wss://")){
+            onlineStatus="Inserisci prima un server sicuro wss://";
+            screen=ONLINE_SETUP;invalidate();return;
+        }
+        leaveOnline();
+        screen=ONLINE_SETUP;onlineStatus="Connessione in corso...";
+        onlineClient.connect(serverUrl.trim(),nick,skin);
+        invalidate();
+    }
+    private void editServer(){
+        final android.widget.EditText field=new android.widget.EditText(context);
+        field.setSingleLine(true);
+        field.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        field.setHint("wss://server.example.com/ws");
+        field.setText(serverUrl);
+        android.app.AlertDialog.Builder builder=new android.app.AlertDialog.Builder(context);
+        builder.setTitle("Server multiplayer TRISH BOLL");
+        builder.setMessage("Inserisci l'indirizzo wss:// del server pubblico.");
+        builder.setView(field);
+        builder.setPositiveButton("SALVA",new android.content.DialogInterface.OnClickListener(){
+            @Override public void onClick(android.content.DialogInterface d,int which){
+                String val=field.getText().toString().trim();
+                if(val.startsWith("https://"))val="wss://"+val.substring(8);
+                serverUrl=val;save();
+                onlineStatus=serverUrl.isEmpty()?"Server non configurato":"Pronto per connettersi";
+                invalidate();
+            }
+        });
+        builder.setNegativeButton("ANNULLA",null);
+        builder.show();
     }
     private String modeName(){return mode==0?"CLASSIC":mode==1?"TURBO":mode==2?"SURVIVAL":"TEAM";}
     @Override protected void onDraw(Canvas real){
@@ -105,7 +177,8 @@ public final class GameView extends View implements GameEngine.Events {
         prevTime=now; uiTime+=dt;
         try{
             if(screen==GAME){
-                game.update(dt,steer,boost);
+                if(onlineMode){onlineClient.input(steer,boost);game.time+=dt;}
+                else game.update(dt,steer,boost);
                 if(game.player!=null){
                     float lerp=Math.min(.13f,dt*6);
                     cameraX+=(game.player.x-cameraX)*lerp;
@@ -113,7 +186,7 @@ public final class GameView extends View implements GameEngine.Events {
                     float target=mode==1?.91f:Math.max(.61f,1.04f-game.player.len/650);
                     cameraZoom+=(target-cameraZoom)*Math.min(1,dt*3);
                 }
-                if(game.dead){screen=RESULT;finishGame();}
+                if(game.dead&&!onlineMode){screen=RESULT;finishGame();}
             }
             if(screen==GAME||screen==PAUSE||screen==RESULT){
                 drawArena(c);
@@ -126,6 +199,7 @@ public final class GameView extends View implements GameEngine.Events {
                 if(screen==HELP)drawHelp(c);
                 if(screen==SKINS)drawSkins(c);
                 if(screen==SETTINGS)drawSettings(c);
+                if(screen==ONLINE_SETUP)drawOnlineSetup(c);
             }
         }catch(Throwable error){
             android.util.Log.e("TRISH_BOLL_NATIVE","Renderer failed",error);
@@ -224,11 +298,11 @@ public final class GameView extends View implements GameEngine.Events {
                 p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);p.setColor(WHITE);c.drawCircle(x,460,19,p);p.setStyle(Paint.Style.FILL);
             }
         }
-        button(c,"GIOCA ORA",200,520,389,77,true);
-        button(c,"SKIN E PREMI",619,520,240,77,false);
+        button(c,"GIOCA OFFLINE",200,520,389,77,true);
+        button(c,"GIOCA ONLINE",619,520,240,77,false);
         button(c,"OPZIONI",870,520,215,77,false);
         text(c,"RECORD  "+record+"     MONETE  "+coins,202,628,17,GOLD,true);
-        text(c,"VERSIONE 4.0  •  MOTORE ANDROID NATIVO",707,628,14,MUTED,false);
+        text(c,"VERSIONE 5.0 • MULTIPLAYER",707,628,14,MUTED,false);
     }
     private void drawArena(Canvas c){
         c.drawColor(0xff071329);
@@ -290,7 +364,7 @@ public final class GameView extends View implements GameEngine.Events {
         String score=game.player==null?"0":Integer.toString((int)game.player.score);
         text(c,"PUNTEGGIO  "+score,33,70,17,WHITE,true);
         box(c,977,14,289,208,17,0xdf091834);
-        text(c,"CLASSIFICA",999,45,22,GOLD,true);
+        text(c,onlineMode?"ONLINE • "+playersOnline+" GIOCATORI":"CLASSIFICA",999,45,onlineMode?16:22,GOLD,true);
         ArrayList<GameEngine.Snake> list=game.leaderboard();
         for(int i=0;i<Math.min(5,list.size());i++){
             GameEngine.Snake s=list.get(i);
@@ -299,7 +373,7 @@ public final class GameView extends View implements GameEngine.Events {
             text(c,Integer.toString((int)s.score),1204,77+i*26,16,GOLD,false);
         }
         box(c,14,101,250,39,12,0xcf102143);
-        text(c,modeName()+"  •  "+((int)game.time)+"s",30,128,16,CYAN,true);
+        text(c,(onlineMode?"ONLINE":"OFFLINE "+modeName())+"  •  "+((int)game.time)+"s",30,128,16,CYAN,true);
         button(c,"PAUSA",17,646,165,58,false);
         circle(c,1185,584,78,0x99401a59);circle(c,1185,584,65,0xffa23e86);
         p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5);p.setColor(0xffffb8f5);
@@ -314,15 +388,16 @@ public final class GameView extends View implements GameEngine.Events {
         p.setColor(0xff587bb6);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(2);
         c.drawCircle(1186,318,65,p);p.setStyle(Paint.Style.FILL);
         if(game.player==null)return;
-        for(GameEngine.Snake b:game.bots)if(b.alive)circle(c,1186+b.x*64/GameEngine.WORLD,318+b.y*64/GameEngine.WORLD,3,GameEngine.COLORS[b.color%8]);
-        circle(c,1186+game.player.x*64/GameEngine.WORLD,318+game.player.y*64/GameEngine.WORLD,5,WHITE);
+        float radius=Math.max(1,game.arenaRadius);
+        for(GameEngine.Snake b:game.bots)if(b.alive)circle(c,1186+b.x*64/radius,318+b.y*64/radius,3,GameEngine.COLORS[b.color%8]);
+        circle(c,1186+game.player.x*64/radius,318+game.player.y*64/radius,5,WHITE);
     }
     private void overlay(Canvas c){box(c,0,0,SW,SH,0,0xd9050b1c);}
     private void drawPause(Canvas c){
         overlay(c);box(c,372,143,536,430,26,PANEL);
         border(c,372,143,536,430,26,0xff4f74ba,2);
         center(c,"PARTITA IN PAUSA",640,239,39,WHITE,true);
-        center(c,modeName()+" • "+(int)game.time+" secondi",640,290,20,MUTED,false);
+        center(c,(onlineMode?"ONLINE":modeName())+" • "+(int)game.time+" secondi",640,290,20,MUTED,false);
         button(c,"RIPRENDI",444,346,392,68,true);
         button(c,"TORNA AL MENU",444,439,392,64,false);
     }
@@ -374,6 +449,16 @@ public final class GameView extends View implements GameEngine.Events {
         text(c,"MONETE DISPONIBILI: "+coins,278,530,21,GOLD,true);
         button(c,"INDIETRO",395,563,490,69,true);
     }
+    private void drawOnlineSetup(Canvas c){
+        screenPanel(c,"MULTIPLAYER ONLINE");
+        center(c,"Gioca contro persone reali nella stessa arena",640,214,22,MUTED,false);
+        center(c,"SERVER: "+(serverUrl.isEmpty()?"NON CONFIGURATO":serverUrl.length()>51?serverUrl.substring(0,51)+"...":serverUrl),640,289,17,CYAN,false);
+        center(c,onlineStatus.length()>68?onlineStatus.substring(0,68):onlineStatus,640,333,19,GOLD,true);
+        button(c,"CONNETTITI",395,381,490,63,true);
+        button(c,"INDIRIZZO SERVER",395,462,490,63,false);
+        button(c,"GIOCA OFFLINE",395,545,490,63,false);
+        center(c,"Il multiplayer richiede un server wss:// pubblico attivo",640,645,16,MUTED,false);
+    }
     private void drawSettings(Canvas c){
         screenPanel(c,"IMPOSTAZIONI");
         text(c,"GRAFICA",292,216,20,MUTED,true);
@@ -404,16 +489,21 @@ public final class GameView extends View implements GameEngine.Events {
                 else{notice="Servono "+((i-2)*50)+" monete per sbloccare questa skin";}return;
             }
             if(hit(x,y,200,520,389,77)){start();return;}
-            if(hit(x,y,619,520,240,77)){screen=SKINS;playClick();return;}
+            if(hit(x,y,619,520,240,77)){screen=ONLINE_SETUP;onlineStatus=serverUrl.isEmpty()?"Server non configurato":"Pronto per connettersi";playClick();return;}
             if(hit(x,y,870,520,215,77)){screen=SETTINGS;playClick();return;}
+            if(hit(x,y,185,441,92,38)){screen=SKINS;return;}
         }else if(screen==GAME){
             if(hit(x,y,17,646,165,58)){screen=PAUSE;boost=false;playClick();return;}
         }else if(screen==PAUSE){
             if(hit(x,y,444,346,392,68)){screen=GAME;prevTime=0;playClick();return;}
-            if(hit(x,y,444,439,392,64)){screen=MENU;playClick();return;}
+            if(hit(x,y,444,439,392,64)){leaveOnline();screen=MENU;playClick();return;}
         }else if(screen==RESULT){
-            if(hit(x,y,431,430,418,65)){start();return;}
-            if(hit(x,y,431,524,418,59)){screen=MENU;playClick();return;}
+            if(hit(x,y,431,430,418,65)){if(onlineMode)connectOnline();else start();return;}
+            if(hit(x,y,431,524,418,59)){leaveOnline();screen=MENU;playClick();return;}
+        }else if(screen==ONLINE_SETUP){
+            if(hit(x,y,395,381,490,63)){connectOnline();return;}
+            if(hit(x,y,395,462,490,63)){editServer();return;}
+            if(hit(x,y,395,545,490,63)){start();return;}
         }else if(screen==SETTINGS){
             for(int i=0;i<3;i++)if(hit(x,y,279+i*244,240,219,75)){quality=i;playClick();save();return;}
             if(hit(x,y,293,372,330,64)){audio=!audio;save();playClick();return;}
