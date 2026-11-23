@@ -15,9 +15,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
+      - name: Download standalone Gradle 8.7
+        shell: bash
+        run: |
+          curl --retry 3 -fLsS https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle-8.7-bin.zip -d /tmp
+          /tmp/gradle-8.7/bin/gradle --version
       - name: Install Android SDK platform and build tools
         shell: bash
         run: |
@@ -34,7 +37,7 @@ jobs:
           test -s four-sports-game-src/android/app/src/main/assets/index.html
       - name: Compile Android APK
         working-directory: four-sports-game-src/android
-        run: gradle --no-daemon --stacktrace :app:assembleDebug
+        run: /tmp/gradle-8.7/bin/gradle --no-daemon --stacktrace :app:assembleDebug
       - name: Verify installable package, signature and entry point
         shell: bash
         run: |
