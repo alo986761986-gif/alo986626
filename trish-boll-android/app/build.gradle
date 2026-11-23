@@ -6,8 +6,8 @@ android {
         applicationId 'com.trishboll.arena'
         minSdk 21
         targetSdk 28
-        versionCode 11
-        versionName '5.5-controls-skins'
+        versionCode 12
+        versionName '5.6-grow-thicker'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
