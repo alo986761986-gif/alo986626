@@ -1,0 +1,48 @@
+name: TRISH BOLL 5.3 Premium Graphics Android APK
+on:
+  push:
+    branches: [trish-boll-v5-3-premium-graphics]
+    paths:
+      - 'trish-boll-android/**'
+      - '.github/workflows/trish-boll-5-3-graphics.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+          validate-wrappers: false
+      - name: Verify WebSocket fragment regression
+        working-directory: trish-boll-android
+        run: |
+          mkdir -p /tmp/trish-ws
+          javac -d /tmp/trish-ws app/src/main/java/com/trishboll/arena/WebSocketFrameReader.java tests/WebSocketFrameReaderTest.java
+          java -cp /tmp/trish-ws com.trishboll.arena.WebSocketFrameReaderTest
+      - name: Verify native gameplay
+        working-directory: trish-boll-android
+        run: |
+          mkdir -p /tmp/trish-game
+          javac -d /tmp/trish-game app/src/main/java/com/trishboll/arena/GameEngine.java tests/GameEngineSmokeTest.java
+          java -cp /tmp/trish-game com.trishboll.arena.GameEngineSmokeTest
+      - name: Compile premium graphical APK
+        working-directory: trish-boll-android
+        run: gradle --no-daemon :app:assembleDebug --stacktrace
+      - name: Verify APK integrity
+        run: |
+          test -s trish-boll-android/app/build/outputs/apk/debug/app-debug.apk
+          unzip -l trish-boll-android/app/build/outputs/apk/debug/app-debug.apk | grep classes.dex
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TRISH_BOLL_5_3_PREMIUM_GRAPHICS_ANDROID5_APK
+          path: trish-boll-android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
