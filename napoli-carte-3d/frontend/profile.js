@@ -177,6 +177,7 @@ function ensureModal(){
 function renderAvatarGrid(){var grid=document.getElementById('nc22-avatar-grid');if(!grid)return;var active=stageAvatar;grid.innerHTML=AVATARS.map(function(n,i){return '<button type="button" class="nc22-avatar-choice" aria-pressed="'+(active===i)+'" onclick="NC22_PICK_AVATAR('+i+')">'+avatarSvg(i)+'<small>'+ec(n)+'</small></button>'}).join('')}
 function renderPortrait(){var t=document.getElementById('nc22-portrait');if(t)t.innerHTML=face({avatarId:stageAvatar,photo:stagePhoto})}
 window.NC22_CLOSE_PROFILE=function(){if(!opened)return false;closeProfile();return true};
+window.NC22_CLOSE_PROFILE=function(){if(!opened)return false;closeProfile();return true};
 function closeProfile(){var box=document.getElementById('nc22-profile-panel');if(box){box.hidden=true;document.body.classList.remove('nc22-modal-open')}opened=false}
 window.NC22_OPEN_PROFILE=function(){ensureModal();opened=true;var p=current(),box=document.getElementById('nc22-profile-panel');box.hidden=false;document.body.classList.add('nc22-modal-open');stagePhoto=p.photo;stageAvatar=p.avatarId;document.getElementById('nc22-name').value=document.getElementById('nickname')?.value||p.name;var input=box.querySelector('input[value="'+p.photoMode+'"]');if(input)input.checked=true;document.getElementById('nc22-crop').hidden=true;pendingImage=null;renderAvatarGrid();renderPortrait();setTimeout(function(){document.getElementById('nc22-close').focus()},0)};
 window.NC22_PICK_AVATAR=function(id){stageAvatar=nId(id);renderAvatarGrid();renderPortrait()};
@@ -212,7 +213,7 @@ async function saveProfile(){
  var input=document.querySelector('input[name="nc22-visibility"]:checked');var privacy=input?input.value:'avatar';
  if(['avatar','public','room','friends'].indexOf(privacy)<0)privacy='avatar';
  if(!set('nc22_photo',stagePhoto))return message('Spazio di memoria insufficiente per salvare la foto');
- set('nc22_visibility',privacy);set('nc3d_name',name);set('nc22_avatar',stageAvatar);
+ set('nc22_visibility',privacy);set('nc3d_name',name);set('nc22_avatar',stageAvatar);set('nc22_avatar',stageAvatar);
  var nickname=document.getElementById('nickname');if(nickname)nickname.value=name;
  var wasGame=!!document.querySelector('.board');closeProfile();
  if(activeToken()){await syncProfile(true)}
