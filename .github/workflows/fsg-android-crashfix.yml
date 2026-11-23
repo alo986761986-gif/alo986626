@@ -1,57 +1,83 @@
-name: Four Sports Game Android 1.1 Crashfix
+name: Four Sports Game Android 1.1 Native APK
 on:
   push:
     branches: [four-sports-game-crashfix]
+    paths-ignore:
+      - 'downloads/**'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   android-apk:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Download standalone Gradle 8.7
-        shell: bash
-        run: |
-          curl --retry 3 -fLsS https://services.gradle.org/distributions/gradle-8.7-bin.zip -o /tmp/gradle-8.7-bin.zip
-          unzip -q /tmp/gradle-8.7-bin.zip -d /tmp
-          /tmp/gradle-8.7/bin/gradle --version
-      - name: Install Android SDK platform and build tools
+      - name: Install Android SDK platform/build tools
         shell: bash
         run: |
           export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
           SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | head -n 1)"
           test -x "$SDKMANAGER"
-          "$SDKMANAGER" --version
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --install "platforms;android-35" "build-tools;35.0.0"
-      - name: Restore isolated FOUR SPORTS GAME project
+      - name: Restore isolated game sources
         shell: bash
         run: |
           mkdir -p four-sports-game-src
           base64 -d fsg_source.b64 | tar -xJ -C four-sports-game-src
           test -s four-sports-game-src/android/app/src/main/java/com/foursportsgame/arena/MainActivity.java
-          test -s four-sports-game-src/android/app/src/main/assets/index.html
-      - name: Compile Android APK
-        working-directory: four-sports-game-src/android
-        run: /tmp/gradle-8.7/bin/gradle --no-daemon --stacktrace :app:assembleDebug
-      - name: Verify installable package, signature and entry point
+      - name: Build and sign APK directly with official Android tools
         shell: bash
         run: |
-          APK=four-sports-game-src/android/app/build/outputs/apk/debug/app-debug.apk
+          set -euo pipefail
+          ROOT="$PWD/four-sports-game-src/android/app"
+          OUT="$PWD/four-sports-build"
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          PLATFORM="$ANDROID_HOME/platforms/android-35/android.jar"
+          mkdir -p "$OUT/classes" "$OUT/dex" "$OUT/assets"
+          javac -source 8 -target 8 -Xlint:-options -bootclasspath "$PLATFORM" -d "$OUT/classes" "$ROOT/src/main/java/com/foursportsgame/arena/MainActivity.java"
+          "$BT/d8" --min-api 21 --lib "$PLATFORM" --output "$OUT/dex" "$OUT"/classes/com/foursportsgame/arena/*.class
+          test -s "$OUT/dex/classes.dex"
+          "$BT/aapt2" compile --dir "$ROOT/src/main/res" -o "$OUT/resources.zip"
+          "$BT/aapt2" link -o "$OUT/unsigned.apk" -I "$PLATFORM" --manifest "$ROOT/src/main/AndroidManifest.xml" --min-sdk-version 21 --target-sdk-version 28 --version-code 2 --version-name 1.1.0 "$OUT/resources.zip"
+          cp "$OUT/dex/classes.dex" "$OUT/"
+          cp "$ROOT"/src/main/assets/* "$OUT/assets/"
+          (cd "$OUT" && zip -0 -q unsigned.apk classes.dex && zip -0 -q unsigned.apk assets/*)
+          "$BT/zipalign" -f 4 "$OUT/unsigned.apk" "$OUT/aligned.apk"
+          keytool -genkeypair -alias foursportsgame -keyalg RSA -keysize 2048 -validity 3650 -keystore "$OUT/debug-release.jks" -storepass changeit -keypass changeit -dname "CN=FOUR SPORTS GAME,O=Four Sports Game,C=IT" -noprompt
+          "$BT/apksigner" sign --ks "$OUT/debug-release.jks" --ks-key-alias foursportsgame --ks-pass pass:changeit --key-pass pass:changeit --out "$OUT/FOUR_SPORTS_GAME_1_1_ANDROID.apk" "$OUT/aligned.apk"
+      - name: Verify APK, signature, manifest and assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=four-sports-build/FOUR_SPORTS_GAME_1_1_ANDROID.apk
+          BT="$ANDROID_HOME/build-tools/35.0.0"
           test -s "$APK"
           unzip -t "$APK" | tail -1
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E 'package:|launchable-activity:|sdkVersion:'
-      - name: Publish installable APK
+          unzip -l "$APK" | grep 'classes.dex'
+          unzip -l "$APK" | grep 'assets/index.html'
+          "$BT/apksigner" verify --verbose "$APK"
+          "$BT/aapt" dump badging "$APK" | grep -E 'package:|launchable-activity:|sdkVersion:'
+      - name: Upload signed APK build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: FOUR_SPORTS_GAME_v1_1_INSTALLABILE
-          path: four-sports-game-src/android/app/build/outputs/apk/debug/app-debug.apk
+          name: FOUR_SPORTS_GAME_1_1_ANDROID_APK
+          path: four-sports-build/FOUR_SPORTS_GAME_1_1_ANDROID.apk
           if-no-files-found: error
+      - name: Publish APK for direct download
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p downloads
+          cp four-sports-build/FOUR_SPORTS_GAME_1_1_ANDROID.apk downloads/FOUR_SPORTS_GAME_1_1_ANDROID.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/FOUR_SPORTS_GAME_1_1_ANDROID.apk
+          git commit -m "Publish installable FOUR SPORTS GAME 1.1 APK"
+          git push origin HEAD:four-sports-game-crashfix
