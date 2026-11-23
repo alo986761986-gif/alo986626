@@ -28,6 +28,12 @@ jobs:
       - name: Run rules engine tests
         working-directory: napoli-carte-3d
         run: node tests/engine.test.js
+      - name: Run online matchmaking engine tests
+        working-directory: napoli-carte-3d
+        run: node tests/online.test.js
+      - name: Generate embedded Android game with public server address
+        working-directory: napoli-carte-3d
+        run: python3 backend/build_android_assets.py
       - name: Build Android APK
         working-directory: napoli-carte-3d/android
         run: gradle --no-daemon assembleDebug
