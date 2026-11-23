@@ -19,6 +19,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+          validate-wrappers: false
       - name: Compile Android with preinstalled SDK
         run: gradle --no-daemon :app:assembleDebug --stacktrace
       - name: Verify APK is present
@@ -48,6 +49,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+          validate-wrappers: false
       - name: Compile app for emulator
         run: gradle --no-daemon :app:assembleDebug
       - uses: reactivecircus/android-emulator-runner@v2
