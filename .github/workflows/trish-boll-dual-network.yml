@@ -1,0 +1,65 @@
+name: TRISH BOLL Real Public Dual-Network Arena Test
+on:
+  push:
+    branches: [trish-boll-v5-5-controls-skins-online-qa]
+    paths:
+      - 'trish-boll-server/test_dual_network.js'
+      - '.github/workflows/trish-boll-dual-network.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  two-networks:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            role: A
+          - os: windows-latest
+            role: B
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Join shared global arena and observe other independently hosted player
+        working-directory: trish-boll-server
+        env:
+          CLIENT_ROLE: ${{ matrix.role }}
+        run: node test_dual_network.js
+      - name: Upload IP and world snapshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TRISH_NETWORK_${{ matrix.role }}
+          path: trish-boll-server/dual-*.json
+          if-no-files-found: ignore
+  verify:
+    needs: two-networks
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: TRISH_NETWORK_*
+          path: reports
+          merge-multiple: true
+      - name: Verify two different public IPs and identical game session
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json
+          files=glob.glob('reports/dual-*.json')
+          assert len(files)==2, f'Need two independent test machines: {files}'
+          r=[json.load(open(p)) for p in files]
+          print(r)
+          assert all(x['sharedWorld'] for x in r), 'Two clients did not see each other'
+          assert all(x['ip']!='unknown' for x in r), 'Cannot prove network separation'
+          assert r[0]['ip'] != r[1]['ip'], 'Both clients used same public IP'
+          assert set(x['role'] for x in r)=={'A','B'}
+          assert set(p['id'] for p in r[0]['players']) == set(p['id'] for p in r[1]['players']), 'Player IDs do not match'
+          print('TRISH_BOLL_TWO_DIFFERENT_PUBLIC_IPS_SHARED_WORLD_PASS')
+          PY
