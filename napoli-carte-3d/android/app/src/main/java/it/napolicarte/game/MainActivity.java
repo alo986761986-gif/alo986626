@@ -1,6 +1,10 @@
 package it.napolicarte.game;
 
 import android.app.Activity;
+import android.Manifest;
+import android.os.Build;
+import android.content.pm.PackageManager;
+import android.webkit.PermissionRequest;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
@@ -25,6 +29,8 @@ public final class MainActivity extends Activity {
     private ValueCallback<Uri[]> pendingFiles;
     private Uri cameraUri;
     private File cameraFile;
+    private static final int MIC_PERMISSION_REQUEST=2307;
+    private PermissionRequest pendingMicRequest;
     private String loadGame() throws Exception {
         try(InputStream in=getAssets().open("index.html")){
             ByteArrayOutputStream out=new ByteArrayOutputStream();
@@ -102,7 +108,7 @@ public final class MainActivity extends Activity {
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
-        settings.setMediaPlaybackRequiresUserGesture(true);
+        settings.setMediaPlaybackRequiresUserGesture(false);
         web.setWebViewClient(new WebViewClient(){
             @Override public boolean shouldOverrideUrlLoading(WebView view,String url){
                 return !url.startsWith(BASE_URL);
@@ -112,15 +118,43 @@ public final class MainActivity extends Activity {
             @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams params){
                 return openPhotoChooser(callback,params);
             }
+            @Override public void onPermissionRequest(final PermissionRequest request){
+                runOnUiThread(()->{
+                    if(request==null)return;
+                    Uri origin=request.getOrigin();
+                    if(origin==null||!"https".equals(origin.getScheme())||
+                       !"appassets.androidplatform.net".equals(origin.getHost())){request.deny();return;}
+                    String[] asked=request.getResources();
+                    if(asked==null||asked.length!=1||
+                       !PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(asked[0])){request.deny();return;}
+                    if(Build.VERSION.SDK_INT>=23&&checkSelfPermission(Manifest.permission.RECORD_AUDIO)!=PackageManager.PERMISSION_GRANTED){
+                        if(pendingMicRequest!=null)pendingMicRequest.deny();
+                        pendingMicRequest=request;
+                        requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},MIC_PERMISSION_REQUEST);
+                    }else request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+                });
+            }
+            @Override public void onPermissionRequestCanceled(final PermissionRequest request){
+                runOnUiThread(()->{if(pendingMicRequest==request)pendingMicRequest=null;});
+            }
         });
         setContentView(web);
         openGame();
     }
+    @Override public void onRequestPermissionsResult(int code,String[] permissions,int[] results){
+        super.onRequestPermissionsResult(code,permissions,results);
+        if(code!=MIC_PERMISSION_REQUEST)return;
+        PermissionRequest r=pendingMicRequest;pendingMicRequest=null;
+        if(r==null)return;
+        if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)
+            r.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
+        else r.deny();
+    }
     @Override public void onBackPressed(){
-        if(web!=null)web.evaluateJavascript("if(!(window.NC22_CLOSE_PROFILE&&NC22_CLOSE_PROFILE())&&typeof lobby==='function')lobby()",null);
+        if(web!=null)web.evaluateJavascript("if(!(window.NC23_CLOSE_CHAT&&NC23_CLOSE_CHAT())&&!(window.NC22_CLOSE_PROFILE&&NC22_CLOSE_PROFILE())&&typeof lobby==='function')lobby()",null);
         else finish();
     }
-    @Override public void onPause(){if(web!=null)web.onPause();super.onPause();}
+    @Override public void onPause(){if(web!=null){web.evaluateJavascript("window.NC23_DISABLE_VOICE&&NC23_DISABLE_VOICE()",null);web.onPause();}super.onPause();}
     @Override public void onResume(){super.onResume();if(web!=null)web.onResume();}
-    @Override protected void onDestroy(){clearPending();if(web!=null){web.loadUrl("about:blank");web.destroy();web=null;}super.onDestroy();}
+    @Override protected void onDestroy(){clearPending();if(pendingMicRequest!=null){pendingMicRequest.deny();pendingMicRequest=null;}if(web!=null){web.loadUrl("about:blank");web.destroy();web=null;}super.onDestroy();}
 }
