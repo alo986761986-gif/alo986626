@@ -6,8 +6,8 @@ android {
         applicationId 'com.trishboll.arena'
         minSdk 21
         targetSdk 28
-        versionCode 9
-        versionName '5.3-premium-graphics'
+        versionCode 10
+        versionName '5.4-games-studios-intro'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
