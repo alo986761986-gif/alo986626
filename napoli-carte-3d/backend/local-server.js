@@ -18,6 +18,7 @@ http.createServer(async(req,res)=>{
     else if(req.url==='/api/state')data=e.state(x.token);
     else if(req.url==='/api/choices')data=e.opts(x.token,x.card);
     else if(req.url==='/api/play')data=e.action(x.token,x.move||{});
+    else if(req.url==='/api/leave')data=e.leave(x.token);
     else throw Error('Endpoint non trovato');
     res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(data));
   }catch(err){res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:err.message}));}

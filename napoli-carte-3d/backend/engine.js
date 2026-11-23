@@ -33,17 +33,29 @@ function start(r){r.deck=shuffle(deck40());r.table=[];r.trick=[];r.turn=0;r.scop
  else if(r.game==='sette')deal(r,1);
  log(r,`Inizia ${RULES[r.game].title}. Tocca a ${r.players[0].name}.`);
 }
-function join({game,seats,name,bot}){
+function join({game,seats,name,bot,invite,private: privateRoom}){
+ name=String(name||'Giocatore').replace(/[<>]/g,'').slice(0,19);
+ const code=String(invite||'').trim().toUpperCase();
+ let r;
+ if(code){
+   if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('Il codice invito deve avere 6 caratteri');
+   r=[...rooms.values()].find(v=>v.code===code&&v.status==='waiting'&&v.players.length<v.seats);
+   if(!r)throw new Error('Nessun tavolo in attesa con questo codice');
+   game=r.game;seats=r.seats;bot=false;
+ }
  if(!GAME_IDS.includes(game))throw new Error('Gioco non valido');
  seats=Number(seats);if(!RULES[game].seats.includes(seats))throw new Error('Numero di giocatori non supportato');
- name=String(name||'Giocatore').replace(/[<>]/g,'').slice(0,19);
- let r;
  if(bot){r=newRoom(game,seats); const me=addPlayer(r,name,false);for(let i=1;i<seats;i++)addPlayer(r,`CPU ${i}`,true);start(r); return {token:me.token,roomId:r.id};}
- r=[...rooms.values()].find(v=>v.status==='waiting'&&v.game===game&&v.seats===seats&&v.players.length<seats&&now()-v.created<3*60*60*1000);
+ if(!r && privateRoom){
+   r=newRoom(game,seats);r.private=true;
+   for(let i=0;i<20;i++){const code=crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();if(![...rooms.values()].some(v=>v!==r&&v.code===code)){r.code=code;break;}}
+   if(!r.code)throw new Error('Impossibile creare il codice stanza');
+ }
+ if(!r)r=[...rooms.values()].find(v=>v.status==='waiting'&&!v.private&&v.game===game&&v.seats===seats&&v.players.length<seats&&now()-v.created<3*60*60*1000);
  if(!r)r=newRoom(game,seats);
- const me=addPlayer(r,name,false);log(r,`${me.name} è entrato. ${r.players.length}/${seats} giocatori.`);
- if(r.players.length===seats)start(r);
- return {token:me.token,roomId:r.id};
+ const me=addPlayer(r,name,false);log(r,`${me.name} è entrato. ${r.players.length}/${r.seats} giocatori.`);
+ if(r.players.length===r.seats)start(r);
+ return {token:me.token,roomId:r.id,code:r.code||null};
 }
 function auth(token){const r=rooms.get(playerRoom.get(String(token||'')));if(!r)throw new Error('Sessione scaduta o server riavviato. Torna alla lobby.');const seat=r.players.findIndex(p=>p.token===token);if(seat<0)throw new Error('Sessione non valida');r.updated=now();return {r,seat};}
 function scopaChoices(r,card){if(r.game==='asso'&&card.v===1&&r.table.length)return [{type:'table',picks:r.table.map(c=>c.id),label:'Asso: prendi tutto'}];
@@ -114,9 +126,10 @@ function botStep(r){let limit=300;while(r.status==='playing'&&r.players[r.turn]?
  }else{
  const card=p.hand[0];if(!card)break;const ch=getChoices(r,seat,card.id)[0];play(r,seat,{card:card.id,...ch});
  }}if(limit<=0)log(r,'Limite mosse automatiche raggiunto.');}
-function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
+function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
 function action(token,move){const {r,seat}=auth(token);play(r,seat,move);botStep(r);return state(token);}
 function opts(token,card){const {r,seat}=auth(token);botStep(r);return {options:getChoices(r,seat,card)};}
 function housekeeping(){let n=now();for(const r of rooms.values())if(n-r.updated>6*60*60*1000){rooms.delete(r.id);for(const p of r.players)if(p.token)playerRoom.delete(p.token);}}
+function leave(token){const {r,seat}=auth(token);if(r.status==='waiting'){const p=r.players.splice(seat,1)[0];if(p.token)playerRoom.delete(p.token);if(!r.players.length)rooms.delete(r.id);else log(r,`${p.name} ha abbandonato la sala.`);}return {ok:true};}
 function statusInfo(){const v=[...rooms.values()];return {ok:true,title:'Napoli Carte 3D',onlinePlayers:v.reduce((n,r)=>n+r.players.filter(p=>!p.bot).length,0),activeTables:v.filter(r=>r.status==='playing').length,waitingTables:v.filter(r=>r.status==='waiting').length,games:GAME_IDS};}
-if (typeof module !== 'undefined') module.exports={join,state,action,opts,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};
+if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,statusInfo,RULES,rooms,deck40,getChoices,finishScopa,cardText};
