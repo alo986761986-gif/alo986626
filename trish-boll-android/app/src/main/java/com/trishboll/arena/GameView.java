@@ -113,7 +113,7 @@ public final class GameView extends View implements GameEngine.Events {
             .putString("nickname",nick).putString("multiplayer_url",serverUrl).apply();
     }
     public boolean goBack(){
-        if(screen==GAME){screen=PAUSE;boost=false;return true;}
+        if(screen==GAME){if(onlineMode){leaveOnline();screen=MENU;}else{screen=PAUSE;boost=false;}return true;}
         if(screen==PAUSE||screen==RESULT||screen==SETTINGS||screen==SKINS||screen==HELP||screen==ONLINE_SETUP){leaveOnline();screen=MENU;return true;}
         return false;
     }
@@ -140,6 +140,24 @@ public final class GameView extends View implements GameEngine.Events {
         screen=ONLINE_SETUP;onlineStatus="Connessione in corso...";
         onlineClient.connect(serverUrl.trim(),nick,skin);
         invalidate();
+    }
+    private void editNickname(){
+        final android.widget.EditText field=new android.widget.EditText(context);
+        field.setSingleLine(true);
+        field.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(14)});
+        field.setText(nick);
+        new android.app.AlertDialog.Builder(context)
+            .setTitle("Il tuo nome nell'arena")
+            .setView(field)
+            .setPositiveButton("SALVA",new android.content.DialogInterface.OnClickListener(){
+                @Override public void onClick(android.content.DialogInterface dialog,int which){
+                    nick=field.getText().toString().trim().replaceAll("[<>]","");
+                    if(nick.isEmpty())nick="PLAYER";
+                    save();invalidate();
+                }
+            })
+            .setNegativeButton("ANNULLA",null)
+            .show();
     }
     private void editServer(){
         final android.widget.EditText field=new android.widget.EditText(context);
@@ -291,6 +309,7 @@ public final class GameView extends View implements GameEngine.Events {
             center(c,names[i],x+88,y+28,18,WHITE,true);
         }
         text(c,"SKIN",197,467,18,MUTED,true);
+        text(c,"NOME: "+nick,742,465,19,CYAN,true);
         for(int i=0;i<8;i++){
             float x=272+i*41;
             circle(c,x,460,17,0xff07162f);circle(c,x,460,i==skin?15:12,GameEngine.COLORS[i]);
@@ -374,7 +393,7 @@ public final class GameView extends View implements GameEngine.Events {
         }
         box(c,14,101,250,39,12,0xcf102143);
         text(c,(onlineMode?"ONLINE":"OFFLINE "+modeName())+"  •  "+((int)game.time)+"s",30,128,16,CYAN,true);
-        button(c,"PAUSA",17,646,165,58,false);
+        button(c,onlineMode?"ESCI":"PAUSA",17,646,165,58,false);
         circle(c,1185,584,78,0x99401a59);circle(c,1185,584,65,0xffa23e86);
         p.reset();p.setAntiAlias(true);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(5);p.setColor(0xffffb8f5);
         c.drawCircle(1185,584,65,p);p.setStyle(Paint.Style.FILL);
@@ -492,8 +511,9 @@ public final class GameView extends View implements GameEngine.Events {
             if(hit(x,y,619,520,240,77)){screen=ONLINE_SETUP;onlineStatus=serverUrl.isEmpty()?"Server non configurato":"Pronto per connettersi";playClick();return;}
             if(hit(x,y,870,520,215,77)){screen=SETTINGS;playClick();return;}
             if(hit(x,y,185,441,92,38)){screen=SKINS;return;}
+            if(hit(x,y,690,431,330,55)){editNickname();return;}
         }else if(screen==GAME){
-            if(hit(x,y,17,646,165,58)){screen=PAUSE;boost=false;playClick();return;}
+            if(hit(x,y,17,646,165,58)){if(onlineMode){leaveOnline();screen=MENU;}else{screen=PAUSE;boost=false;}playClick();return;}
         }else if(screen==PAUSE){
             if(hit(x,y,444,346,392,68)){screen=GAME;prevTime=0;playClick();return;}
             if(hit(x,y,444,439,392,64)){leaveOnline();screen=MENU;playClick();return;}
