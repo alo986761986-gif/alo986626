@@ -20,6 +20,11 @@ jobs:
         with:
           gradle-version: '8.9'
           validate-wrappers: false
+      - name: Test game simulation, AI and bounded memory
+        run: |
+          mkdir -p /tmp/trish-engine-test
+          javac -d /tmp/trish-engine-test app/src/main/java/com/trishboll/arena/GameEngine.java tests/GameEngineSmokeTest.java
+          java -cp /tmp/trish-engine-test com.trishboll.arena.GameEngineSmokeTest
       - name: Compile Android with preinstalled SDK
         run: gradle --no-daemon :app:assembleDebug --stacktrace
       - name: Verify APK is present
@@ -30,6 +35,12 @@ jobs:
         with:
           name: TRISH_BOLL_v4_NATIVE_PREMIUM_APK
           path: trish-boll-android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Upload source project
+        uses: actions/upload-artifact@v4
+        with:
+          name: TRISH_BOLL_v4_NATIVE_PROJECT
+          path: trish-boll-android/
           if-no-files-found: error
   launch-test:
     needs: build
