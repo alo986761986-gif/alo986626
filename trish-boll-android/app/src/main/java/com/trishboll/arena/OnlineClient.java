@@ -43,6 +43,7 @@ public final class OnlineClient {
     private final SecureRandom random=new SecureRandom();
     private final Listener listener;
     private volatile boolean active=false, joined=false;
+    private volatile long connectionId=0;
     private volatile float angle=0f;
     private volatile boolean boosting=false;
     private volatile Socket socket;
@@ -65,14 +66,15 @@ public final class OnlineClient {
         disconnect();
         url=endpoint;playerName=nick;skin=Math.max(0,Math.min(7,color));
         active=true;joined=false;playerId="";livePlayers=0;
+        final long thisConnection=++connectionId;
         main.post(new Runnable(){public void run(){listener.onConnecting();}});
-        thread=new Thread(new Runnable(){public void run(){runConnection();}},"TrishOnlineWebSocket");
+        thread=new Thread(new Runnable(){public void run(){runConnection(thisConnection);}},"TrishOnlineWebSocket");
         thread.setDaemon(true);
         thread.start();
     }
     public synchronized void disconnect(){
-        active=false;joined=false;playerId="";
-        Socket old=socket;socket=null;
+        active=false;joined=false;playerId="";connectionId++;
+        Socket old=socket;socket=null;output=null;
         if(old!=null)try{old.close();}catch(Exception ignored){}
         // The old thread exits without notifying the user because active is false.
     }
@@ -81,7 +83,7 @@ public final class OnlineClient {
         active=false;joined=false;playerId="";
         main.post(new Runnable(){public void run(){listener.onDisconnect(message);}});
     }
-    private void runConnection(){
+    private void runConnection(long token){
         Socket current=null;
         try {
             URI address=new URI(url.trim());
@@ -101,6 +103,9 @@ public final class OnlineClient {
             tcp.setSoTimeout(15000);
             SSLSocket ssl=(SSLSocket)SSLSocketFactory.getDefault()
                 .createSocket(tcp,host,port,true);
+            javax.net.ssl.SSLParameters params=ssl.getSSLParameters();
+            params.setEndpointIdentificationAlgorithm("HTTPS");
+            ssl.setSSLParameters(params);
             ssl.startHandshake();
             current=ssl;socket=ssl;
             InputStream in=new BufferedInputStream(ssl.getInputStream());
@@ -138,7 +143,7 @@ public final class OnlineClient {
             sendFrame(1,join.toString().getBytes(StandardCharsets.UTF_8));
             long inputAt=0,pingAt=System.currentTimeMillis();
             current.setSoTimeout(110);
-            while(active && socket==current){
+            while(active && token==connectionId && socket==current){
                 long now=System.currentTimeMillis();
                 if(joined && now-inputAt>=100){
                     JSONObject input=new JSONObject();
@@ -152,6 +157,7 @@ public final class OnlineClient {
                 }
                 try{
                     int first=in.read();if(first<0)break;
+                    current.setSoTimeout(9000);
                     int second=read(in);
                     int op=first&15;
                     if((first&0x80)==0)throw new IllegalStateException("Frame frammentato non supportato");
@@ -172,14 +178,16 @@ public final class OnlineClient {
                     if(op==9){sendFrame(10,body);continue;}
                     if(op==10)continue;
                     if(op==1)receive(new JSONObject(new String(body,StandardCharsets.UTF_8)));
+                    current.setSoTimeout(110);
                 }catch(SocketTimeoutException timeout){
-                    // Idle sockets are expected. Keep the thread alive until disconnection.
+                    // Timing out in the middle of a frame indicates an incomplete message.
+                    if(current.getSoTimeout()!=110)throw timeout;
                 }
             }
-            if(active)notifyError("Connessione persa. Puoi rientrare o giocare offline.");
+            if(active && token==connectionId)notifyError("Connessione persa. Puoi rientrare o giocare offline.");
         }catch(Exception error){
             Log.w(TAG,"Network connection failed",error);
-            if(active)notifyError("Connessione online non riuscita: "+error.getMessage());
+            if(active && token==connectionId)notifyError("Connessione online non riuscita: "+error.getMessage());
         }finally{
             if(current!=null)try{current.close();}catch(Exception ignored){}
         }
