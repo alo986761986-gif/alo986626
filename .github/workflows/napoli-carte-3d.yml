@@ -46,6 +46,13 @@ jobs:
       - name: Verify legal multi-card capture choices
         working-directory: napoli-carte-3d
         run: node tests/capture27.test.js
+      - name: Validate server stability and reconnect safety
+        working-directory: napoli-carte-3d
+        run: |
+          node --check backend/local-server.js
+          node --check backend/audio-relay.js
+          node tests/stability.test.js
+          node tests/stability-http.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py
