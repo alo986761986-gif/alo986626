@@ -68,7 +68,7 @@ const server=http.createServer(async(req,res)=>{
     else if(req.url==='/api/signal')data=comm.signal(x.token,x.to,x.type,x.payload);
     else if(req.url==='/api/rtc-config')data=comm.rtcConfig(x.token);
     else throw Error('Endpoint non trovato');
-    if(['/api/join','/api/play','/api/leave','/api/profile','/api/friend','/api/state'].includes(req.url)){
+    if(['/api/join','/api/play','/api/leave','/api/profile','/api/friend'].includes(req.url)){
       persistence.changed();
       if(['/api/join','/api/play','/api/leave'].includes(req.url))await persistence.flush();
     }
