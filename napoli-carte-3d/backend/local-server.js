@@ -1,5 +1,6 @@
 // Local test adapter, Node.js 22. Run: node backend/local-server.js
 const http = require('node:http');
+const {Buffer}=require('node:buffer');
 const fs = require('node:fs');
 const path = require('node:path');
 const e = require('./engine.js');
@@ -19,18 +20,37 @@ const capture27Css=fs.readFileSync(path.join(__dirname,'../frontend/capture27.cs
 const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
  .replace('</head>','<style id="nc22-profile-css">'+profileCss+'</style><style id="nc23-realtime-css">'+realtimeCss+'</style><style id="nc25-voice-css">'+voice25Css+'</style><style id="nc25-drag-css">'+drag25Css+'</style><style id="nc27-capture-css">'+capture27Css+'</style></head>')
  .replace('</body>','<script id="nc22-profile-js">'+profileJs+'</script><script id="nc23-realtime-js">'+realtimeJs+'</script><script id="nc26-audio-js">'+voice26Js+'</script><script id="nc25-voice-js">'+voice25Js+'</script><script id="nc25-drag-js">'+drag25Js+'</script><script id="nc27-capture-js">'+capture27Js+'</script></body>');
+const joinRate=new Map();
+let draining=false,cleanups=0;
+function limitJoin(req){
+ const key=req.socket.remoteAddress||'unknown',n=Date.now();
+ const arr=(joinRate.get(key)||[]).filter(t=>n-t<60000);
+ if(arr.length>=80)throw Error('Troppe richieste di ingresso, riprova tra poco');
+ arr.push(n);joinRate.set(key,arr);
+}
+const sweeper=setInterval(()=>{const result=e.housekeeping();cleanups+=result.removed;
+ const cutoff=Date.now()-60000;for(const [key,arr] of joinRate)if(!arr.some(t=>t>cutoff))joinRate.delete(key);
+},60000);sweeper.unref();
 const server=http.createServer(async(req,res)=>{
+  if(draining){res.writeHead(503,{'content-type':'application/json','Retry-After':'5'});res.end(JSON.stringify({error:'Server in aggiornamento, riconnessione in corso'}));return;}
   // Browser asset in Android uses the opaque file:// origin. Public API accepts CORS.
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('Referrer-Policy','no-referrer');
+  res.setHeader('Cache-Control','no-store');
   res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','content-type');
   if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}
+  if(!['GET','POST'].includes(req.method)){res.writeHead(405,{'Allow':'GET, POST, OPTIONS'});res.end();return;}
   if(req.method==='GET'&&(req.url==='/'||req.url==='/index.html')){res.writeHead(200,{'content-type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return;}
-  if(req.method==='GET'&&req.url==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({...e.statusInfo(),audioRelay:'wss-pcm16',audioRelayStatus:audioRelay.stats()}));return;}
-  try{let body='';for await(const chunk of req){body+=chunk;if(body.length>120000)throw Error('Richiesta troppo grande');}
+  if(req.method==='GET'&&req.url==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({...e.statusInfo(),audioRelay:'wss-pcm16',audioRelayStatus:audioRelay.stats(),uptimeSeconds:Math.floor(process.uptime()),cleanupCount:cleanups,serverVersion:'2.8'}));return;}
+  if(req.method!=='POST'||!req.url.startsWith('/api/')){res.writeHead(404);res.end();return;}
+  try{
+    let body='',bodyBytes=0;
+    if(Number(req.headers['content-length']||0)>120000)throw Error('Richiesta troppo grande');
+    for await(const chunk of req){bodyBytes+=chunk.length;if(bodyBytes>120000)throw Error('Richiesta troppo grande');body+=chunk.toString('utf8');}
     let x=body?JSON.parse(body):{};let data;
-    if(req.url==='/api/join')data=e.join(x);
+    if(req.url==='/api/join'){limitJoin(req);data=e.join(x);}
     else if(req.url==='/api/state')data=e.state(x.token);
     else if(req.url==='/api/choices')data=e.opts(x.token,x.card);
     else if(req.url==='/api/play')data=e.action(x.token,x.move||{});
@@ -44,7 +64,14 @@ const server=http.createServer(async(req,res)=>{
     else if(req.url==='/api/rtc-config')data=comm.rtcConfig(x.token);
     else throw Error('Endpoint non trovato');
     res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(data));
-  }catch(err){res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:err.message}));}
+  }catch(err){if(!res.writableEnded){const status=/troppo grande/i.test(err.message)?413:/Troppe richieste/i.test(err.message)?429:400;res.writeHead(status,{'content-type':'application/json'});res.end(JSON.stringify({error:err.message}));}}
 });
 audioRelay.attach(server);
-server.listen(process.env.PORT||3000,()=>console.log('Napoli Carte 3D at http://localhost:'+(process.env.PORT||3000)));
+server.requestTimeout=15000;server.headersTimeout=16000;server.keepAliveTimeout=5000;
+server.listen(process.env.PORT||3000,'0.0.0.0',()=>console.log('Napoli Carte 3D at http://0.0.0.0:'+(process.env.PORT||3000)));
+function shutdown(){
+ if(draining)return;draining=true;clearInterval(sweeper);
+ const kill=setTimeout(()=>process.exit(0),8500);kill.unref();
+ server.close(()=>process.exit(0));
+}
+process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
