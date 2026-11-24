@@ -1,0 +1,15 @@
+/* Napoli Carte 3D v2.5 - discreet microphone control panel */
+.nc25-voice-tools{margin:11px 0 0;padding:11px 12px;border:1px solid #d8b57479;border-radius:12px;background:#071c1aaf;color:#f8e5bd}
+.nc25-mic-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.nc25-mic-head strong{font-size:13px}.nc25-mic-head span{font-size:10px;color:#b9dbcd}
+.nc25-meter{height:6px;width:100%;border-radius:9px;overflow:hidden;margin:10px 0;background:#24473f}.nc25-meter span{display:block;height:100%;width:0;background:#56c28b;transition:width .13s ease}
+.nc25-label{display:flex;align-items:center;justify-content:space-between;gap:9px;margin:10px 0 4px;font-size:11px;color:#f5ddad}.nc25-label output{font-weight:800;color:#ffe9be}
+.nc25-range{width:100%;accent-color:#d4b976;cursor:pointer;min-height:25px}.nc25-buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.nc25-buttons button{font-size:11px;font-weight:800;border:1px solid #e9be7f9f;border-radius:9px;color:#ffe9bf;background:#17463c;padding:10px 7px;min-height:43px;touch-action:manipulation}
+.nc25-buttons button[aria-pressed=true],.nc25-buttons button.nc25-ptt-holding{background:#986b32;color:#fffef3;border-color:#ffd990}
+.nc25-buttons button.nc25-ptt-enabled{touch-action:none}
+.nc25-audio-note{display:block;margin-top:10px;font-size:10px;color:#c9d4c9;line-height:1.5}
+@media(max-width:350px){.nc25-buttons{grid-template-columns:1fr}.nc25-buttons button{min-height:38px}}
+@media(prefers-reduced-motion:reduce){.nc25-meter span{transition:none}}
+
+.nc25-ptt-hold{width:100%;margin-top:9px;min-height:48px;border-radius:10px;background:#33704f!important;color:#fff!important;border:2px solid #ffdb90!important;font-weight:900;touch-action:none!important}
+.nc25-ptt-hold[hidden]{display:none!important}
