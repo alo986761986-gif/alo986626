@@ -1,0 +1,41 @@
+name: Napoli Carte - Stability Preflight
+on:
+  push:
+    branches: [napoli-server-stability-preflight]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks for all server endpoints
+        working-directory: napoli-carte-3d
+        run: |
+          node --check backend/engine.js
+          node --check backend/realtime.js
+          node --check backend/audio-relay.js
+          node --check backend/local-server.js
+      - name: Existing card games and multiplayer regressions
+        working-directory: napoli-carte-3d
+        run: |
+          node tests/engine.test.js
+          node tests/online.test.js
+          node tests/realtime.test.js
+          node tests/profile.test.js
+          node tests/capture27.test.js
+      - name: Server stability stress and reconnect tests
+        working-directory: napoli-carte-3d
+        run: |
+          node tests/stability.test.js
+          node tests/stability-http.test.js
+      - name: Offline Android asset compatibility
+        working-directory: napoli-carte-3d
+        run: |
+          python3 backend/build_android_assets.py
+          node tests/cards.test.js
