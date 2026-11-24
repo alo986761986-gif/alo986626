@@ -1,1 +1,12 @@
-{"private":true,"type":"commonjs","name":"napoli-carte-3d","version":"1.2.0"}
+{
+  "private": true,
+  "type": "commonjs",
+  "name": "napoli-carte-3d",
+  "version": "3.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
