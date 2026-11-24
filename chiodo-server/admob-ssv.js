@@ -1,6 +1,26 @@
 'use strict';
 const crypto=require('node:crypto');
-let cache=new Map(), expires=0;
+let cache=new Map(), expires=0, pool, init;
+async function db(){
+ if(!process.env.DATABASE_URL)throw Error('DATABASE_URL missing');
+ if(!pool){const {Pool}=require('pg');pool=new Pool({connectionString:process.env.DATABASE_URL,max:3,connectionTimeoutMillis:5000});pool.on('error',()=>{});}
+ if(!init)init=pool.query("CREATE TABLE IF NOT EXISTS nc_admob_rewards (transaction_id text PRIMARY KEY, firebase_uid text NOT NULL, amount integer NOT NULL CHECK(amount=350), received_at timestamptz NOT NULL DEFAULT now())").catch(e=>{init=null;throw e;});
+ await init;return pool;
+}
+async function firebaseUser(req){
+ const token=(req.headers.authorization||'').replace(/^Bearer /,'');
+ if(!token||token.length>8192)return null;
+ const url='https://identitytoolkit.googleapis.com/v1/accounts:lookup?key='+encodeURIComponent(process.env.FIREBASE_WEB_API_KEY||'');
+ if(!process.env.FIREBASE_WEB_API_KEY)throw Error('Firebase configuration missing');
+ const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken:token}),signal:AbortSignal.timeout(8000)});
+ if(!r.ok)return null;
+ const j=await r.json();return j.users?.[0]?.localId||null;
+}
+async function rewards(req,send){
+ if(req.method!=='GET')return send(405,{error:'method'});
+ try{const uid=await firebaseUser(req);if(!uid)return send(401,{error:'Authentication required'});const d=await db();const q=await d.query('SELECT transaction_id,amount FROM nc_admob_rewards WHERE firebase_uid=$1 ORDER BY received_at,transaction_id',[uid]);return send(200,{rewards:q.rows});}catch(e){return send(503,{error:'Rewards unavailable'});}
+}
+async function health(send){try{const d=await db();await d.query('SELECT 1');return send(200,{database:true,identityConfigured:!!process.env.FIREBASE_WEB_API_KEY,ready:!!process.env.FIREBASE_WEB_API_KEY});}catch(e){return send(503,{database:false,ready:false});}}
 async function keys(force=false){
  if(!force&&Date.now()<expires&&cache.size)return cache;
  const res=await fetch('https://www.gstatic.com/admob/reward/verifier-keys.json',{signal:AbortSignal.timeout(8000)});
@@ -17,17 +37,18 @@ async function verify(raw){
  for(const [k] of p){if(seen.has(k))return null;seen.add(k);}
  let key=(await keys()).get(m[3]);if(!key)key=(await keys(true)).get(m[3]);if(!key)return null;
  const sig=Buffer.from(decodeURIComponent(m[2]),'base64url');
- if(!crypto.verify('sha256',Buffer.from(decodeURIComponent(m[1]),'utf8'),key,sig))return null;
+ if(!crypto.verify('sha256',Buffer.from(m[1],'utf8'),key,sig))return null;
  return p;
 }
 async function callback(req,send){
  if(req.method!=='GET')return send(405,{error:'method'});
  const raw=req.url.split('?').slice(1).join('?');
- if(!raw)return send(503,{ready:false,reason:'Persistent reward ledger not connected'});
+ if(!raw)return send(400,{error:'Signed callback required'});
  let p;try{p=await verify(raw);}catch(e){return send(503,{error:'Verification unavailable'});}
  if(!p)return send(403,{error:'Invalid signature'});
  if(!['3818748399','ca-app-pub-3210480040948197/3818748399'].includes(p.get('ad_unit'))||p.get('reward_amount')!=='350'||!p.get('transaction_id'))return send(400,{error:'Unexpected reward'});
- // Fail closed: no success acknowledgement until a durable, authenticated ledger exists.
- return send(503,{error:'Reward ledger not connected'});
+ const uid=p.get('user_id'), tx=p.get('transaction_id');
+ if(!uid||!/^[A-Za-z0-9_-]{1,128}$/.test(uid)||tx.length>256)return send(400,{error:'Missing account or invalid transaction'});
+ try{const d=await db();await d.query('INSERT INTO nc_admob_rewards(transaction_id,firebase_uid,amount) VALUES($1,$2,350) ON CONFLICT(transaction_id) DO NOTHING',[tx,uid]);return send(200,{ok:true});}catch(e){return send(503,{error:'Reward storage unavailable'});}
 }
-module.exports={callback,verify};
+module.exports={callback,verify,rewards,health};
