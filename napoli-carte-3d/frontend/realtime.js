@@ -1,4 +1,4 @@
-/* Napoli Carte 3D 2.4 - text chat + WebRTC peer audio, all six card games */
+/* Napoli Carte 3D 2.6 - voice relay and WebRTC fallback for six games */
 (function(){'use strict';if(window.NC23_REALTIME_READY)return;window.NC23_REALTIME_READY=true;
 const oldGame=window.drawGame,oldLobby=window.drawLobby,oldLeave=window.lobby;
 let timer=null,busy=false,active='',room='',seat=-1,chatSeq=0,signalSeq=0,users=[],voiceSeats=[],mic=null,enabled=false,ice=[{urls:'stun:stun.l.google.com:19302'}],peers=new Map(),muted=new Set(),opened=false,unread=0;
@@ -28,9 +28,9 @@ function append(m){const list=el('nc23-chat-list');if(!list||typeof m.text!=='st
 function status(text){const elStatus=el('nc23-voice-state');if(elStatus)elStatus.textContent=text}
 function updatePeersUI(){const host=el('nc23-peer-mutes');if(!host)return;host.replaceChildren();if(!enabled)return;for(const [id,x] of peers){const b=document.createElement('button');b.type='button';b.className='nc23-mute-remote';b.textContent=(muted.has(id)?'🔇':'🔊')+' Giocatore '+(id+1);b.setAttribute('aria-pressed',String(muted.has(id)));b.onclick=()=>{if(muted.has(id))muted.delete(id);else muted.add(id);if(x.audio)x.audio.muted=muted.has(id);updatePeersUI()};host.appendChild(b)}}
 function removePeer(id){const x=peers.get(id);if(!x)return;peers.delete(id);try{x.pc.onicecandidate=null;x.pc.ontrack=null;x.pc.close()}catch(e){}if(x.audio){x.audio.srcObject=null;x.audio.remove()}updatePeersUI()}
-function clean(){for(const id of [...peers.keys()])removePeer(id);if(mic){for(const track of mic.getTracks())track.stop();mic=null}enabled=false;voiceSeats=[];const b=el('nc23-toggle-mic');if(b){b.textContent='🎙️ Attiva microfono';b.setAttribute('aria-pressed','false');b.classList.remove('nc23-mic-on');b.classList.add('nc23-mic-off')}status('🎙️ Microfono spento')}
+function clean(){if(window.NC26_AUDIO_RELAY)try{window.NC26_AUDIO_RELAY.stop()}catch(e){}for(const id of [...peers.keys()])removePeer(id);if(mic){for(const track of mic.getTracks())track.stop();mic=null}enabled=false;voiceSeats=[];const b=el('nc23-toggle-mic');if(b){b.textContent='🎙️ Attiva microfono';b.setAttribute('aria-pressed','false');b.classList.remove('nc23-mic-on');b.classList.add('nc23-mic-off')}status('🎙️ Microfono spento')}
 async function disableMic(){if(!enabled)return;try{await api23('voice',{enabled:false})}catch(e){}clean()}
-async function enableMic(){if(!ok())return message('Entra prima in una partita online');if(!navigator.mediaDevices?.getUserMedia||typeof RTCPeerConnection!=='function')return message('Microfono/WebRTC non disponibile. Aggiorna Android System WebView.');const b=el('nc23-toggle-mic');b.disabled=true;try{
+async function enableMic(){if(!ok())return message('Entra prima in una partita online');if(!navigator.mediaDevices?.getUserMedia||typeof RTCPeerConnection!=='function')return message('Microfono/WebRTC non disponibile. Aggiorna Android System WebView.');if(window.NC26_AUDIO_RELAY)window.NC26_AUDIO_RELAY.prime();const b=el('nc23-toggle-mic');b.disabled=true;try{
  // Minimal microphone capture first: complex DSP constraints can break Android WebView.
  let stream;
  try{stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false})}
@@ -47,7 +47,8 @@ async function enableMic(){if(!ok())return message('Entra prima in una partita o
    await track.applyConstraints({echoCancellation:true,noiseSuppression:true,autoGainControl:true});
  }catch(e){console.info('Optional audio enhancements unavailable');}
  if(!ok()){clean();return}
- const cfg=await api23('rtc-config',{});ice=cfg.iceServers||ice;await api23('voice',{enabled:true});enabled=true;mic.getTracks().forEach(t=>t.addEventListener('ended',()=>{if(enabled)disableMic()}));b.textContent='🎙️ Microfono ON';b.setAttribute('aria-pressed','true');b.classList.add('nc23-mic-on');b.classList.remove('nc23-mic-off');status('🎙️ Microfono acceso · In attesa degli altri');await poll();
+ const cfg=await api23('rtc-config',{});ice=cfg.iceServers||ice;await api23('voice',{enabled:true});enabled=true;mic.getTracks().forEach(t=>t.addEventListener('ended',()=>{if(enabled)disableMic()}));b.textContent='🎙️ Microfono ON';b.setAttribute('aria-pressed','true');b.classList.add('nc23-mic-on');b.classList.remove('nc23-mic-off');if(window.NC26_AUDIO_RELAY){const ready=await window.NC26_AUDIO_RELAY.start(mic,{token:active,room,seat,onStatus:status,isMuted:id=>muted.has(id)});if(ready){for(const id of [...peers.keys()])removePeer(id)}}
+ status(window.NC26_AUDIO_RELAY&&window.NC26_AUDIO_RELAY.isReady()?'🟢 Audio via server collegato':'🎙️ Microfono acceso · Provo collegamento diretto');await poll();
  }catch(e){clean();const name=e&&e.name||'';
  const reason=(name==='NotAllowedError'||name==='PermissionDeniedError')
   ?'Microfono non autorizzato: attiva il permesso Microfono nelle impostazioni Android.'
@@ -67,7 +68,7 @@ async function receive(s){if(!enabled||s.from===seat||!voiceSeats.includes(s.fro
  else if(s.type==='candidate'){const candidate=new RTCIceCandidate(obj);if(x.pc.remoteDescription)await x.pc.addIceCandidate(candidate);else x.candidates.push(candidate)}
  }catch(e){console.warn('WebRTC',e.message)}}
 async function poll(){if(!ok()||busy||!room)return;busy=true;try{const d=await api23('realtime',{afterChat:chatSeq,afterSignal:signalSeq});if(!ok()||d.roomId!==room)return;seat=d.seat;users=d.users||[];for(const m of d.chat||[])if(m.id>chatSeq)append(m);chatSeq=Math.max(chatSeq,Number(d.chatSeq)||0);signalSeq=Math.max(signalSeq,Number(d.signalSeq)||0);voiceSeats=d.voiceSeats||[];
- if(enabled){for(const id of [...peers.keys()])if(!voiceSeats.includes(id))removePeer(id);for(const msg of d.signals||[])await receive(msg);for(const id of voiceSeats)if(id>seat&&!peers.has(id))await offer(id);if(voiceSeats.length===1&&voiceSeats[0]===seat)status('🎙️ Microfono acceso · In attesa degli altri')}
+ if(enabled){const viaRelay=!!(window.NC26_AUDIO_RELAY&&window.NC26_AUDIO_RELAY.isReady());if(viaRelay){for(const id of [...peers.keys()])removePeer(id)}else{for(const id of [...peers.keys()])if(!voiceSeats.includes(id))removePeer(id);for(const msg of d.signals||[])await receive(msg);for(const id of voiceSeats)if(id>seat&&!peers.has(id))await offer(id)}if(voiceSeats.length===1&&voiceSeats[0]===seat)status(viaRelay?'🟢 Audio pronto · In attesa degli altri':'🎙️ Microfono acceso · In attesa degli altri')}
  }catch(e){if(enabled)status('⚠️ Connessione audio in verifica')}finally{busy=false}}
 function stop(){if(active){if(enabled)api23('voice',{enabled:false}).catch(()=>{});clean();active='';room=''}clearInterval(timer);timer=null;opened=false;const host=el('nc23-live');if(host){host.hidden=true;const panel=el('nc23-chat-panel');if(panel)panel.hidden=true}}
 function start(s){if(!online()||!currentToken())return stop();mount();if(active!==currentToken()){stop();active=currentToken();chatSeq=0;signalSeq=0;unread=0;badge();el('nc23-chat-list').replaceChildren()}room=s.roomId;seat=s.seat;el('nc23-live').hidden=false;if(!timer)timer=setInterval(poll,1300);poll()}
