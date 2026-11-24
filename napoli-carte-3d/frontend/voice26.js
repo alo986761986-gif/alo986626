@@ -24,7 +24,8 @@ function downsample(floats,rate){
  return output;
 }
 function attachMic(){
- if(!mic||!connected||!prime()||processor)return;
+ if(!mic||!connected||!prime())return false;
+ if(processor)return true;
  let input=mic;
  try{const hooks=window.NC25_VOICE_HOOKS;
    if(hooks&&typeof hooks.getOutbound==='function'){const p=hooks.getOutbound();if(p&&p.getAudioTracks().some(t=>t.readyState==='live'))input=p}
@@ -39,7 +40,8 @@ function attachMic(){
    const pcm=downsample(evt.inputBuffer.getChannelData(0),ctx.sampleRate);
    if(pcm.length){try{ws.send(pcm.buffer);sent++}catch(e){lastError=e.message}}
   };
- }catch(e){lastError=e.message;statusFn('⚠️ Acquisizione audio non disponibile: '+e.message);detachMic()}
+  return true;
+ }catch(e){lastError=e.message;statusFn('⚠️ Acquisizione audio non disponibile: '+e.message);detachMic();return false}
 }
 function detachMic(){
  if(processor){processor.onaudioprocess=null;try{processor.disconnect()}catch(e){}processor=null}
@@ -87,7 +89,7 @@ function connect(){
    let obj;try{obj=JSON.parse(evt.data)}catch(e){return}
    if(obj.type==='ready'&&obj.roomId===roomId&&obj.seat===seat){
     clearTimeout(timeout);connected=true;retries=0;lastError='';
-    attachMic();statusFn('🟢 Voce collegata tramite server · Audio bidirezionale');
+    if(!attachMic()){try{socket.close()}catch(e){}return;}statusFn('🟢 Voce collegata tramite server · Audio bidirezionale');
     if(readyFn){readyFn(true);readyFn=null}if(readyTimeout){clearTimeout(readyTimeout);readyTimeout=null}
    }else if(obj.type==='error'){lastError=obj.message;statusFn('⚠️ '+lastError)}
   }else hear(evt.data);
