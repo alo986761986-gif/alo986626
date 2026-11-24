@@ -1,0 +1,48 @@
+/* NAPOLI CARTE 3D 3.0 — original ambient premium skin; low-motion and GPU-safe fallbacks */
+:root{--nc30-metal:#d8b977;--nc30-light:#fff4d8;--nc30-felt:#14684d;--nc30-shadow:rgba(0,0,0,.65)}
+body.nc30-premium{background:#061815;color:#f9efd7}
+.nc30-settings{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 auto 12px;padding:9px 12px;max-width:1080px;border:1px solid #cda55f59;border-radius:16px;background:linear-gradient(130deg,rgba(14,46,40,.97),rgba(7,31,28,.96));box-shadow:0 7px 22px #0005}
+.nc30-settings b{font-size:11px;color:#f9daa0;letter-spacing:.04em;margin-right:auto}
+.nc30-settings button{padding:8px 11px;border:1px solid #d6b06f70;border-radius:12px;background:linear-gradient(#285646,#10342d);color:#fff1d0;font-size:11px;font-weight:760;min-height:37px;transition:background .22s,transform .17s}
+.nc30-settings button:active{transform:scale(.97)}
+.nc30-settings .nc30-value{color:#a9e5c8;font-weight:650}
+.nc30-settings .nc30-quality{border-color:#b8d6a566}
+.nc30-settings [data-nc30-state=on]{border-color:#a3ffcb;background:#244f40}
+.nc30-premium .board{isolation:isolate;position:relative;overflow:visible;box-shadow:0 30px 60px #0009,inset 0 3px 0 #ffdd9c55,inset 0 -9px 16px #0c140c8a,0 0 0 2px #5c371aaa;transform-style:preserve-3d;backface-visibility:hidden}
+.nc30-premium .board::before{content:"";position:absolute;inset:9px;border-radius:inherit;border:1px solid #fff3bd43;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 28% 18%,#c0dba912,transparent 46%),repeating-linear-gradient(105deg,transparent 0 8px,#fbfffa04 8px 9px);mix-blend-mode:screen}
+.nc30-premium .board::after{content:"";position:absolute;inset:-11px;border-radius:inherit;border:4px solid #c08c4c8c;box-shadow:inset 0 0 13px #ffdaa12e,0 0 0 4px #321b10bb,0 14px 20px #0007;pointer-events:none;z-index:-1}
+.nc30-premium .tablecards .playing-card,.nc30-premium .myhand .playing-card{filter:drop-shadow(0 6px 7px #0009);transform-style:preserve-3d;will-change:auto}
+.nc30-premium .myhand .playing-card{transition:transform .18s ease,filter .18s ease;position:relative;box-shadow:inset 0 0 1px #fff7e8bb,0 7px 14px #0008}
+.nc30-premium .myhand .playing-card:focus-visible{outline:3px solid #fff1b4;outline-offset:3px}
+.nc30-premium .myhand .playing-card:active{filter:drop-shadow(0 12px 13px #0009);transform:translateY(-10px) rotate(-1.5deg) scale(1.055)}
+.nc30-premium .myhand .playing-card.nc30-enter{animation:nc30-deal .38s cubic-bezier(.18,.72,.22,1) both}
+.nc30-premium .tablecards .playing-card.nc30-captured{animation:nc30-pick .26s ease forwards}
+.nc30-premium .board .turn .avatar{box-shadow:0 0 0 3px #f1cf85,0 0 13px 4px #f9cd7870}
+.nc30-premium .nc-scene-bg{filter:saturate(1.11) contrast(1.07)}
+.nc30-premium.nc30-night .nc-scene-bg{filter:brightness(.64) saturate(.95)}
+.nc30-premium.nc30-night .board{filter:brightness(.94)}
+.nc30-premium.nc30-night .nc30-settings{background:linear-gradient(#0a2b32,#081b26)}
+.nc30-premium .online{background:linear-gradient(#194f3c,#113329);box-shadow:0 0 0 1px #f8dc9e1f,0 4px 12px #0007}
+.nc30-premium .player{transition:box-shadow .24s ease,filter .24s ease}
+.nc30-premium .player.turn{box-shadow:0 0 0 1px #ffd88157,0 0 21px #ffca853a}
+.nc30-premium .scoreboard{border:1px solid #e1c37a80;border-radius:20px;background:linear-gradient(140deg,#1c4a3b,#0c2825);box-shadow:0 18px 38px #0009;animation:nc30-score .5s cubic-bezier(.25,.7,.26,1) both}
+.nc30-premium .nc30-banner{border-radius:18px;padding:10px 14px;margin:8px auto;text-align:center;color:#ffefcb;background:linear-gradient(115deg,#4e381f,#1a4b37,#4e381f);border:1px solid #edcd8d8a;box-shadow:0 8px 22px #0007;animation:nc30-banner .7s ease both;font-size:14px;font-weight:850;letter-spacing:.055em;max-width:380px}
+.nc30-premium .nc30-ambient-veil{position:absolute;inset:0;pointer-events:none;background:linear-gradient(120deg,transparent 15%,#ffebb009 48%,transparent 77%);border-radius:inherit;z-index:2;opacity:.8}
+.nc30-premium .nc30-hint{font-size:10px;color:#d8ddca;letter-spacing:.07em;display:block;padding:0 5px 0 0}
+.nc30-achievements{border:1px solid #debd7e4f;border-radius:17px;background:linear-gradient(120deg,#173e33,#082724);padding:13px 14px;color:#f4e5c8;margin:10px auto;max-width:1080px}
+.nc30-achievements h3{margin:0 0 8px;font-size:14px;color:#f2d394}
+.nc30-achievements .nc30-award-row{display:flex;flex-wrap:wrap;gap:7px}
+.nc30-award{font-size:10px;padding:7px 9px;border-radius:10px;border:1px solid #dbbf7b55;background:#0b2d24;color:#cbd7c5}
+.nc30-award.nc30-won{background:linear-gradient(#5a4e2d,#233e30);border-color:#f8d78d;color:#ffecb9}
+.nc30-conn{display:flex;align-items:center;gap:7px;color:#c6e7cf;font-size:11px;font-weight:700}
+.nc30-conn::before{content:"";height:8px;width:8px;flex-shrink:0;border-radius:50%;background:#79e6a5;box-shadow:0 0 7px #72dcb2}
+.nc30-conn.nc30-conn-warn{color:#ffcc96}.nc30-conn.nc30-conn-warn::before{background:#ffd08f;box-shadow:0 0 9px #d99d5f}
+.nc30-conn.nc30-conn-bad{color:#fbb5a6}.nc30-conn.nc30-conn-bad::before{background:#fa8b7e;box-shadow:0 0 9px #bc5658}
+@keyframes nc30-deal{from{opacity:.1;transform:translateY(-22px) scale(.84) rotate(-3deg)}to{opacity:1;transform:translateY(0) scale(1) rotate(0)}}
+@keyframes nc30-pick{to{opacity:0;transform:translateY(-25px) scale(.82)}}
+@keyframes nc30-banner{0%{opacity:0;transform:translateY(12px) scale(.96)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes nc30-score{from{opacity:0;transform:translateY(17px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:700px){.nc30-settings{margin:0 11px 9px;padding:7px 9px;gap:6px}.nc30-settings button{flex:1;font-size:10px;padding:6px;min-width:70px}.nc30-settings b{width:100%;text-align:left}.nc30-premium .board::after{inset:-7px;border-width:3px}.nc30-premium .board::before{inset:5px}}
+@media(prefers-reduced-motion:reduce){.nc30-premium .scoreboard,.nc30-premium .nc30-banner,.nc30-premium .myhand .playing-card.nc30-enter,.nc30-premium .tablecards .playing-card.nc30-captured{animation:none!important}.nc30-premium .playing-card,.nc30-premium .player{transition:none!important}}
+body.nc-lite .nc30-ambient-veil,body.nc-lite .nc30-premium .board::after{display:none!important}
+body.nc-lite .nc30-premium .playing-card{filter:none!important}
