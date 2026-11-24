@@ -17,7 +17,7 @@ const drag25Css=fs.readFileSync(path.join(__dirname,'../frontend/drag25.css'),'u
 const capture27Js=fs.readFileSync(path.join(__dirname,'../frontend/capture27.js'),'utf8');
 const capture27Css=fs.readFileSync(path.join(__dirname,'../frontend/capture27.css'),'utf8');
 const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
- .replace('</head>','<style id="nc22-profile-css">'+profileCss+'</style><style id="nc23-realtime-css">''+realtimeCss+'</style><style id="nc25-voice-css">'+voice25Css+'</style><style id="nc25-drag-css">'+drag25Css+'</style><style id="nc27-capture-css">'+capture27Css+'</style></head>')
+ .replace('</head>','<style id="nc22-profile-css">'+profileCss+'</style><style id="nc23-realtime-css">'+realtimeCss+'</style><style id="nc25-voice-css">'+voice25Css+'</style><style id="nc25-drag-css">'+drag25Css+'</style><style id="nc27-capture-css">'+capture27Css+'</style></head>')
  .replace('</body>','<script id="nc22-profile-js">'+profileJs+'</script><script id="nc23-realtime-js">'+realtimeJs+'</script><script id="nc26-audio-js">'+voice26Js+'</script><script id="nc25-voice-js">'+voice25Js+'</script><script id="nc25-drag-js">'+drag25Js+'</script><script id="nc27-capture-js">'+capture27Js+'</script></body>');
 const server=http.createServer(async(req,res)=>{
   // Browser asset in Android uses the opaque file:// origin. Public API accepts CORS.
