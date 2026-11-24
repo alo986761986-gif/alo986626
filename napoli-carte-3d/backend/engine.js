@@ -180,26 +180,15 @@ function botStep(r){let limit=300;while(r.status==='playing'&&r.players[r.turn]?
 function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
 function action(token,move){const {r,seat}=auth(token);play(r,seat,move);botStep(r);return state(token);}
 function opts(token,card){const {r,seat}=auth(token);botStep(r);return {options:getChoices(r,seat,card)};}
-function housekeeping(){const n=now();let removed=0,takenOver=0;
+function housekeeping(){const n=now();let removed=0;
  for(const r of rooms.values()){
   const idle=n-r.updated;
   const expire=r.status==='finished'?30*MINUTE:r.status==='waiting'?45*MINUTE:4*60*MINUTE;
   if(idle>expire||(r.status==='waiting'&&n-r.created>2*60*MINUTE)){
-   purgeRoom(r);removed++;continue;
-  }
-  if(r.status==='playing'&&!r.players.some(p=>p.bot&&p.token)){
-   let changed=false;
-   for(const p of r.players){
-    if(!p.bot&&p.token&&n-p.lastSeen>10*MINUTE){
-     playerRoom.delete(p.token);p.token=null;p.bot=true;p.photo=null;p.photoMode='avatar';p.name=p.name.replace(/ \(CPU\)$/,'')+' (CPU)';
-     log(r,p.name+' sostituisce un giocatore disconnesso.');changed=true;takenOver++;
-    }
-   }
-   if(changed){r.updated=n;botStep(r);}
-   if(r.players.every(p=>p.bot))purgeRoom(r);
+   purgeRoom(r);removed++;
   }
  }
- return {removed,takenOver,rooms:rooms.size};
+ return {removed,rooms:rooms.size};
 }
 function leave(token){const {r,seat}=auth(token),p=r.players[seat];
  if(r.status==='waiting'){
