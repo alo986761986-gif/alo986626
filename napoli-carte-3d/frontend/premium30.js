@@ -53,7 +53,7 @@
   badge.textContent=state;badge.className='nc30-conn'+(level==='ok'?'':level==='warn'?' nc30-conn-warn':' nc30-conn-bad');
  }
  function installPanel(){
-  const main=doc.querySelector('#root>.wrap')||doc.querySelector('#root main.wrap')||doc.querySelector('#root main');
+  const main=doc.querySelector('#root>.wrap')||doc.querySelector('#root main.wrap')||doc.querySelector('#root main')||doc.getElementById('root');
   if(!main)return;
   if(!doc.getElementById('nc30-settings'))main.insertBefore(buildPanel(),main.firstChild);
   refreshLabels();status();
@@ -80,7 +80,7 @@
   prevStatus=s.status;
  }
  function installAwards(finished){
-  const setup=doc.querySelector('.setup'),wrap=doc.querySelector('#root .wrap');
+  const setup=doc.querySelector('.setup'),wrap=doc.querySelector('#root .wrap')||doc.getElementById('root');
   if(!wrap||(!setup&&!finished))return;
   let existing=wrap.querySelector('.nc30-achievements');if(existing)existing.remove();
   const target=doc.createElement('div');target.innerHTML=awardsHTML();
@@ -88,7 +88,7 @@
  }
  function announce(text){
   if(reduce())return;
-  const wrap=doc.querySelector('#root .wrap');if(!wrap)return;
+  const wrap=doc.querySelector('#root .wrap')||doc.getElementById('root');if(!wrap)return;
   const node=doc.createElement('div');node.className='nc30-banner';node.textContent=text.slice(0,100);node.setAttribute('role','status');
   wrap.insertBefore(node,wrap.firstChild);
   window.setTimeout(()=>node.remove(),2800);
