@@ -2,7 +2,7 @@ name: Napoli Carte 3D - Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, napoli-carte-3d-build]
+    branches: [main, napoli-carte-3d-build, napoli-carte-3d-v3-premium]
     paths:
       - 'napoli-carte-3d/**'
       - '.github/workflows/napoli-carte-3d.yml'
@@ -51,6 +51,14 @@ jobs:
         run: |
           node --check backend/local-server.js
           node --check backend/audio-relay.js
+          node tests/stability.test.js
+          node tests/stability-http.test.js
+      - name: Verify premium graphics and persistence recovery
+        working-directory: napoli-carte-3d
+        run: |
+          node --check frontend/premium30.js
+          node --check backend/persistence.js
+          node tests/persistence30.test.js
           node tests/stability.test.js
           node tests/stability-http.test.js
       - name: Generate embedded Android game with public server address
