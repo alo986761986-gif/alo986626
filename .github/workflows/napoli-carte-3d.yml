@@ -2,7 +2,7 @@ name: Napoli Carte 3D - Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main, napoli-carte-3d-build]
+    branches: [main, napoli-carte-3d-build, napoli-server-stability-preflight]
     paths:
       - 'napoli-carte-3d/**'
       - '.github/workflows/napoli-carte-3d.yml'
@@ -46,6 +46,14 @@ jobs:
       - name: Verify legal multi-card capture choices
         working-directory: napoli-carte-3d
         run: node tests/capture27.test.js
+      - name: Network server syntax and recovery checks
+        working-directory: napoli-carte-3d
+        run: |
+          node --check backend/local-server.js
+          node --check backend/realtime.js
+          node --check backend/audio-relay.js
+          node tests/stability.test.js
+          node tests/stability-http.test.js
       - name: Generate embedded Android game with public server address
         working-directory: napoli-carte-3d
         run: python3 backend/build_android_assets.py
