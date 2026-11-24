@@ -1,6 +1,7 @@
 // Local test adapter, Node.js 22. Run: node backend/local-server.js
 const http = require('node:http');
 const {Buffer}=require('node:buffer');
+const net=require('node:net');
 const fs = require('node:fs');
 const path = require('node:path');
 const e = require('./engine.js');
@@ -23,7 +24,8 @@ const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
 const joinRate=new Map();
 let draining=false,cleanups=0;
 function limitJoin(req){
- const key=req.socket.remoteAddress||'unknown',n=Date.now();
+ const forwarded=String(req.headers['x-forwarded-for']||'').split(',')[0].trim();
+ const key=net.isIP(forwarded)?forwarded:(req.socket.remoteAddress||'unknown'),n=Date.now();
  const arr=(joinRate.get(key)||[]).filter(t=>n-t<60000);
  if(arr.length>=80)throw Error('Troppe richieste di ingresso, riprova tra poco');
  arr.push(n);joinRate.set(key,arr);
