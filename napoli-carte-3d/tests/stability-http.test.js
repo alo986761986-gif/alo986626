@@ -7,7 +7,7 @@ const base='http://127.0.0.1:'+port;
 async function post(route,body){const res=await fetch(base+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {code:res.status,data:await res.json()}}
 async function run(){let health;
  for(let i=0;i<45;i++){if(proc.exitCode!==null)throw Error('Server failed: '+logs);try{const res=await fetch(base+'/api/health');if(res.ok){health=await res.json();break}}catch(e){}await new Promise(r=>setTimeout(r,100))}
- assert(health&&health.ok,logs);assert.equal(health.serverVersion,'2.8');
+ assert(health&&health.ok,logs);assert.equal(health.serverVersion,'3.0');
  assert.equal(typeof health.uptimeSeconds,'number');
  assert.equal(typeof health.cleanupCount,'number');
  const bad=await fetch(base+'/api/join');assert.equal(bad.status,404);
