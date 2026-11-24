@@ -6,10 +6,8 @@ const connections=new Set();
 let accepted=0,frames=0;
 function findSession(token){
  if(typeof token!=='string'||token.length<8||token.length>180)return null;
- for(const room of engine.rooms.values()){
-  const seat=room.players.findIndex(p=>!p.bot&&p.token===token);
-  if(seat!==-1&&room.status==='playing')return {room,seat,token};
- }
+ const user=engine.lookupSession(token);
+ if(user&&user.r.status==='playing')return {room:user.r,seat:user.seat,token};
  return null;
 }
 function voiceAllowed(s){
@@ -35,14 +33,15 @@ function close(s){
 function handleMessage(s,opcode,payload){
  if(opcode===8)return close(s);
  if(opcode===9){writeFrame(s.socket,10,payload);return}
- if(opcode===10)return;
+ if(opcode===10){s.lastPong=Date.now();return;}
  if(!s.token){
   if(opcode!==1||payload.length>360)return close(s);
   let msg;try{msg=JSON.parse(payload.toString('utf8'))}catch(e){return close(s)}
   if(msg.type!=='auth')return close(s);
   const auth=findSession(msg.token);
   if(!auth)return close(s);
-  Object.assign(s,auth);accepted++;
+  for(const other of connections)if(other!==s&&other.token===auth.token)close(other);
+  Object.assign(s,auth);s.lastPong=Date.now();accepted++;
   sendJson(s,{type:'ready',seat:s.seat,roomId:s.room.id,transport:'pcm16-wss',sampleRate:16000});
   return;
  }
@@ -85,19 +84,26 @@ function originAllowed(origin,host){
  }catch(e){return false}
 }
 function attach(server){
+ const heartbeat=setInterval(()=>{const time=Date.now();for(const c of connections){
+  if(time-c.lastPong>70000){close(c);continue;}
+  if(c.token)writeFrame(c.socket,9,Buffer.from('heartbeat'));
+ }},25000);
+ heartbeat.unref();
+ server.on('close',()=>{clearInterval(heartbeat);for(const c of [...connections])close(c)});
  server.on('upgrade',(req,socket,head)=>{
   try{
    const host=req.headers.host||'';
-   if(req.url!=='/ws/audio'||!originAllowed(req.headers.origin,host)||String(req.headers.upgrade||'').toLowerCase()!=='websocket'||String(req.headers['sec-websocket-version'])!=='13')return socket.destroy();
+   if(connections.size>=160||req.url!=='/ws/audio'||!originAllowed(req.headers.origin,host)||String(req.headers.upgrade||'').toLowerCase()!=='websocket'||String(req.headers['sec-websocket-version'])!=='13')return socket.destroy();
    const key=String(req.headers['sec-websocket-key']||'');
    if(!/^[A-Za-z0-9+/]{22}==$/.test(key))return socket.destroy();
    const accept=crypto.createHash('sha1').update(key+'258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
    socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: '+accept+'\r\n\r\n');
    socket.setNoDelay(true);
-   const s={socket,token:'',room:null,seat:-1,pending:Buffer.alloc(0),closed:false,bucketTime:Date.now(),bucketFrames:0};
+   const s={socket,token:'',room:null,seat:-1,pending:Buffer.alloc(0),closed:false,lastPong:Date.now(),bucketTime:Date.now(),bucketFrames:0};
    connections.add(s);
    socket.on('data',part=>onData(s,part));
    socket.on('error',()=>close(s));socket.on('close',()=>close(s));
+   socket.setTimeout(90000,()=>close(s));
    if(head&&head.length)onData(s,head);
    const init=setTimeout(()=>{if(!s.token)close(s)},10000);init.unref();
   }catch(e){socket.destroy()}
