@@ -19,12 +19,14 @@ drag25_js=(root/'frontend/drag25.js').read_text(encoding='utf-8')
 drag25_css=(root/'frontend/drag25.css').read_text(encoding='utf-8')
 capture27_js=(root/'frontend/capture27.js').read_text(encoding='utf-8')
 capture27_css=(root/'frontend/capture27.css').read_text(encoding='utf-8')
+premium30_css=(root/'frontend/premium30.css').read_text(encoding='utf-8')
+premium30_js=(root/'frontend/premium30.js').read_text(encoding='utf-8')
 html=html.replace('</head>','<style id="nc22-profile-css">'+profile_css+'</style></head>',1)
-html=html.replace('</body>','<script id="nc22-profile-js">'+profile_js+'</script><script id="nc23-realtime-js">'+realtime_js+'</script><script id="nc26-audio-js">'+voice26_js+'</script><script id="nc25-voice-js">'+voice25_js+'</script><script id="nc25-drag-js">'+drag25_js+'</script><script id="nc27-capture-js">'+capture27_js+'</script></body>',1)
-html=html.replace('</head>','<style id="nc23-realtime-css">'+realtime_css+'</style><style id="nc25-voice-css">'+voice25_css+'</style><style id="nc25-drag-css">'+drag25_css+'</style><style id="nc27-capture-css">'+capture27_css+'</style></head>',1)
+html=html.replace('</body>','<script id="nc22-profile-js">'+profile_js+'</script><script id="nc23-realtime-js">'+realtime_js+'</script><script id="nc26-audio-js">'+voice26_js+'</script><script id="nc25-voice-js">'+voice25_js+'</script><script id="nc25-drag-js">'+drag25_js+'</script><script id="nc27-capture-js">'+capture27_js+'</script><script id="nc30-premium-js">'+premium30_js+'</script></body>',1)
+html=html.replace('</head>','<style id="nc23-realtime-css">'+realtime_css+'</style><style id="nc25-voice-css">'+voice25_css+'</style><style id="nc25-drag-css">'+drag25_css+'</style><style id="nc27-capture-css">'+capture27_css+'</style><style id="nc30-premium-css">'+premium30_css+'</style></head>',1)
 engine = (root/'backend/engine.js').read_text(encoding='utf-8')
-assert "module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,RULES,rooms,deck40,getChoices,finishScopa,cardText};" in engine
-engine = engine.replace("if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,RULES,rooms,deck40,getChoices,finishScopa,cardText};", "return {join,state,action,opts,profile,friend,statusInfo,RULES};")
+assert "module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,exportSnapshot,importSnapshot,RULES,rooms,deck40,getChoices,finishScopa,cardText};" in engine
+engine = engine.replace("if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,exportSnapshot,importSnapshot,RULES,rooms,deck40,getChoices,finishScopa,cardText};", "return {join,state,action,opts,profile,friend,statusInfo,RULES};")
 engine = engine.replace("const uid = () => crypto.randomUUID();", "const uid = () => ((typeof crypto!=='undefined' && typeof crypto.randomUUID==='function') ? crypto.randomUUID() : 'local-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2));")
 asset_dir = root/'android/app/src/main/assets'
 server_url = (asset_dir/'server_url.txt').read_text(encoding='utf-8').strip().rstrip('/')

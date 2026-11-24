@@ -201,4 +201,45 @@ function leave(token){const {r,seat}=auth(token),p=r.players[seat];
  }else if(p.token){playerRoom.delete(p.token);p.token=null;p.bot=true;}
  return {ok:true};}
 function statusInfo(){const v=[...rooms.values()];return {ok:true,title:'Napoli Carte 3D',onlinePlayers:v.reduce((n,r)=>n+r.players.filter(p=>!p.bot).length,0),activeTables:v.filter(r=>r.status==='playing').length,waitingTables:v.filter(r=>r.status==='waiting').length,games:GAME_IDS};}
-if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,RULES,rooms,deck40,getChoices,finishScopa,cardText};
+
+/* Game snapshots exclude photo uploads, live audio and chat; session tokens are
+   retained only in trusted database storage so an interrupted match can resume. */
+function exportSnapshot(){
+ const safe=[];
+ for(const r of rooms.values()){
+  if(!['waiting','playing','finished'].includes(r.status))continue;
+  const copy={...r,live:undefined,
+   players:r.players.map(p=>({...p,photo:null})),
+   friendRequests:[...(r.friendRequests||[])],
+   friendPairs:[...(r.friendPairs||[])]};
+  safe.push(copy);
+ }
+ return {version:1,savedAt:now(),rooms:safe};
+}
+function importSnapshot(snapshot){
+ if(!snapshot||snapshot.version!==1||!Array.isArray(snapshot.rooms)||snapshot.rooms.length>MAX_ROOMS)throw Error('Snapshot versione non valida');
+ const freshRooms=new Map(),freshPlayers=new Map(),keys=new Set();
+ for(const src of snapshot.rooms){
+  if(!src||typeof src.id!=='string'||src.id.length>100||!GAME_IDS.includes(src.game)||
+     !RULES[src.game].seats.includes(src.seats)||!Array.isArray(src.players)||src.players.length>src.seats||
+     !['waiting','playing','finished'].includes(src.status)||freshRooms.has(src.id))throw Error('Snapshot stanza non valida');
+  const r={...src,live:undefined,friendRequests:new Set(src.friendRequests||[]),friendPairs:new Set(src.friendPairs||[])};
+  r.players=src.players.map(p=>{
+   if(!p||typeof p!=='object'||typeof p.name!=='string'||!Array.isArray(p.hand)||!Array.isArray(p.pile))throw Error('Snapshot giocatore non valido');
+   return {...p,name:p.name.slice(0,19),photo:null,photoMode:'avatar',lastSeen:now()};
+  });
+  for(const p of r.players){
+   if(p.token){if(typeof p.token!=='string'||p.token.length>180||keys.has(p.token))throw Error('Snapshot token non valido');
+    keys.add(p.token);freshPlayers.set(p.token,r.id);}
+  }
+  if(!Array.isArray(r.deck)||!Array.isArray(r.table)||!Array.isArray(r.trick)||!Array.isArray(r.log))throw Error('Snapshot carte non valido');
+  freshRooms.set(r.id,r);
+ }
+ rooms.clear();playerRoom.clear();
+ for(const [id,r] of freshRooms)rooms.set(id,r);
+ for(const [token,id] of freshPlayers)playerRoom.set(token,id);
+ housekeeping();
+ return {rooms:rooms.size,sessions:playerRoom.size};
+}
+
+if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,exportSnapshot,importSnapshot,RULES,rooms,deck40,getChoices,finishScopa,cardText};
