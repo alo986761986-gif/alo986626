@@ -9,9 +9,10 @@ const profileCss=fs.readFileSync(path.join(__dirname,'../frontend/profile.css'),
 const profileJs=fs.readFileSync(path.join(__dirname,'../frontend/profile.js'),'utf8');
 const realtimeCss=fs.readFileSync(path.join(__dirname,'../frontend/realtime.css'),'utf8');
 const realtimeJs=fs.readFileSync(path.join(__dirname,'../frontend/realtime.js'),'utf8');
+const voice26Js=fs.readFileSync(path.join(__dirname,'../frontend/voice26.js'),'utf8');
 const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
  .replace('</head>','<style id="nc22-profile-css">'+profileCss+'</style><style id="nc23-realtime-css">'+realtimeCss+'</style></head>')
- .replace('</body>','<script id="nc22-profile-js">'+profileJs+'</script><script id="nc23-realtime-js">'+realtimeJs+'</script></body>');
+ .replace('</body>','<script id="nc22-profile-js">'+profileJs+'</script><script id="nc23-realtime-js">'+realtimeJs+'</script><script id="nc26-audio-js">'+voice26Js+'</script></body>');
 const server=http.createServer(async(req,res)=>{
   // Browser asset in Android uses the opaque file:// origin. Public API accepts CORS.
   res.setHeader('Access-Control-Allow-Origin','*');
