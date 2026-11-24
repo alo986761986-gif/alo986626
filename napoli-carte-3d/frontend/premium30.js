@@ -73,7 +73,7 @@
   previousHand=new Set(ids);
   const event=s.log&&s.log[0]||'';
   if(event&&event!==prevLog){
-   if(/SCOPA|vince|ruba/i.test(event))announce(event);
+   if(/fa SCOPA!|^Vince | ruba \d+ carte/i.test(event))announce(event);
    prevLog=event;
   }
   if(s.status==='finished'&&s.status!==prevStatus){installAwards(true)}
