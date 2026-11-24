@@ -44,5 +44,8 @@ body.nc30-premium{background:#061815;color:#f9efd7}
 @keyframes nc30-score{from{opacity:0;transform:translateY(17px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:700px){.nc30-settings{margin:0 11px 9px;padding:7px 9px;gap:6px}.nc30-settings button{flex:1;font-size:10px;padding:6px;min-width:70px}.nc30-settings b{width:100%;text-align:left}.nc30-premium .board::after{inset:-7px;border-width:3px}.nc30-premium .board::before{inset:5px}}
 @media(prefers-reduced-motion:reduce){.nc30-premium .scoreboard,.nc30-premium .nc30-banner,.nc30-premium .myhand .playing-card.nc30-enter,.nc30-premium .tablecards .playing-card.nc30-captured{animation:none!important}.nc30-premium .playing-card,.nc30-premium .player{transition:none!important}}
-body.nc-lite .nc30-ambient-veil,body.nc-lite .nc30-premium .board::after{display:none!important}
-body.nc-lite .nc30-premium .playing-card{filter:none!important}
+body.nc-lite .nc30-ambient-veil,body.nc-lite.nc30-premium .board::after{display:none!important}
+body.nc-lite.nc30-premium .playing-card{filter:none!important}
+
+/* Premium scene switcher replaces the legacy scene cycle; sound/fades remain. */
+body.nc30-premium #nc-cycle-scene{display:none!important}
