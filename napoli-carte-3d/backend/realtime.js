@@ -4,8 +4,8 @@ const TIME=()=>Date.now(),MAX_CHAT=80,MAX_SIGNAL=260;
 function live(r){if(!r.live)r.live={chat:[],signals:[],chatSeq:0,signalSeq:0,voice:new Map(),limit:new Map()};return r.live;}
 function session(token){
  if(typeof token!=='string'||!token||token.length>180)throw Error('Sessione non valida');
- for(const r of engine.rooms.values()){const seat=r.players.findIndex(p=>p.token===token&&!p.bot);
-  if(seat>=0){r.updated=TIME();return {r,seat,p:r.players[seat],live:live(r)};}}
+ const user=engine.lookupSession(token);
+ if(user){const {r,seat,p}=user;r.updated=TIME();p.lastSeen=TIME();return {r,seat,p,live:live(r)};}
  throw Error('Sessione non valida. Rientra nella partita');
 }
 function limit(l,seat,kind,max,ms){
