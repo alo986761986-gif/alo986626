@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const e = require('./engine.js');
 const comm=require('./realtime.js');
+const audioRelay=require('./audio-relay.js');
 const profileCss=fs.readFileSync(path.join(__dirname,'../frontend/profile.css'),'utf8');
 const profileJs=fs.readFileSync(path.join(__dirname,'../frontend/profile.js'),'utf8');
 const realtimeCss=fs.readFileSync(path.join(__dirname,'../frontend/realtime.css'),'utf8');
@@ -11,7 +12,7 @@ const realtimeJs=fs.readFileSync(path.join(__dirname,'../frontend/realtime.js'),
 const html=fs.readFileSync(path.join(__dirname,'../frontend/index.html'),'utf8')
  .replace('</head>','<style id="nc22-profile-css">'+profileCss+'</style><style id="nc23-realtime-css">'+realtimeCss+'</style></head>')
  .replace('</body>','<script id="nc22-profile-js">'+profileJs+'</script><script id="nc23-realtime-js">'+realtimeJs+'</script></body>');
-http.createServer(async(req,res)=>{
+const server=http.createServer(async(req,res)=>{
   // Browser asset in Android uses the opaque file:// origin. Public API accepts CORS.
   res.setHeader('Access-Control-Allow-Origin','*');
   res.setHeader('X-Content-Type-Options','nosniff');
@@ -19,7 +20,7 @@ http.createServer(async(req,res)=>{
   res.setHeader('Access-Control-Allow-Headers','content-type');
   if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}
   if(req.method==='GET'&&(req.url==='/'||req.url==='/index.html')){res.writeHead(200,{'content-type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return;}
-  if(req.method==='GET'&&req.url==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(e.statusInfo()));return;}
+  if(req.method==='GET'&&req.url==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({...e.statusInfo(),audioRelay:'wss-pcm16',audioRelayStatus:audioRelay.stats()}));return;}
   try{let body='';for await(const chunk of req){body+=chunk;if(body.length>120000)throw Error('Richiesta troppo grande');}
     let x=body?JSON.parse(body):{};let data;
     if(req.url==='/api/join')data=e.join(x);
@@ -37,4 +38,6 @@ http.createServer(async(req,res)=>{
     else throw Error('Endpoint non trovato');
     res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(data));
   }catch(err){res.writeHead(400,{'content-type':'application/json'});res.end(JSON.stringify({error:err.message}));}
-}).listen(process.env.PORT||3000,()=>console.log('Napoli Carte 3D at http://localhost:'+(process.env.PORT||3000)));
+});
+audioRelay.attach(server);
+server.listen(process.env.PORT||3000,()=>console.log('Napoli Carte 3D at http://localhost:'+(process.env.PORT||3000)));
