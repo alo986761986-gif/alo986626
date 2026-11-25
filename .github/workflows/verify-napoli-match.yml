@@ -1,0 +1,20 @@
+name: Verify classic card-game matchmaking
+on:
+  push:
+    branches: [napoli-carte-3d-build]
+    paths:
+      - "napoli-carte-3d/backend/engine.js"
+      - "napoli-carte-3d/tests/matchmaking30.test.js"
+      - ".github/workflows/verify-napoli-match.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  classic-online:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate game engine syntax
+        run: node --check napoli-carte-3d/backend/engine.js
+      - name: Run 30 second matchmaking and multiplayer regression
+        run: node --test napoli-carte-3d/tests/matchmaking30.test.js napoli-carte-3d/tests/engine.test.js napoli-carte-3d/tests/online.test.js napoli-carte-3d/tests/profile.test.js
