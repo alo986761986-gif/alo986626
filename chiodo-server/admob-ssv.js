@@ -49,6 +49,8 @@ async function callback(req,send){
  if(!['3818748399','ca-app-pub-3210480040948197/3818748399'].includes(p.get('ad_unit'))||p.get('reward_amount')!=='350'||!p.get('transaction_id'))return send(400,{error:'Unexpected reward'});
  const uid=p.get('user_id'), tx=p.get('transaction_id');
  if(!uid||!/^[A-Za-z0-9_-]{1,128}$/.test(uid)||tx.length>256)return send(400,{error:'Missing account or invalid transaction'});
+ // The signed AdMob console verification must not create a reward ledger entry.
+ if(uid==='nc_admob_ssv_verification_20261125'&&p.get('custom_data')==='nc_admob_console_verify_v1')return send(200,{ok:true,test:true,credited:false});
  try{const d=await db();await d.query('INSERT INTO nc_admob_rewards(transaction_id,firebase_uid,amount) VALUES($1,$2,350) ON CONFLICT(transaction_id) DO NOTHING',[tx,uid]);return send(200,{ok:true});}catch(e){return send(503,{error:'Reward storage unavailable'});}
 }
 module.exports={callback,verify,rewards,health};
