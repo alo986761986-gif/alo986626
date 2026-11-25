@@ -258,3 +258,55 @@ test('malformed escaping or base64 signatures fail as invalid input without data
   assertNoDatabase(h);
  }
 });
+
+test('the exact signed synthetic console probe returns success without a database or reward',async()=>{
+ for(const decoded of [false,true]){
+  const h=harness({database:false});
+  const raw=signed({user_id:testUid,custom_data:testData,ad_unit:'1234567890',transaction_id:'123456789',reward_item:'Crediti Virtuali'},{decoded});
+  assert.deepEqual(await h.callback(raw),{status:200,body:{ok:true,test:true,credited:false}});
+  assert.equal(h.calls.keyFetches,1,'synthetic console probes must still pass Google key verification');
+  assertNoDatabase(h);
+ }
+});
+
+test('synthetic units cannot credit normal accounts or bypass any exact probe field',async()=>{
+ const probe={user_id:testUid,custom_data:testData,ad_unit:'1234567890',transaction_id:'123456789',reward_item:'Crediti Virtuali'};
+ for(const change of [
+  {user_id:'normal_firebase_uid'},
+  {user_id:undefined},
+  {user_id:''},
+  {user_id:'invalid.uid'},
+  {user_id:testUid+'_suffix'},
+  {custom_data:undefined},
+  {custom_data:''},
+  {custom_data:testData+'_suffix'},
+  {user_id:'normal_firebase_uid',custom_data:undefined},
+  {ad_unit:'01234567890'},
+  {ad_unit:'1234567890_suffix'},
+  {transaction_id:'1234567890'},
+  {transaction_id:''},
+  {transaction_id:undefined},
+  {reward_amount:'351'},
+  {reward_amount:'350.0'},
+  {reward_amount:undefined}
+ ]){
+  const h=harness();
+  assert.deepEqual(await h.callback(signed({...probe,...change},{decoded:true})),{status:400,body:{error:'Unexpected reward'}});
+  assertNoDatabase(h);
+ }
+});
+
+test('tampered synthetic probes cannot bypass signature verification',async()=>{
+ const raw=signed({user_id:testUid,custom_data:testData,ad_unit:'1234567890',transaction_id:'123456789',reward_item:'Crediti Virtuali'},{decoded:true});
+ for(const altered of [
+  raw.replace('reward_amount=350','reward_amount=351'),
+  raw.replace('ad_unit=1234567890','ad_unit=3818748399'),
+  raw.replace('transaction_id=123456789','transaction_id=1234567890'),
+  raw.replace('user_id='+testUid,'user_id=normal_firebase_uid'),
+  raw.replace('custom_data='+testData,'custom_data=other')
+ ]){
+  const h=harness();
+  assert.deepEqual(await h.callback(altered),{status:403,body:{error:'Invalid signature'}});
+  assertNoDatabase(h);
+ }
+});
