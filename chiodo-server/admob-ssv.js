@@ -35,9 +35,24 @@ async function verify(raw){
  if(!m||raw.length>8192)return null;
  const p=new URLSearchParams(raw), seen=new Set();
  for(const [k] of p){if(seen.has(k))return null;seen.add(k);}
+ let signature;try{signature=decodeURIComponent(m[2]);}catch(e){return null;}
+ if(!/^[A-Za-z0-9_-]+={0,2}$/.test(signature))return null;
  let key=(await keys()).get(m[3]);if(!key)key=(await keys(true)).get(m[3]);if(!key)return null;
- const sig=Buffer.from(decodeURIComponent(m[2]),'base64url');
- if(!crypto.verify('sha256',Buffer.from(m[1],'utf8'),key,sig))return null;
+ const sig=Buffer.from(signature,'base64url');
+ if(!crypto.verify('sha256',Buffer.from(m[1],'utf8'),key,sig)){
+  // Google/Tink uses URI.getQuery(): percent-decoded UTF-8, in the original order.
+  // Keep raw-signature compatibility, but never reinterpret encoded delimiters,
+  // form-style pluses or percent escapes a second time in the decoded fallback.
+  const decoded=[];
+  for(const part of m[1].split('&')){
+   const i=part.indexOf('='), name=part.slice(0,i);
+   if(i<1||!/^[a-z_]+$/.test(name))return null;
+   let value;try{value=decodeURIComponent(part.slice(i+1));}catch(e){return null;}
+   if(/[&=%+]/.test(value))return null;
+   decoded.push(name+'='+value);
+  }
+  if(!crypto.verify('sha256',Buffer.from(decoded.join('&'),'utf8'),key,sig))return null;
+ }
  return p;
 }
 async function callback(req,send){
