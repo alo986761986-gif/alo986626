@@ -9,6 +9,16 @@ const comm=require('./realtime.js');
 const audioRelay=require('./audio-relay.js');
 const persistence=require('./persistence.js');
 const appAdsTxt=fs.readFileSync(path.join(__dirname,'../frontend/app-ads.txt'),'utf8');
+const publicPages=new Map();
+for(const [file,routes] of [
+ ['privacy.html',['/privacy','/privacy/']],
+ ['privacy-en.html',['/privacy/en']],
+ ['account-deletion.html',['/account-deletion','/account-deletion/']],
+ ['account-deletion-en.html',['/account-deletion/en']]
+]){
+ const body=fs.readFileSync(path.join(__dirname,'../frontend',file));
+ for(const route of routes)publicPages.set(route,body);
+}
 const profileCss=fs.readFileSync(path.join(__dirname,'../frontend/profile.css'),'utf8');
 const profileJs=fs.readFileSync(path.join(__dirname,'../frontend/profile.js'),'utf8');
 const realtimeCss=fs.readFileSync(path.join(__dirname,'../frontend/realtime.css'),'utf8');
@@ -47,6 +57,20 @@ const server=http.createServer(async(req,res)=>{
   res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers','content-type');
   if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}
+  if(req.method==='GET'||req.method==='HEAD'){
+    let documentPath='';
+    try{documentPath=new URL(req.url,'http://localhost').pathname;}catch(e){}
+    const page=publicPages.get(documentPath);
+    if(page){
+      res.writeHead(200,{
+        'Content-Type':'text/html; charset=utf-8',
+        'Content-Length':page.length,
+        'Cache-Control':'public, max-age=300',
+        'Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+      });
+      res.end(req.method==='HEAD'?undefined:page);return;
+    }
+  }
   if(!['GET','POST'].includes(req.method)){res.writeHead(405,{'Allow':'GET, POST, OPTIONS'});res.end();return;}
   if(req.method==='GET'&&req.url==='/app-ads.txt'){
     res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=3600'});
