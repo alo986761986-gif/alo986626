@@ -16,7 +16,7 @@ let tableReady=null,oauth=null;
 class PurchaseError extends Error {constructor(code,message){super(message);this.code=code;}}
 const digest=x=>crypto.createHash('sha256').update(x).digest('hex');
 const obfuscate=uid=>digest('NAPOLI_CARTE_3D:'+uid);
-function configured(){return !!(process.env.DATABASE_URL&&process.env.FIREBASE_WEB_API_KEY&&process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON);}
+function configured(){return !!(process.env.PLAY_BILLING_ENABLED==='true'&&process.env.DATABASE_URL&&process.env.FIREBASE_WEB_API_KEY&&process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON);}
 function validate(v2,productId,uid){
   if(!v2||v2.purchaseStateContext?.purchaseState!=='PURCHASED')throw new PurchaseError(409,'Pagamento non completato');
   const lines=v2.productLineItem;
