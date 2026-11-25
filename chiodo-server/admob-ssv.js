@@ -70,4 +70,4 @@ async function callback(req,send){
  if(consoleTest)return send(200,{ok:true,test:true,credited:false});
  try{const d=await db();await d.query('INSERT INTO nc_admob_rewards(transaction_id,firebase_uid,amount) VALUES($1,$2,350) ON CONFLICT(transaction_id) DO NOTHING',[tx,uid]);return send(200,{ok:true});}catch(e){return send(503,{error:'Reward storage unavailable'});}
 }
-module.exports={callback,verify,rewards,health};
+module.exports={callback,verify,rewards,health,db,firebaseUser};
