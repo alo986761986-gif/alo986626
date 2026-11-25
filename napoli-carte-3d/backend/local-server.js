@@ -8,6 +8,7 @@ const e = require('./engine.js');
 const comm=require('./realtime.js');
 const audioRelay=require('./audio-relay.js');
 const persistence=require('./persistence.js');
+const appAdsTxt=fs.readFileSync(path.join(__dirname,'../frontend/app-ads.txt'),'utf8');
 const profileCss=fs.readFileSync(path.join(__dirname,'../frontend/profile.css'),'utf8');
 const profileJs=fs.readFileSync(path.join(__dirname,'../frontend/profile.js'),'utf8');
 const realtimeCss=fs.readFileSync(path.join(__dirname,'../frontend/realtime.css'),'utf8');
@@ -47,6 +48,10 @@ const server=http.createServer(async(req,res)=>{
   res.setHeader('Access-Control-Allow-Headers','content-type');
   if(req.method==='OPTIONS'){res.writeHead(204);res.end();return;}
   if(!['GET','POST'].includes(req.method)){res.writeHead(405,{'Allow':'GET, POST, OPTIONS'});res.end();return;}
+  if(req.method==='GET'&&req.url==='/app-ads.txt'){
+    res.writeHead(200,{'Content-Type':'text/plain; charset=utf-8','Cache-Control':'public, max-age=3600'});
+    res.end(appAdsTxt);return;
+  }
   if(req.method==='GET'&&(req.url==='/'||req.url==='/index.html')){res.writeHead(200,{'content-type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);return;}
   if(req.method==='GET'&&req.url==='/api/health'){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({...e.statusInfo(),audioRelay:'wss-pcm16',audioRelayStatus:audioRelay.stats(),uptimeSeconds:Math.floor(process.uptime()),cleanupCount:cleanups,serverVersion:'3.0',persistence:persistence.status()}));return;}
   if(req.method!=='POST'||!req.url.startsWith('/api/')){res.writeHead(404);res.end();return;}
@@ -88,3 +93,4 @@ function shutdown(){
  persistence.stop().finally(()=>process.exit(0));
 }
 process.once('SIGTERM',shutdown);process.once('SIGINT',shutdown);
+
