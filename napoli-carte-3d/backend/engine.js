@@ -13,6 +13,7 @@ const rooms = new Map();
 const playerRoom = new Map();
 const MAX_ROOMS = 400;
 const MINUTE = 60*1000;
+const MATCH_WAIT = 30*1000; // Public matchmaking: real players first, CPU only after 30 seconds.
 function purgeRoom(r){rooms.delete(r.id);for(const p of r.players)if(p.token)playerRoom.delete(p.token);if(r.live){r.live.chat.length=0;r.live.signals.length=0;r.live.voice.clear();r.live.limit.clear();}}
 function lookupSession(token){if(typeof token!=='string'||!token)return null;const r=rooms.get(playerRoom.get(token));if(!r)return null;const seat=r.players.findIndex(p=>p.token===token&&!p.bot);return seat>=0?{r,seat,p:r.players[seat]}:null;}
 const now = () => Date.now();
@@ -27,7 +28,7 @@ const isTeams = r => r.seats===4 && ['scopa','scopone','briscola','asso'].includ
 const teamFor = (r,seat)=>isTeams(r)?seat%2:seat;
 const labelFor = (r,i)=>isTeams(r)?`Squadra ${i+1}`:r.players[i]?.name||`Giocatore ${i+1}`;
 function log(r,s){r.log.unshift(s); if(r.log.length>8)r.log.length=8;}
-function newRoom(game,seats){housekeeping();if(rooms.size>=MAX_ROOMS)throw new Error('Server occupato: riprova tra poco. Le partite in corso sono protette.');const r={id:uid(),game,seats,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],friendRequests:new Set(),friendPairs:new Set(),scores:[],result:null,log:[],created:now(),updated:now()}; rooms.set(r.id,r); return r;}
+function newRoom(game,seats){housekeeping();if(rooms.size>=MAX_ROOMS)throw new Error('Server occupato: riprova tra poco. Le partite in corso sono protette.');const r={id:uid(),game,seats,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],friendRequests:new Set(),friendPairs:new Set(),scores:[],result:null,log:[],created:now(),updated:now(),matchDeadline:now()+MATCH_WAIT}; rooms.set(r.id,r); return r;}
 function addPlayer(r,name,bot){const p={token:bot?null:uid(),name:String(name||'Giocatore').trim().slice(0,19)||'Giocatore',bot:!!bot,avatarId:bot?r.players.length%12:0,photo:null,photoMode:'avatar',profileVersion:0,lastSeen:now(),hand:[],pile:[]};r.players.push(p);if(p.token)playerRoom.set(p.token,r.id);return p;}
 function deal(r,count){for(let k=0;k<count;k++)for(let p of r.players)if(r.deck.length)p.hand.push(r.deck.pop());}
 function start(r){r.deck=shuffle(deck40());r.table=[];r.trick=[];r.turn=0;r.scopes=Array(r.seats).fill(0);r.lastCapture=null;r.stood=Array(r.seats).fill(false);r.scores=[];r.result=null;r.status='playing';r.log=[];for(const p of r.players){p.hand=[];p.pile=[];}
@@ -37,7 +38,17 @@ function start(r){r.deck=shuffle(deck40());r.table=[];r.trick=[];r.turn=0;r.scop
  else if(r.game==='sette')deal(r,1);
  log(r,`Inizia ${RULES[r.game].title}. Tocca a ${r.players[0].name}.`);
 }
+function matchTick(at=now()){
+ for(const r of rooms.values()){
+  if(r.status!=='waiting'||r.private||r.players.length===0)continue;
+  if(at<(r.matchDeadline||r.created+MATCH_WAIT))continue;
+  while(r.players.length<r.seats)addPlayer(r,'CPU '+(r.players.length+1),true);
+  if(r.players.length===r.seats)start(r);
+ }
+}
 function join({game,seats,name,bot,invite,private: privateRoom}){
+ matchTick();
+
  name=String(name||'Giocatore').replace(/[<>]/g,'').slice(0,19);
  const code=String(invite||'').trim().toUpperCase();
  let r;
@@ -55,7 +66,7 @@ function join({game,seats,name,bot,invite,private: privateRoom}){
    for(let i=0;i<20;i++){const code=crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();if(![...rooms.values()].some(v=>v!==r&&v.code===code)){r.code=code;break;}}
    if(!r.code)throw new Error('Impossibile creare il codice stanza');
  }
- if(!r)r=[...rooms.values()].find(v=>v.status==='waiting'&&!v.private&&v.game===game&&v.seats===seats&&v.players.length<seats&&now()-v.created<3*60*60*1000);
+ if(!r)r=[...rooms.values()].find(v=>v.status==='waiting'&&!v.private&&v.game===game&&v.seats===seats&&v.players.length<seats&&now()<(v.matchDeadline||v.created+MATCH_WAIT));
  if(!r)r=newRoom(game,seats);
  const me=addPlayer(r,name,false);log(r,`${me.name} è entrato. ${r.players.length}/${r.seats} giocatori.`);
  if(r.players.length===r.seats)start(r);
@@ -177,7 +188,7 @@ function botStep(r){let limit=300;while(r.status==='playing'&&r.players[r.turn]?
  }else{
  const card=p.hand[0];if(!card)break;const ch=getChoices(r,seat,card.id)[0];play(r,seat,{card:card.id,...ch});
  }}if(limit<=0)log(r,'Limite mosse automatiche raggiunto.');}
-function state(token){const {r,seat}=auth(token);botStep(r);return {roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
+function state(token){const {r,seat}=auth(token);matchTick();botStep(r);return {matchDeadline:r.status==='waiting'&&!r.private?(r.matchDeadline||r.created+MATCH_WAIT):0,serverNow:now(),roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
 function action(token,move){const {r,seat}=auth(token);play(r,seat,move);botStep(r);return state(token);}
 function opts(token,card){const {r,seat}=auth(token);botStep(r);return {options:getChoices(r,seat,card)};}
 function housekeeping(){const n=now();let removed=0;
@@ -200,7 +211,7 @@ function leave(token){const {r,seat}=auth(token),p=r.players[seat];
   if(r.players.every(z=>z.bot))purgeRoom(r);else botStep(r);
  }else if(p.token){playerRoom.delete(p.token);p.token=null;p.bot=true;}
  return {ok:true};}
-function statusInfo(){const v=[...rooms.values()];return {ok:true,title:'Napoli Carte 3D',onlinePlayers:v.reduce((n,r)=>n+r.players.filter(p=>!p.bot).length,0),activeTables:v.filter(r=>r.status==='playing').length,waitingTables:v.filter(r=>r.status==='waiting').length,games:GAME_IDS};}
+function statusInfo(){matchTick();const v=[...rooms.values()];return {ok:true,title:'Napoli Carte 3D',onlinePlayers:v.reduce((n,r)=>n+r.players.filter(p=>!p.bot).length,0),activeTables:v.filter(r=>r.status==='playing').length,waitingTables:v.filter(r=>r.status==='waiting').length,games:GAME_IDS};}
 
 /* Game snapshots exclude photo uploads, live audio and chat; session tokens are
    retained only in trusted database storage so an interrupted match can resume. */
@@ -242,4 +253,4 @@ function importSnapshot(snapshot){
  return {rooms:rooms.size,sessions:playerRoom.size};
 }
 
-if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,exportSnapshot,importSnapshot,RULES,rooms,deck40,getChoices,finishScopa,cardText};
+if (typeof module !== 'undefined') module.exports={join,state,action,opts,leave,profile,friend,statusInfo,lookupSession,housekeeping,matchTick,MATCH_WAIT,exportSnapshot,importSnapshot,RULES,rooms,deck40,getChoices,finishScopa,cardText};
