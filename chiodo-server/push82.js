@@ -94,9 +94,33 @@ async function dailyTick(){
  }catch(e){console.error('Daily push:',e.message);}
  finally{dailyRunning=false;}
 }
+async function checkFirebaseCredentials(){
+ const json=process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+ if(!json){console.warn('FCM validation: credentials missing');return false;}
+ try{
+  const account=JSON.parse(json);
+  if(account.project_id!=='napoli-carte-3d'){
+   console.warn('FCM validation: wrong Firebase project');
+   return false;
+  }
+  const sender=messaging();
+  if(!sender)throw new Error('FCM unavailable');
+  const admin=require('firebase-admin');
+  const credential=admin.app().options.credential;
+  const token=await credential.getAccessToken();
+  if(!token||typeof token.access_token!=='string'||!token.access_token)throw new Error('Invalid auth token');
+  console.info('FCM validation: Firebase Admin authenticated for napoli-carte-3d');
+  return true;
+ }catch(_){
+  // Do not log credentials, private key material, access tokens, or raw provider responses.
+  console.warn('FCM validation: service-account authentication failed');
+  return false;
+ }
+}
 function startDailySchedule(){
  const t=setInterval(()=>{dailyTick().catch(()=>{});},15*60*1000);
  t.unref?.();
  dailyTick().catch(()=>{});
+ checkFirebaseCredentials().catch(()=>{});
 }
 module.exports={route,notify,startDailySchedule,dailyTick,setup};
