@@ -134,6 +134,12 @@ async function route(req,send,path){
   if(path==='/invites94/publish'&&req.method==='POST'){
    const a=await body(req),c=context(String(a.tableToken||''));
    if(c.status!=='waiting'||c.private)throw err(409,'Solo tavoli pubblici in attesa possono essere pubblicati');
+   const recent=await p.query(`SELECT COUNT(*)::integer n FROM nc94_invites WHERE sender=$1
+ AND audience='everyone' AND created_at>now()-interval '1 hour'`,[uid]);
+   if(recent.rows[0].n>=5)throw err(429,'Limite di pubblicazione dei tavoli raggiunto');
+   const published=await p.query(`SELECT 1 FROM nc94_invites WHERE sender=$1 AND room_id=$2
+ AND audience='everyone' AND status='pending' AND expires_at>now()`,[uid,c.roomId]);
+   if(published.rowCount)return send(200,{ok:true,roomId:c.roomId});
    await p.query(`INSERT INTO nc94_invites(id,sender,room_id,game,audience,kind,expires_at)
  VALUES($1,$2,$3,$4,'everyone','join',now()+interval '3 minutes')`,
  [crypto.randomUUID(),uid,c.roomId,c.game]);
@@ -179,7 +185,9 @@ async function route(req,send,path){
    const c=expansion.service.publicRoom(inv.room_id);
    if(inv.kind==='join'&&c.status!=='waiting'||inv.kind!=='join'&&c.status!=='playing')throw err(409,'Il tavolo non è più disponibile');
    if(inv.kind==='takeover'&&c.vacantSeats<1)throw err(409,'Posto non più disponibile');
-   await p.query("UPDATE nc94_invites SET status='accepted',responded_at=now() WHERE id=$1 AND recipient=$2",[a.id,uid]);
+   await p.query(`UPDATE nc94_invites SET status='accepted',responded_at=now(),
+     expires_at=CASE WHEN kind='watch' THEN now()+interval '30 minutes' ELSE expires_at END
+     WHERE id=$1 AND recipient=$2`,[a.id,uid]);
    return send(200,{ok:true,status:'accepted',kind:inv.kind,id:inv.id,game:inv.game});
   }
   if(path==='/invites94/enter'&&req.method==='POST'){
@@ -203,8 +211,15 @@ async function route(req,send,path){
    }
    if(inv.kind==='watch')return send(200,{kind:'watch',state:expansion.service.spectatorView(inv.room_id)});
    if(inv.kind==='takeover'){
-    const taken=expansion.service.takeover(inv.room_id,account.rows[0].nickname);
-    await p.query("UPDATE nc94_invites SET status='used' WHERE id=$1",[inv.id]);
+    const used=await p.query(`UPDATE nc94_invites SET status='used' WHERE id=$1
+      AND recipient=$2 AND status='accepted' AND expires_at>now() RETURNING id`,[inv.id,uid]);
+    if(!used.rowCount)throw err(409,'Invito di subentro già utilizzato');
+    let taken;
+    try{taken=expansion.service.takeover(inv.room_id,account.rows[0].nickname);}
+    catch(e){
+      await p.query("UPDATE nc94_invites SET status='accepted' WHERE id=$1 AND status='used'",[inv.id]);
+      throw e;
+    }
     return send(200,{kind:'takeover',game:inv.game,joined:taken});
    }
   }
