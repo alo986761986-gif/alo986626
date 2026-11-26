@@ -96,8 +96,11 @@ async function route(req,send,path){
    const n=await p.query('SELECT 1 FROM nc_social_friends WHERE (requester=$1 AND recipient=$2) OR (requester=$2 AND recipient=$1)',[uid,other]);if(n.rowCount)throw error(409,'Richiesta o amicizia già presente');
    const limit=await p.query('SELECT COUNT(*)::integer AS n FROM nc_social_friends WHERE requester=$1 AND status=\'pending\'',[uid]);if(limit.rows[0].n>=100)throw error(429,'Troppe richieste in sospeso');
    await p.query("INSERT INTO nc_social_friends(requester,recipient,status) VALUES($1,$2,'pending')",[uid,other]);
-   const sender=await p.query('SELECT nickname FROM nc_social_users WHERE uid=$1',[uid]);
-   require('./push82.js').notify(other,'friend_request',{senderUid:uid,senderNickname:sender.rows[0]?.nickname}).catch(()=>{});
+   // Notification delivery must never turn a successfully saved request into HTTP 500.
+   Promise.resolve().then(async()=>{
+    const sender=await p.query('SELECT nickname FROM nc_social_users WHERE uid=$1',[uid]);
+    return require('./push82.js').notify(other,'friend_request',{senderUid:uid,senderNickname:sender.rows[0]?.nickname});
+   }).catch(e=>console.warn('Friend push unavailable',e.message));
    return send(200,{ok:true});
   }
   if(path==='/social/stats'&&req.method==='GET'){
