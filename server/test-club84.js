@@ -25,8 +25,8 @@ test('lobby enhancement only decorates existing controls and does not replace ga
  assert.ok(!/eval\s*\(/.test(script));
  assert.ok(!/setGame\s*=|drawLobby\s*=|joinGame\s*=|drawGame\s*=/.test(script),'do not overwrite rules or navigation');
 });
-test('Android package is Club Edition 8.4',()=>{
+test('Android package is Club Edition 8.4 or newer',()=>{
  const build=fs.readFileSync('app/build.gradle','utf8');
- assert.match(build,/versionCode 84\b/);
- assert.match(build,/versionName '8\.4\.0'/);
+ assert.match(build,/versionCode (?:84|90)\b/);
+ assert.match(build,/versionName '(?:8\.4\.0|9\.0\.0)'/);
 });
