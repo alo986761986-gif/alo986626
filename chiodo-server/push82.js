@@ -29,10 +29,15 @@ async function setup(){
 }
 async function route(req,send,path){
  try{
-  if(!['/push/register','/push/unregister'].includes(path))return send(404,{error:'Endpoint sconosciuto'});
-  if(req.method!=='POST')return send(405,{error:'Metodo non consentito'});
+  if(path==='/push/health'&&req.method==='GET')return send(200,{ok:true,deliveryConfigured:!!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,databaseConfigured:!!process.env.DATABASE_URL});
+  if(!['/push/register','/push/unregister','/push/status'].includes(path))return send(404,{error:'Endpoint sconosciuto'});
+  if(req.method!==(path==='/push/status'?'GET':'POST'))return send(405,{error:'Metodo non consentito'});
   const uid=await social.firebase(req);
   await setup();
+  if(path==='/push/status'){
+   const deviceCount=await social.db().query('SELECT COUNT(*)::integer AS total FROM nc_push_devices WHERE uid=$1',[uid]);
+   return send(200,{ok:true,devices:deviceCount.rows[0].total,deliveryConfigured:!!process.env.FIREBASE_SERVICE_ACCOUNT_JSON});
+  }
   let raw='';
   for await(const chunk of req){raw+=chunk;if(raw.length>4096)return send(413,{error:'Dati troppo grandi'});}
   const data=JSON.parse(raw||'{}'),token=data.token;
@@ -60,7 +65,7 @@ async function notify(uid,type,details={}){
   if((type==='chat_message'||type==='friend_request')&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
   if(details.senderNickname)data.senderNickname=String(details.senderNickname).slice(0,24);
   // Data-only messages let the Android service control channel, privacy and deeplink.
-  const out=await messaging().sendEachForMulticast({tokens,data,android:{priority:'high'}});
+  const out=await messaging().sendEachForMulticast({tokens,data,android:{priority:type==='daily_bonus'?'normal':'high'}});
   const expired=[];
   out.responses.forEach((r,i)=>{
    if(!r.success&&['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error?.code))expired.push(tokens[i]);
