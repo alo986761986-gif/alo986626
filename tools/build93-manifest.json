@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "app": {
     "packageName": "it.napolicarte.game",
-    "versionCode": 93,
-    "versionName": "9.3.0",
+    "versionCode": 94,
+    "versionName": "9.4.0",
     "minSdk": 24,
     "targetSdk": 36,
     "gameCount": 19,
@@ -32,12 +32,12 @@
       "dubito",
       "mercante"
     ],
-    "apkFile": "NAPOLI_CARTE_3D_9_3_19GIOCHI_FIRMATO.apk"
+    "apkFile": "NAPOLI_CARTE_3D_9_4_INVITI_LIVE_FIRMATO.apk"
   },
   "previousRelease": {
-    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk",
-    "file": "NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk",
-    "versionCode": 92
+    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_3_19GIOCHI_FIRMATO.apk",
+    "file": "NAPOLI_CARTE_3D_9_3_19GIOCHI_FIRMATO.apk",
+    "versionCode": 93
   },
   "toolchain": {
     "jdk": {
