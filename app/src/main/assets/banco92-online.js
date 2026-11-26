@@ -142,5 +142,18 @@ function open(){
  root.querySelector('[data-action="close"]')?.focus();
 }
 d.addEventListener('keydown',e=>{if(root&&e.key==='Escape'){e.preventDefault();close();}});
+function mount(){
+ const games=d.querySelector('#root .games');
+ if(!games||games.querySelector('.nc92-launch'))return;
+ const tile=d.createElement('button');tile.type='button';tile.className='game nc92-launch';
+ tile.innerHTML='<span class="sel">ONLINE</span><span class="art">🌍</span><strong>IL BANCO ONLINE</strong><small>La Smorfia · fino a 12 giocatori</small>';
+ tile.onclick=open;games.append(tile);
+}
+function initMount(){
+ const host=d.getElementById('root');
+ if(host)new MutationObserver(()=>{w.requestAnimationFrame(mount)}).observe(host,{childList:true,subtree:false});
+ mount();
+}
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',initMount,{once:true});else initMount();
 w.NC_BANCO_ONLINE_OPEN=open;w.NC_BANCO_ONLINE_CLOSE=close;w.NC_BANCO_ONLINE_IS_OPEN=()=>!!root;
 })(window,document);
