@@ -10,6 +10,7 @@ function back(){
   if(w.NC77_CHAT?.isOpen?.()){w.NC77_CHAT.close();return true;}
   if(w.NC76_MENU?.isOpen?.()){w.NC76_MENU.close();return true;}
   if(d.getElementById('nc70-overlay')){w.NC70_SOCIAL?.close?.();return true;}
+  if(w.NC_MARKET_CLOSE?.())return true;
   if(w.NC52_CLOSE_STORE?.())return true;
   if(w.NC_CHIODO_CLOSE_RULES?.())return true;
   if(w.NC_CHIODO_CLOSE_CHAT?.())return true;
