@@ -14,6 +14,8 @@ on:
       - 'app/src/main/assets/push82.js'
       - 'app/src/main/java/it/napolicarte/game/**'
       - 'server/test-invites94.js'
+      - 'tools/**'
+      - 'app/build.gradle'
       - '.github/workflows/invites94-regression.yml'
   workflow_dispatch:
 permissions:
