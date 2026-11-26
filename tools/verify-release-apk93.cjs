@@ -41,6 +41,15 @@ function packageInfo(badging) {
     debuggable: /^application-debuggable(?:\s|$)/m.test(badging)
   };
 }
+function launcherIcons(badging) {
+  const icons = new Map();
+  for (const match of badging.matchAll(/^application-icon-(\d+):'([^']+)'\s*$/gm)) {
+    const dpi = Number(match[1]);
+    assert.ok(!icons.has(dpi), 'Duplicate application icon metadata for density ' + dpi);
+    icons.set(dpi, match[2]);
+  }
+  return icons;
+}
 function readEntry(apk, name) { return run('unzip', ['-p', apk, name], true); }
 function listEntries(apk) { return run('unzip', ['-Z1', apk]).trim().split(/\r?\n/).filter(Boolean); }
 function verifySignature(java, signerJar, apk) {
@@ -75,8 +84,9 @@ function checkApk(options) {
     'Release certificate differs from the previously published APK');
   assert.ok(signature.v2 || signature.v3, 'Release APK must support Android APK Signature Scheme v2 or v3');
 
-  const info = packageInfo(run(aapt, ['dump', 'badging', apk]));
-  const previousInfo = packageInfo(run(aapt, ['dump', 'badging', previous]));
+  const badging = run(aapt, ['dump', 'badging', apk]);
+  const previousBadging = run(aapt, ['dump', 'badging', previous]);
+  const info = packageInfo(badging), previousInfo = packageInfo(previousBadging);
   for (const key of ['packageName', 'versionCode', 'versionName', 'minSdk', 'targetSdk']) {
     assert.equal(info[key], manifest.app[key], 'Unexpected APK manifest field: ' + key);
   }
@@ -103,20 +113,26 @@ function checkApk(options) {
   assert.equal(music.bytes, manifest.music.bytes, 'Music size changed');
   assert.equal(music.sha256, manifest.music.sha256, 'Music hash changed');
 
+  // Release resource optimization may rename or deduplicate ZIP entries.
+  // Resolve the application icon through Android's compiled resource table.
+  const densityDpi = { mdpi: 160, hdpi: 240, xhdpi: 320, xxhdpi: 480, xxxhdpi: 640 };
+  const currentIcons = launcherIcons(badging), previousIcons = launcherIcons(previousBadging);
   const icons = manifest.icons.densities.map(density => {
-    const pattern = new RegExp('^res/mipmap-' + density + '(?:-[^/]+)?/ic_launcher\\.png$');
-    const matches = entries.filter(entry => pattern.test(entry));
-    const oldMatches = previousEntries.filter(entry => pattern.test(entry));
-    assert.equal(matches.length, 1, 'One launcher icon is required for density ' + density);
-    assert.equal(oldMatches.length, 1, 'Previous APK must contain icon density ' + density);
-    const packaged = readEntry(apk, matches[0]), old = readEntry(previous, oldMatches[0]);
+    const dpi = densityDpi[density], entry = currentIcons.get(dpi), oldEntry = previousIcons.get(dpi);
+    assert.ok(entry, 'Missing compiled application icon at ' + density + '; available densities: ' +
+      Array.from(currentIcons.keys()).join(', '));
+    assert.ok(oldEntry, 'Previous APK is missing its application icon at ' + density);
+    assert.ok(entries.includes(entry), 'Resolved launcher icon is absent from the APK: ' + entry);
+    assert.ok(previousEntries.includes(oldEntry), 'Resolved previous launcher icon is absent: ' + oldEntry);
+    const packaged = readEntry(apk, entry), old = readEntry(previous, oldEntry);
     const dimensions = iconDimensions(packaged);
     assert.deepEqual(dimensions, iconDimensions(old), 'Launcher icon dimensions changed: ' + density);
     const rawSource = fs.readFileSync(path.join(source, 'app/src/main/res/mipmap-' + density + '/ic_launcher.png'));
     const gitBlob = crypto.createHash('sha1').update(Buffer.from('blob ' + rawSource.length + '\0')).update(rawSource).digest('hex');
     assert.equal(gitBlob, manifest.icons.sourceGitBlob, 'Original launcher source icon changed');
-    return { density, entry: matches[0], ...dimensions, sha256: digest(packaged),
-      previousSha256: digest(old), compiledBytesMatchPrevious: packaged.equals(old), sourceGitBlob: gitBlob };
+    return { density, dpi, entry, previousEntry: oldEntry, resolution: 'aapt dump badging',
+      ...dimensions, sha256: digest(packaged), previousSha256: digest(old),
+      compiledBytesMatchPrevious: packaged.equals(old), sourceGitBlob: gitBlob };
   });
   const extraAssets = entries.filter(entry => entry.startsWith('assets/') && !entry.endsWith('/') &&
     !sourceFiles.includes(entry.slice(7)));
@@ -161,4 +177,4 @@ if (require.main === module) {
     process.exitCode = 1;
   }
 }
-module.exports = { certDigests, packageInfo, checkApk, argumentsFor };
+module.exports = { certDigests, packageInfo, launcherIcons, checkApk, argumentsFor };

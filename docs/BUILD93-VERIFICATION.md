@@ -29,7 +29,8 @@ fissati. La versione della piattaforma Android è 36 e i Build Tools sono
 ## Ordine delle verifiche
 
 1. Scarica l’APK 9.2 pubblico, necessario al confronto del certificato.
-2. Ripristina la musica originale dai venti frammenti già nel repository.
+2. Genera l’HTML 9.3 con il preparatore idempotente e ripristina la musica
+   originale dai venti frammenti già nel repository.
 3. Controlla sintassi, CommonJS sotto `app/package.json`, moduli app/server
    identici, catalogo degli undici motori, classici preservati e asset.
 4. Esegue i quattordici file di test elencati nel manifest con `node --test`.
@@ -76,8 +77,10 @@ effettiva del browser e le revisioni degli strumenti Android installati.
 
 ## Firma e contenuto dell’APK
 
-`tools/verify-release-apk93.cjs` esegue `apksigner verify --verbose
---print-certs` sia sul nuovo APK sia sul precedente. Le impronte SHA-256
+`tools/verify-release-apk93.cjs` esegue il binario Java assoluto indicato da
+`--java`, avviando `lib/apksigner.jar verify --verbose --print-certs` sia sul
+nuovo APK sia sul precedente. In questo modo usa sempre il JDK fissato
+senza dipendere dal `PATH` del wrapper shell dell’SDK. Le impronte SHA-256
 dei certificati devono essere identiche. Il nuovo APK deve avere una firma
 v2 o v3 valida e non può usare un certificato Android Debug.
 
@@ -94,9 +97,12 @@ non deve far fallire un conteggio storico di 51.
 La musica deve avere 11.464.051 byte e SHA-256
 `fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226`.
 Le cinque icone sorgente devono conservare il blob Git originale
-`fdec54a0262337de36b8365ecda1510ab6a261c5`. Nel pacchetto vengono controllati
-presenza, formato PNG e dimensioni per tutte le densità; il report registra
-anche gli hash degli asset compilati e il confronto con il precedente APK.
+`fdec54a0262337de36b8365ecda1510ab6a261c5`. Per ciascuna densità, il verificatore
+risolve l’icona dell’app tramite `aapt dump badging`: la compilazione può
+rinominare i file o deduplicare immagini identiche. Non presume quindi che
+i nomi ZIP coincidano con i percorsi sorgente. Controlla presenza, formato
+PNG e dimensioni rispetto alla 9.2; il report registra percorsi risolti,
+hash degli asset compilati e confronto con il precedente APK.
 
 ## Collaudo online
 
@@ -138,11 +144,13 @@ ripristinata, e un SDK contenente Build Tools 35.0.0. Il seguente comando
 confronta il nuovo pacchetto con il precedente senza modificarli:
 
 ```sh
+node tools/prepare-expansion-index.cjs
 bash server/restore_bass_audio.sh
 node tools/verify-release-apk93.cjs \
   --apk /percorso/NAPOLI_CARTE_3D_9_3_19GIOCHI_FIRMATO.apk \
   --previous /percorso/NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk \
   --sdk /percorso/android-sdk \
+  --java /percorso/jdk17/bin/java \
   --source "$PWD" \
   --report /percorso/verifica-apk93.json
 ```
