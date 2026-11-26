@@ -2,13 +2,19 @@
 'use strict';
 const games=[
  ['scopa','Scopa','🪙','Fai prese, scope e conquista il settebello.'],
- ['scopone','Scopone','👑','Quattro giocatori in due squadre: vince la strategia.'],
+ ['scopone','Scopone scientifico','👑','Quattro giocatori in due squadre: vince la strategia.'],
  ['briscola','Briscola','⚔️','Scegli la carta migliore e usa il seme di briscola.'],
  ['sette','Sette e Mezzo','7½','Avvicinati a sette e mezzo senza superarlo.'],
  ['asso','Asso Piglia Tutto','🏆','Gli assi possono cambiare la partita.'],
  ['ruba','Ruba Mazzetto','🃏','Fai prese e ruba i mazzetti.'],
  ['chiodo121','Chiodo 121','♠','Gioca le carte speciali rispettando il turno.']
 ];
+const expansionIcons={tressette:'🃏',traversone:'🔄',briscola_chiamata:'🤝',bestia:'🐺',trentuno:'31',cucu:'🐦',cirulla:'✨',asino:'🐴',dubito:'🎭',tressette_morto:'👤',mercante:'🎪'};
+const expansionDescriptions={tressette:'Rispondi al seme e conquista le prese.',traversone:'Cerca di evitare i punti delle prese.',briscola_chiamata:'Asta, carta chiamata e alleato segreto.',bestia:'Scegli se entrare e conquista le prese.',trentuno:'Migliora il tuo seme e scegli quando bussare.',cucu:'Tieni o scambia la carta al tuo turno.',cirulla:'Prese a quindici, accusi e combinazioni.',asino:'Elimina le coppie e pesca dagli avversari.',dubito:'Gioca coperto e scegli quando dubitare.',tressette_morto:'Gioca con la mano scoperta del Morto.',mercante:'Aste di carte e premi di partita.'};
+const expansionGames=w.NC_EXPANSION_SESSION?.catalog?.()||[];
+const expansionIds=new Set(expansionGames.map(game=>game.id));
+games.push(['banco','Il Banco · Tombola','🎱','Tombola e Smorfia Napoletana, locale e online.']);
+for(const game of expansionGames)games.push([game.id,game.title,expansionIcons[game.id]||'🃏',expansionDescriptions[game.id]||'Apri il tavolo e leggi la variante.']);
 let panel=null,step=0,selected='scopa',done=false;
 let audio=null,playing=false,starting=false,gameActive=false,systemPaused=false;
 const MUSIC_KEY='nc74_music_enabled';
@@ -47,7 +53,7 @@ function pauseMusic(){
  if(audio)audio.pause();
  playing=false;
 }
-function detectGame(){const host=d.getElementById('root');return !!(d.getElementById('chiodo121')||d.getElementById('chiodo121-online')||(host&&!host.querySelector('.setup')&&(host.querySelector('.board')||host.querySelector('.waiting')||host.querySelector('.scoreboard'))));}
+function detectGame(){const host=d.getElementById('root');return !!(w.NC_EXPANSION?.isPlaying?.()||w.NC_BANCO_IS_OPEN?.()||w.NC_BANCO_ONLINE_IS_OPEN?.()||d.getElementById('chiodo121')||d.getElementById('chiodo121-online')||(host&&!host.querySelector('.setup')&&(host.querySelector('.board')||host.querySelector('.waiting')||host.querySelector('.scoreboard'))));}
 function syncGameMusic(){const on=detectGame();if(on!==gameActive){gameActive=on;if(on)pauseMusic();else if(enabled&&!gameActive)startMusic();}}
 function setMusic(on){
  enabled=!!on;
@@ -60,6 +66,8 @@ function toggleMusic(){setMusic(!enabled);}
 function close(){remember();panel?.remove();panel=null;musicLabel();}
 function launch(kind){
  const game=selected;close();
+ if(expansionIds.has(game)){w.NC_EXPANSION?.open?.(game,kind==='online'?'online':'cpu');return;}
+ if(game==='banco'){if(kind==='online')w.NC_BANCO_ONLINE_OPEN?.();else w.NC_BANCO_OPEN?.();return;}
  if(kind==='online'){
   if(typeof w.NC72_ONLINE_OPEN==='function'){w.NC72_ONLINE_OPEN();w.NC72_ONLINE_SELECT?.(game);}
   else w.setMode?.('online');
@@ -80,10 +88,10 @@ function paint(){
  if(step===0){
   body.append(create('div','nc74-cards','🃏 🪙 ♛'));
   body.append(create('h2','nc74-title','Benvenuto, '+nickname()+'!'));
-  body.append(create('p','nc74-copy','Napoli Carte 3D ti dà il benvenuto! Sette giochi, carte napoletane, partite contro CPU e sfide online.'));
+  body.append(create('p','nc74-copy','Napoli Carte 3D ti dà il benvenuto! '+games.length+' giochi, carte napoletane, Tombola e sfide online.'));
   body.append(create('p','nc74-gold','La passione di Napoli, una carta alla volta.'));
  }else if(step===1){
-  body.append(create('h2','nc74-title','Scopri i 7 giochi'));
+  body.append(create('h2','nc74-title','Scopri i '+games.length+' giochi'));
   body.append(create('p','nc74-copy','Tocca un gioco per scegliere quello che vuoi provare.'));
   const list=create('div','nc74-game-grid');
   for(const [id,name,icon,description] of games){
@@ -99,7 +107,7 @@ function paint(){
  }else if(step===3){
   body.append(create('h2','nc74-title','Crediti, regole e amici'));
   body.append(tile('Bonus giornaliero','Apri 🎁 Bonus giornaliero e riscatta una ricompensa gratuita ogni giorno.','🎁'));
-  body.append(tile('Regole complete','Dal menu premi Consulta le regole per imparare le sette varianti.','📖'));
+  body.append(tile('Regole complete','Consulta le regole dei classici dal menu e leggi la variante prima di aprire un nuovo tavolo.','📖'));
   body.append(tile('Amici e statistiche','Cerca i nickname e consulta i dati disponibili nella tua area personale.','👥'));
   body.append(create('p','nc74-gold','I crediti sono virtuali e non si convertono in denaro.'));
  }else{

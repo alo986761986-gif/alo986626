@@ -93,3 +93,7 @@ Non è stato eseguito un collaudo su telefoni fisici. La compatibilità dichiara
 Prima di pubblicare modifiche alle regole eseguire `python3 tools/sync-expansion-engines.py`, poi la suite elencata in `tools/build93-manifest.json`. Il builder di rilascio è `tools/render-build-apk82.sh`.
 
 Il backend degli undici nuovi giochi è `https://napoli-chiodo-121.onrender.com/expansion/`; il file `server_url.txt` continua a identificare il servizio dei giochi classici.
+
+## Preparazione dell'HTML
+
+Il file HTML di base 9.2 rimane nel repository. Il catalogo 9.3 viene generato da `tools/prepare-expansion-index.cjs` con sostituzioni puntuali, controllo dell'impronta della base e verifica idempotente. La pipeline lo esegue prima dei test; anche il task Gradle `preBuild` lo richiama. Le verifiche UI e APK riguardano l'HTML generato. Il codice sorgente della trasformazione è quindi parte necessaria della build e richiede Node.js.

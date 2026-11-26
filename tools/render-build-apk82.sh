@@ -63,6 +63,7 @@ unzip -t "$PREVIOUS_APK" >/dev/null
 QA_ENV=(env -u DATABASE_URL -u UPLOAD_KEYSTORE_BASE64 -u UPLOAD_KEYSTORE \
   -u UPLOAD_STORE_PASSWORD -u UPLOAD_KEY_ALIAS -u UPLOAD_KEY_PASSWORD \
   -u GOOGLE_APPLICATION_CREDENTIALS)
+"${QA_ENV[@]}" node tools/prepare-expansion-index.cjs
 bash server/restore_bass_audio.sh
 for file in app/src/main/assets/*.js chiodo-server/expansion*.js chiodo-server/games/expansion*.js \
   chiodo-server/http.js chiodo-server/banco92-core.js chiodo-server/banco92.js \

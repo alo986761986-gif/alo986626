@@ -39,3 +39,10 @@ dependencies {
     implementation 'androidx.webkit:webkit:1.10.0'
 }
 
+
+// Reproduce the generated 9.3 catalogue before every Android build.
+tasks.register('prepareExpansionIndex', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'node', new File(rootProject.projectDir, 'tools/prepare-expansion-index.cjs').absolutePath
+}
+tasks.named('preBuild').configure { dependsOn 'prepareExpansionIndex' }
