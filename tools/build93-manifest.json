@@ -182,5 +182,6 @@
   },
   "backendModulesDir": "chiodo-server/games",
   "backendUrl": "https://napoli-chiodo-121.onrender.com",
-  "generatedIndexScript": "tools/prepare-expansion-index.cjs"
+  "generatedIndexScript": "tools/prepare-expansion-index.cjs",
+  "backendProtocolVersion": "9.3.0"
 }
