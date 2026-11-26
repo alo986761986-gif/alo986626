@@ -21,7 +21,22 @@ permissions:
 jobs:
   regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nc94
+          POSTGRES_PASSWORD: nc94-test-only
+          POSTGRES_DB: invites94_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U nc94 -d invites94_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://nc94:nc94-test-only@127.0.0.1:5432/invites94_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -45,6 +60,16 @@ jobs:
           set -euo pipefail
           cmp app/src/main/assets/expansion-session.js chiodo-server/games/expansion-session.js
           node --test --test-reporter=spec server/test-invites94.js server/test-expansion-session.js
+      - name: Install isolated PostgreSQL test client
+        shell: bash
+        run: |
+          npm install --prefix /tmp/nc94-pg --ignore-scripts --no-audit --no-fund --save-exact pg@8.16.3
+      - name: Verify authenticated invite routes with PostgreSQL
+        shell: bash
+        env:
+          NODE_PATH: /tmp/nc94-pg/node_modules
+        run: |
+          node --test --test-reporter=spec server/test-invites94-db.js
       - name: Validate Android bridge integration
         shell: bash
         run: |
