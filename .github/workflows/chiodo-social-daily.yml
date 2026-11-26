@@ -1,0 +1,29 @@
+name: Verify social and daily backend endpoints
+on:
+  push:
+    branches: [chiodo-121-server]
+    paths:
+      - 'chiodo-server/http.js'
+      - 'chiodo-server/social70.js'
+      - 'chiodo-server/daily71.js'
+      - 'chiodo-server/test-social-daily-routes.js'
+      - '.github/workflows/chiodo-social-daily.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  endpoint-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax checks
+        run: |
+          node --check chiodo-server/http.js
+          node --check chiodo-server/social70.js
+          node --check chiodo-server/daily71.js
+      - name: Verify available endpoints and mandatory Firebase authentication
+        run: node chiodo-server/test-social-daily-routes.js
