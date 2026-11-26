@@ -84,3 +84,8 @@
 #nc91-banco .nc91-actions{gap:6px}
 }
 @media(prefers-reduced-motion:reduce){#nc91-banco .nc91-ball.pop{animation:none}}
+
+/* Playable seventh game tile in the existing Premium Club lobby */
+body.nc90-in-lobby #root button.game.nc91-launch{--g0:#ffbf47;--g1:#dc7c23;--g2:#894014;background:radial-gradient(circle at 35% 5%,var(--g0),var(--g1) 55%,var(--g2))!important;border-color:#ffe3a2!important}
+body.nc90-in-lobby #root button.game.nc91-launch .art{background:radial-gradient(circle at 30% 20%,#fff2b2,#9d211e)!important;font-size:38px!important}
+body.nc90-in-lobby #root button.game.nc91-launch strong{color:#ffefb5!important}
