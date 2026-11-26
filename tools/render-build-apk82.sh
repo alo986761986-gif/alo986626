@@ -18,7 +18,7 @@ fi
 java -version
 
 fetch 'https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip' "$TOOLS/cmdline-tools.zip"
-echo "4abbbcdc842f3d4879206e9695d52709603e52dd68d3c1fff04b3b5e7a308ecf  $TOOLS/cmdline-tools.zip" | sha256sum --check --status
+echo "7ec965280a073311c339e571cd5de778b9975026cfcbef79f2b1cdbc1e15317ee  $TOOLS/cmdline-tools.zip" | sha256sum --check --status
 mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
 unzip -q "$TOOLS/cmdline-tools.zip" -d "$ANDROID_SDK_ROOT/cmdline-tools"
 mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
