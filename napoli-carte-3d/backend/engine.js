@@ -24,11 +24,11 @@ const value = c => c.v <=7 ? c.v : .5;
 const briscolaPoints = c => ({1:11,3:10,10:4,9:3,8:2})[c.v] || 0;
 const briscolaPower = c => ({1:10,3:9,10:8,9:7,8:6,7:5,6:4,5:3,4:2,2:1})[c.v]||0;
 const cardText = c => c ? `${({8:'Fante',9:'Cavallo',10:'Re'})[c.v]||c.v} di ${['Denari','Coppe','Spade','Bastoni'][c.s]}` : '';
-const isTeams = r => r.seats===4 && ['scopa','scopone','briscola','asso'].includes(r.game);
+const isTeams = r => r.seats===4 && (r.format==='pairs' || (r.format==null && ['scopa','scopone','briscola','asso'].includes(r.game)));
 const teamFor = (r,seat)=>isTeams(r)?seat%2:seat;
 const labelFor = (r,i)=>isTeams(r)?`Squadra ${i+1}`:r.players[i]?.name||`Giocatore ${i+1}`;
 function log(r,s){r.log.unshift(s); if(r.log.length>8)r.log.length=8;}
-function newRoom(game,seats){housekeeping();if(rooms.size>=MAX_ROOMS)throw new Error('Server occupato: riprova tra poco. Le partite in corso sono protette.');const startAt=now();const r={id:uid(),game,seats,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],friendRequests:new Set(),friendPairs:new Set(),scores:[],result:null,log:[],created:startAt,updated:startAt,matchDeadline:startAt+MATCH_WAIT}; rooms.set(r.id,r); return r;}
+function newRoom(game,seats,format='individual'){housekeeping();if(rooms.size>=MAX_ROOMS)throw new Error('Server occupato: riprova tra poco. Le partite in corso sono protette.');const startAt=now();const r={id:uid(),game,seats,format,players:[],status:'waiting',deck:[],table:[],trick:[],trump:null,turn:0,scopes:Array(seats).fill(0),lastCapture:null,banker:seats-1,stood:[],friendRequests:new Set(),friendPairs:new Set(),scores:[],result:null,log:[],created:startAt,updated:startAt,matchDeadline:startAt+MATCH_WAIT}; rooms.set(r.id,r); return r;}
 function addPlayer(r,name,bot){const p={token:bot?null:uid(),name:String(name||'Giocatore').trim().slice(0,19)||'Giocatore',bot:!!bot,avatarId:bot?r.players.length%12:0,photo:null,photoMode:'avatar',profileVersion:0,lastSeen:now(),hand:[],pile:[]};r.players.push(p);if(p.token)playerRoom.set(p.token,r.id);return p;}
 function deal(r,count){for(let k=0;k<count;k++)for(let p of r.players)if(r.deck.length)p.hand.push(r.deck.pop());}
 function start(r){r.deck=shuffle(deck40());r.table=[];r.trick=[];r.turn=0;r.scopes=Array(r.seats).fill(0);r.lastCapture=null;r.stood=Array(r.seats).fill(false);r.scores=[];r.result=null;r.status='playing';r.log=[];for(const p of r.players){p.hand=[];p.pile=[];}
@@ -46,7 +46,7 @@ function matchTick(at=now()){
   if(r.players.length===r.seats)start(r);
  }
 }
-function join({game,seats,name,bot,invite,private: privateRoom}){
+function join({game,seats,name,bot,invite,private: privateRoom,format}){
  matchTick();
 
  name=String(name||'Giocatore').replace(/[<>]/g,'').slice(0,19);
@@ -56,18 +56,20 @@ function join({game,seats,name,bot,invite,private: privateRoom}){
    if(!/^[A-Z0-9]{6}$/.test(code))throw new Error('Il codice invito deve avere 6 caratteri');
    r=[...rooms.values()].find(v=>v.code===code&&v.status==='waiting'&&v.players.length<v.seats);
    if(!r)throw new Error('Nessun tavolo in attesa con questo codice');
-   game=r.game;seats=r.seats;bot=false;
+   game=r.game;seats=r.seats;format=r.format|| (r.game==='scopone'?'pairs':'individual');bot=false;
  }
  if(!GAME_IDS.includes(game))throw new Error('Gioco non valido');
  seats=Number(seats);if(!RULES[game].seats.includes(seats))throw new Error('Numero di giocatori non supportato');
- if(bot){r=newRoom(game,seats); const me=addPlayer(r,name,false);for(let i=1;i<seats;i++)addPlayer(r,`CPU ${i}`,true);start(r); return {token:me.token,roomId:r.id};}
+ format=game==='scopone'?'pairs':format==null?(seats===4&&['scopa','briscola','asso'].includes(game)?'pairs':'individual'):String(format);
+ if(!['individual','pairs'].includes(format)||format==='pairs'&&seats!==4)throw new Error('Modalità di gioco non valida');
+ if(bot){r=newRoom(game,seats,format); const me=addPlayer(r,name,false);for(let i=1;i<seats;i++)addPlayer(r,`CPU ${i}`,true);start(r); return {token:me.token,roomId:r.id};}
  if(!r && privateRoom){
-   r=newRoom(game,seats);r.private=true;
+   r=newRoom(game,seats,format);r.private=true;
    for(let i=0;i<20;i++){const code=crypto.randomUUID().replace(/-/g,'').slice(0,6).toUpperCase();if(![...rooms.values()].some(v=>v!==r&&v.code===code)){r.code=code;break;}}
    if(!r.code)throw new Error('Impossibile creare il codice stanza');
  }
- if(!r)r=[...rooms.values()].find(v=>v.status==='waiting'&&!v.private&&v.game===game&&v.seats===seats&&v.players.length<seats&&now()<(v.matchDeadline||v.created+MATCH_WAIT));
- if(!r)r=newRoom(game,seats);
+ if(!r)r=[...rooms.values()].find(v=>v.status==='waiting'&&!v.private&&v.game===game&&v.seats===seats&&(v.format|| (v.seats===4&&['scopa','scopone','briscola','asso'].includes(v.game)?'pairs':'individual'))===format&&v.players.length<seats&&now()<(v.matchDeadline||v.created+MATCH_WAIT));
+ if(!r)r=newRoom(game,seats,format);
  const me=addPlayer(r,name,false);log(r,`${me.name} è entrato. ${r.players.length}/${r.seats} giocatori.`);
  if(r.players.length===r.seats)start(r);
  return {token:me.token,roomId:r.id,code:r.code||null};
@@ -140,9 +142,11 @@ function finishScopa(r){if(r.table.length){r.players[r.lastCapture??0].pile.push
  r.scores=stats.map((s,i)=>({name:labelFor(r,i),points:s.points,cards:s.cards.length,denari:s.denari,scope:s.scope,primiera:s.primiera,settebello:s.settebello}));end(r);
 }
 function finishBriscola(r){const n=isTeams(r)?2:r.seats;const s=Array.from({length:n},(_,i)=>({name:labelFor(r,i),points:0,cards:0}));r.players.forEach((p,i)=>{s[teamFor(r,i)].points+=p.pile.reduce((a,c)=>a+briscolaPoints(c),0);s[teamFor(r,i)].cards+=p.pile.length;});r.scores=s;end(r);}
-function finishRuba(r){r.players[r.lastCapture??0].pile.push(...r.table);r.table=[];r.scores=r.players.map(p=>({name:p.name,points:p.pile.length,cards:p.pile.length}));end(r);}
+function finishRuba(r){r.players[r.lastCapture??0].pile.push(...r.table);r.table=[];
+ if(isTeams(r))r.scores=[0,1].map(team=>({name:'Squadra '+(team+1),points:r.players.reduce((sum,p,i)=>sum+(i%2===team?p.pile.length:0),0),cards:r.players.reduce((sum,p,i)=>sum+(i%2===team?p.pile.length:0),0)}));
+ else r.scores=r.players.map(p=>({name:p.name,points:p.pile.length,cards:p.pile.length}));end(r);}
 function finishSette(r){const b=r.banker;const bank=r.players[b].hand.reduce((s,c)=>s+value(c),0);const scores=r.players.map(p=>({name:p.name,points:0,total:p.hand.reduce((s,c)=>s+value(c),0)}));
- for(let i=0;i<r.seats;i++){if(i===b)continue;const x=scores[i].total;const win=x<=7.5&&(bank>7.5||x>bank);if(win)scores[i].points++;else scores[b].points++;}r.scores=scores;end(r);}
+ for(let i=0;i<r.seats;i++){if(i===b)continue;const x=scores[i].total;const win=x<=7.5&&(bank>7.5||x>bank);if(win)scores[i].points++;else scores[b].points++;}r.scores=isTeams(r)?[0,1].map(team=>({name:'Squadra '+(team+1),points:scores.reduce((sum,p,i)=>sum+(i%2===team?p.points:0),0),cards:0})):scores;end(r);}
 function end(r){r.status='finished';r.turn=-1;const best=Math.max(...r.scores.map(s=>s.points));const winners=r.scores.filter(s=>s.points===best);r.result=winners.length===1?`Vince ${winners[0].name} con ${best} punti!`:`Pareggio a ${best} punti.`;log(r,r.result);}
 function advance(r,seat){r.turn=(seat+1)%r.seats;}
 function play(r,seat,move){if(r.status!=='playing'||r.turn!==seat)throw new Error('Non è il tuo turno');const p=r.players[seat];
@@ -188,7 +192,7 @@ function botStep(r){let limit=300;while(r.status==='playing'&&r.players[r.turn]?
  }else{
  const card=p.hand[0];if(!card)break;const ch=getChoices(r,seat,card.id)[0];play(r,seat,{card:card.id,...ch});
  }}if(limit<=0)log(r,'Limite mosse automatiche raggiunto.');}
-function state(token){const {r,seat}=auth(token);matchTick();botStep(r);return {matchDeadline:r.status==='waiting'&&!r.private?(r.matchDeadline||r.created+MATCH_WAIT):0,serverNow:now(),roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
+function state(token){const {r,seat}=auth(token);matchTick();botStep(r);return {matchDeadline:r.status==='waiting'&&!r.private?(r.matchDeadline||r.created+MATCH_WAIT):0,serverNow:now(),roomId:r.id,code:r.code||null,private:!!r.private,game:r.game,title:RULES[r.game].title,seats:r.seats,format:isTeams(r)?'pairs':'individual',seat,status:r.status,players:r.players.map((p,i)=>({name:p.name,bot:p.bot,handCount:p.hand.length,pileCount:p.pile.length,pileTop:r.game==='ruba'&&p.pile.length?p.pile[p.pile.length-1]:null,team:isTeams(r)?i%2:null,avatarId:p.avatarId,photoVersion:p.profileVersion,photo:sharedPhoto(r,seat,i),photoMode:i===seat?p.photoMode:undefined,friendStatus:friendStatus(r,seat,i),stood:r.stood[i]||false,total:r.game==='sette'&&(i===seat||r.status==='finished')?p.hand.reduce((s,c)=>s+value(c),0):null})),hand:r.players[seat].hand,turn:r.turn,table:r.table,trick:r.trick,deckCount:r.deck.length,trump:r.trump,scope:r.scopes,log:r.log,result:r.result,scores:r.scores,banker:r.banker,opponentCards:r.status==='finished'&&r.game==='sette'?r.players.map(p=>p.hand):null};}
 function action(token,move){const {r,seat}=auth(token);play(r,seat,move);botStep(r);return state(token);}
 function opts(token,card){const {r,seat}=auth(token);botStep(r);return {options:getChoices(r,seat,card)};}
 function housekeeping(){const n=now();let removed=0;
@@ -232,7 +236,7 @@ function importSnapshot(snapshot){
  const freshRooms=new Map(),freshPlayers=new Map(),keys=new Set();
  for(const src of snapshot.rooms){
   if(!src||typeof src.id!=='string'||src.id.length>100||!GAME_IDS.includes(src.game)||
-     !RULES[src.game].seats.includes(src.seats)||!Array.isArray(src.players)||src.players.length>src.seats||
+     !RULES[src.game].seats.includes(src.seats)||(src.format!=null&&!['individual','pairs'].includes(src.format))||src.format==='pairs'&&src.seats!==4||!Array.isArray(src.players)||src.players.length>src.seats||
      !['waiting','playing','finished'].includes(src.status)||freshRooms.has(src.id))throw Error('Snapshot stanza non valida');
   const r={...src,live:undefined,friendRequests:new Set(src.friendRequests||[]),friendPairs:new Set(src.friendPairs||[])};
   r.players=src.players.map(p=>{
