@@ -1,1 +1,9 @@
-{"name":"chiodo-server","private":true,"type":"commonjs","version":"1.0.0"}
+{
+  "name": "chiodo-server",
+  "private": true,
+  "type": "commonjs",
+  "version": "1.0.0",
+  "dependencies": {
+    "firebase-admin": "^13.4.0"
+  }
+}
