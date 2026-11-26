@@ -1,0 +1,135 @@
+/* IL BANCO — Smorfia Napoletana · Original premium portrait UI */
+#nc92-online{position:fixed;inset:0;z-index:2147483638;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c89c43 #063e32;color:#fff5d7;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:radial-gradient(ellipse at 43% 8%,#306cb1 0,#0e487e 24%,#0b4b56 48%,#042c28 90%);padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch;touch-action:pan-y;box-sizing:border-box}
+#nc92-online *{box-sizing:border-box}
+#nc92-online .nc91-wrap{width:min(1100px,100%);margin:auto;padding:12px 0 35px;min-width:0}
+#nc92-online button{font:inherit;cursor:pointer;touch-action:manipulation;min-height:42px}
+#nc92-online button:focus-visible{outline:3px solid #f9dc79;outline-offset:3px}
+#nc92-online button:disabled{opacity:.5;cursor:not-allowed}
+#nc92-online .nc91-frame{position:relative;border:4px ridge #d8a444;border-radius:22px;box-shadow:inset 0 0 0 2px #fff1b1,0 13px 26px #001a20;overflow:hidden;background:linear-gradient(135deg,#092e44,#053e37)}
+#nc92-online .nc91-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:9px 12px;background:linear-gradient(140deg,#082454,#004e6a);border:2px solid #dba73a;border-radius:18px;box-shadow:0 4px 9px #001725}
+#nc92-online .nc91-head button{border:1px solid #f2d37c;color:#fff2c2;background:linear-gradient(#125b76,#063558);border-radius:12px;padding:7px 13px;font-weight:800}
+#nc92-online .nc91-balance{font-variant-numeric:tabular-nums;border:1px solid #d7ab55;border-radius:99px;padding:7px 13px;color:#ffeaa8;background:#102e39;font-weight:900}
+#nc92-online .nc91-hero{position:relative;isolation:isolate;min-height:230px;padding:14px 14px 38px;margin:13px 0 9px;text-align:center;border:4px ridge #e2bb67;border-radius:22px;overflow:hidden;box-shadow:0 9px 23px #001e3ec7;background:linear-gradient(0deg,#063659bf,#06457511 30%,#11366c88 100%),url("nc90-napoli-bay.svg") center 52%/cover}
+#nc92-online .nc91-hero:after{content:"";pointer-events:none;position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#062a5678,transparent 35%,#003b496e)}
+#nc92-online .nc91-crest{display:inline-flex;align-items:center;justify-content:center;min-width:43px;height:42px;border:3px solid #f9d98b;border-radius:50%;background:radial-gradient(circle at 30% 20%,#ee4d52,#8e0b25);font:900 26px Georgia,serif;box-shadow:0 2px 8px #0008}
+#nc92-online h1{font:900 clamp(37px,7vw,77px) Georgia,'Times New Roman',serif;color:#ffe3a4;letter-spacing:1px;line-height:1.04;margin:5px 0 0;text-shadow:0 3px 1px #7a3b19,0 5px 5px #070c24,0 0 21px #071638;-webkit-text-stroke:.6px #d39a40}
+#nc92-online .nc91-subtitle{display:inline-block;margin:6px 0 0;padding:5px 17px;border:2px solid #efcc79;border-radius:50% / 60%;background:linear-gradient(#fff1ba,#e5b86b);box-shadow:0 4px 0 #81531a;color:#75211b;font:italic 900 clamp(16px,3.2vw,26px) Georgia,serif;text-shadow:0 1px #fff}
+#nc92-online .nc91-caption{margin:13px 0 0;color:#fff6d6;font-size:12px;font-weight:750;text-shadow:0 2px 5px #001}
+#nc92-online .nc91-latest{position:relative;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:20px;padding:11px 13px;margin:0 0 11px;border:2px solid #dfb756;border-radius:20px;background:linear-gradient(100deg,#073f35,#135c3c 43%,#063b32);box-shadow:inset 0 0 20px #001b14}
+#nc92-online .nc91-ball{position:relative;display:grid;place-items:center;width:clamp(82px,18vw,120px);height:clamp(82px,18vw,120px);border:5px double #d99b2b;border-radius:50%;background:radial-gradient(circle at 30% 18%,#fffef7,#fff2c5 36%,#d5b164 78%,#ae772d);box-shadow:inset 0 0 6px #fff,0 8px 12px #001c22,0 0 0 3px #ffe39a;color:#84201c;font:900 clamp(45px,9vw,69px) Georgia,serif;font-variant-numeric:tabular-nums;text-shadow:0 2px #fff}
+#nc92-online .nc91-ball.pop{animation:nc91-ball-pop .45s cubic-bezier(.16,.84,.42,1.15)}
+#nc92-online .nc91-meaning{flex:1;min-width:170px;max-width:550px}
+#nc92-online .nc91-meaning h2{color:#ffe3a5;font:900 clamp(21px,3vw,31px) Georgia,serif;margin:3px 0 5px;text-wrap:balance}
+#nc92-online .nc91-meaning p{margin:3px 0;font-size:13px;color:#dbf2dd}
+#nc92-online .nc91-meaning .nc91-desc{display:block;font:italic 17px Georgia,serif;color:#fff3bb}
+#nc92-online .nc91-game-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+#nc92-online .nc91-game-stats span{padding:5px 9px;border:1px solid #9ec89a;border-radius:10px;color:#e4fff1;background:#052c27;font-size:12px;font-variant-numeric:tabular-nums}
+#nc92-online .nc91-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,1fr);gap:12px;align-items:start}
+#nc92-online .nc91-panel{min-width:0;padding:12px;border:3px ridge #e2b65c;border-radius:19px;background:linear-gradient(#073b34,#052f2b);box-shadow:0 6px 15px #001e19be}
+#nc92-online .nc91-panel h2{font:900 clamp(17px,2.6vw,22px) Georgia,serif;color:#ffe3a7;text-shadow:0 2px #552b0e;margin:0 0 10px}
+#nc92-online .nc91-numbers{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;padding:6px;border:2px ridge #daa954;border-radius:12px;background:#c08d39}
+#nc92-online .nc91-number{border:1px solid #997138;border-radius:5px;min-width:0;min-height:36px;padding:2px 0;background:linear-gradient(#fff9df,#f0d59b);font:900 clamp(10px,1.7vw,16px) Georgia,serif;color:#182648;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px #fff,0 1px 2px #0005}
+#nc92-online .nc91-number.done{background:linear-gradient(#ee6672,#a70a20);border-color:#ffd18d;color:#fff;box-shadow:inset 0 1px #ffe1d6,0 1px 2px #0007;text-shadow:0 1px #5c0e11}
+#nc92-online .nc91-number.latest{outline:3px solid #ffe955;outline-offset:-2px;box-shadow:0 0 11px #ffe23f;color:#fff}
+#nc92-online .nc91-card-collection{display:grid;gap:8px}
+#nc92-online .nc91-card{border:2px solid #deb56b;border-radius:13px;overflow:hidden;background:linear-gradient(#f5e0b7,#e8c58a);padding:7px;box-shadow:0 3px 9px #0009}
+#nc92-online .nc91-card-label{display:flex;justify-content:space-between;color:#482709;font:900 13px Georgia,serif;margin:0 2px 6px}
+#nc92-online .nc91-ticket{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+#nc92-online .nc91-cell{display:grid;place-items:center;min-height:37px;padding:0;border-radius:6px;background:#fef4d9;border:1px solid #d5b47a;box-shadow:inset 0 1px #fff;color:#17294f;font:900 clamp(11px,2vw,16px) Georgia,serif;font-variant-numeric:tabular-nums}
+#nc92-online button.nc91-cell.has-number{background:linear-gradient(#fffdf0,#f2dba9)}
+#nc92-online button.nc91-cell.hit{background:radial-gradient(circle at 40% 25%,#fdc862,#db1428 65%,#850a1a);border-color:#ab6a3b;color:white;text-shadow:0 1px #4b0c19;box-shadow:inset 0 2px #ffe9a1,0 1px 3px #0005}
+#nc92-online .nc91-cell.blank{opacity:.35;background:#b79c7f}
+#nc92-online .nc91-cell:disabled{opacity:1}
+#nc92-online .nc91-ssection{margin-top:11px}
+#nc92-online .nc91-smorfia{display:grid;gap:6px;margin-bottom:8px;padding:11px;border-radius:15px;border:2px solid #ba8a43;background:linear-gradient(#fff2d3,#e9c58b);color:#552c16;text-align:center}
+#nc92-online .nc91-smorfia strong{font:900 23px Georgia,serif;color:#8f1715}
+#nc92-online .nc91-smorfia .nc91-smorfia-icon{font-size:45px;line-height:1.1}
+#nc92-online .nc91-smorfia .nc91-smorfia-name{font:italic 900 21px Georgia,serif;color:#81211a}
+#nc92-online .nc91-smorfia small{font-size:12px;color:#6b422e}
+#nc92-online .nc91-history{display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-height:84px;overflow:auto;padding:8px;border:1px solid #a9a779;border-radius:11px;background:#06281f;min-height:46px}
+#nc92-online .nc91-history b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:2px solid #eebd58;background:linear-gradient(#fff4ce,#cf9c38);color:#6b2b10;font:900 13px Georgia,serif;flex-shrink:0}
+#nc92-online .nc91-empty{color:#c9dece;font-size:12px}
+#nc92-online .nc91-prizes{display:flex;gap:5px;flex-wrap:wrap}
+#nc92-online .nc91-prize{padding:7px 9px;border-radius:99px;border:1px solid #a9b18a;background:#0f3b32;color:#d5e7d1;font-size:11px;font-weight:850}
+#nc92-online .nc91-prize.earned{background:linear-gradient(#ffe9a4,#e3a33e);color:#532c11;border-color:#ffeca9;box-shadow:0 0 10px #ffe8a944}
+#nc92-online .nc91-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:13px 0 9px}
+#nc92-online .nc91-actions button{border:2px solid #f7cf77;border-radius:14px;color:#fff9dc;font-weight:900;text-shadow:0 2px 2px #001;min-height:52px;box-shadow:0 4px 0 #5e3b1e,0 8px 12px #001b22ac;background:linear-gradient(#0c75ac,#06375f);padding:8px 7px}
+#nc92-online .nc91-actions button[data-action="draw"]{background:linear-gradient(#e94b60,#a80522)}
+#nc92-online .nc91-actions button[data-action="auto"]{background:linear-gradient(#23a977,#075e45)}
+#nc92-online .nc91-actions button[data-action="new"]{background:linear-gradient(#dbb05b,#936019)}
+#nc92-online .nc91-actions button:active{transform:translateY(3px);box-shadow:0 1px 0 #5e3b1e}
+#nc92-online .nc91-settings{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:9px 0 2px;padding:10px 12px;border-radius:13px;background:#052d31d9;border:1px solid #d8af60}
+#nc92-online .nc91-settings label{font-size:12px;font-weight:800;display:flex;gap:8px;align-items:center}
+#nc92-online .nc91-settings input{accent-color:#f1c569;width:20px;height:20px}
+#nc92-online select{background:#fff3d0;color:#362b19;border:1px solid #c29b4b;border-radius:8px;padding:7px;font:800 13px system-ui}
+#nc92-online .nc91-status{min-height:26px;font-size:13px;font-weight:700;color:#ffe6a1;margin:8px 0;line-height:1.5}
+#nc92-online .nc91-footer{color:#c7ded4;font-size:11px;text-align:center;line-height:1.4}
+#nc92-online .nc91-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@keyframes nc91-ball-pop{0%{transform:scale(.7) rotate(-16deg);opacity:.25}65%{transform:scale(1.16) rotate(7deg)}100%{transform:scale(1);opacity:1}}
+@media(max-width:720px){
+#nc92-online{padding-left:5px;padding-right:5px}
+#nc92-online .nc91-hero{min-height:190px}
+#nc92-online .nc91-body{grid-template-columns:1fr}
+#nc92-online .nc91-numbers{gap:2px;padding:3px}
+#nc92-online .nc91-number{min-height:34px;font-size:13px}
+#nc92-online .nc91-cell{min-height:39px;font-size:clamp(11px,3.2vw,16px)}
+#nc92-online .nc91-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+#nc92-online .nc91-actions button{min-height:54px}
+}
+@media(max-width:365px){
+#nc92-online .nc91-number{min-height:30px;font-size:11px}
+#nc92-online .nc91-cell{min-height:35px;font-size:11px}
+#nc92-online .nc91-head{padding:7px}
+#nc92-online .nc91-hero{min-height:165px}
+#nc92-online .nc91-actions{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){#nc92-online .nc91-ball.pop{animation:none}}
+
+/* Playable seventh game tile in the existing Premium Club lobby */
+body.nc90-in-lobby #root button.game.nc91-launch{--g0:#ffbf47;--g1:#dc7c23;--g2:#894014;background:radial-gradient(circle at 35% 5%,var(--g0),var(--g1) 55%,var(--g2))!important;border-color:#ffe3a2!important}
+body.nc90-in-lobby #root button.game.nc91-launch .art{background:radial-gradient(circle at 30% 20%,#fff2b2,#9d211e)!important;font-size:38px!important}
+body.nc90-in-lobby #root button.game.nc91-launch strong{color:#ffefb5!important}
+
+/* Online lobby and live player seating. */
+#nc92-online .nc92-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:10px 0}
+#nc92-online .nc92-choices button{border:2px solid #f4c878;border-radius:15px;min-height:91px;padding:10px 7px;color:#fff3c7;background:radial-gradient(circle at 30% 12%,#205d9f,#072553 80%);box-shadow:0 4px 0 #694519,0 9px 12px #001822;text-align:center;font-weight:900}
+#nc92-online .nc92-choices button span{display:block;margin:0 auto 6px;font-size:28px}
+#nc92-online .nc92-choices button strong{display:block;font:900 17px Georgia,serif}
+#nc92-online .nc92-choices button small{display:block;color:#d4e6ff;font-weight:650;margin-top:4px}
+#nc92-online .nc92-choices button:active{transform:translateY(3px)}
+#nc92-online .nc92-welcome{border:2px ridge #dbad59;border-radius:17px;background:linear-gradient(#092d52e9,#083738e0);padding:13px;margin-top:10px}
+#nc92-online .nc92-welcome h2{font:900 22px Georgia,serif;color:#f6d48a;margin:0 0 9px}
+#nc92-online .nc92-welcome p{font-size:13px;line-height:1.55;color:#e0f3e8}
+#nc92-online .nc92-form{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+#nc92-online .nc92-form label{display:grid;gap:5px;font-size:12px;color:#ffebb6;font-weight:750}
+#nc92-online .nc92-form select,#nc92-online .nc92-form input{min-height:44px;border:2px solid #dcb568;border-radius:10px;background:#fff1ce;color:#16384b;padding:8px;font:800 15px system-ui;min-width:0;max-width:100%}
+#nc92-online .nc92-form input{max-width:190px;text-transform:uppercase;letter-spacing:2px}
+#nc92-online .nc92-form button,#nc92-online .nc92-toolbar button{min-height:46px;border:2px solid #edcf88;border-radius:11px;background:linear-gradient(#197c96,#063c63);color:#fff5c9;font-weight:850;padding:8px 12px}
+#nc92-online .nc92-toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:8px}
+#nc92-online .nc92-pill{display:inline-flex;align-items:center;gap:5px;padding:9px 12px;border:1px solid #e5bd6e;border-radius:999px;background:linear-gradient(#082c60,#0a433a);font:800 13px system-ui;color:#ffedbf}
+#nc92-online .nc92-players{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:7px;margin:9px 0}
+#nc92-online .nc92-player{display:flex;align-items:center;gap:7px;padding:8px;border:2px solid #a8b390;border-radius:11px;background:#072e3b;color:#d9edec;font-size:13px;font-weight:850;overflow:hidden}
+#nc92-online .nc92-player.host{border-color:#f4c571}
+#nc92-online .nc92-player:not(.gone) .nc92-dot{background:#30e59b}
+#nc92-online .nc92-player.gone{opacity:.55}
+#nc92-online .nc92-dot{display:inline-block;width:10px;height:10px;flex-shrink:0;border-radius:50%;background:#aeaaaa;box-shadow:0 0 8px #36e3a059}
+#nc92-online .nc92-player span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#nc92-online .nc92-roomcode{user-select:all;border-radius:10px;border:2px dashed #f9c66d;background:#0a304d;color:#ffe8a6;padding:10px 15px;font:900 22px Georgia,serif;letter-spacing:3px;display:inline-block}
+#nc92-online .nc92-winners{display:grid;gap:7px}
+#nc92-online .nc92-winner{display:flex;align-items:center;justify-content:space-between;gap:7px;background:#0b4439;padding:9px 10px;border-radius:9px;border:1px solid #bd9e61;color:#fce8b4;font-size:13px}
+#nc92-online .nc92-winner b{font:900 15px Georgia,serif}
+#nc92-online .nc92-roomlist{display:grid;gap:6px}
+#nc92-online .nc92-roomlist button{background:#124b62;border:1px solid #e3b768;border-radius:10px;padding:10px;text-align:left;color:#fff1c4}
+#nc92-online .nc92-roomlist button strong{display:block}
+#nc92-online .nc92-roomlist button small{color:#c4dfdc}
+#nc92-online .nc92-livemark{display:inline-flex;gap:6px;align-items:center;background:#ab1332;padding:5px 10px;border-radius:99px;border:1px solid #ffc5a7;font-size:11px;font-weight:900}
+#nc92-online .nc92-clock{font-variant-numeric:tabular-nums;font-size:14px;color:#ffe49a;font-weight:900}
+@media(max-width:720px){
+#nc92-online .nc92-choices{grid-template-columns:repeat(2,minmax(0,1fr))}
+#nc92-online .nc92-choices button{min-height:84px}
+#nc92-online .nc92-choices button strong{font-size:14px}
+#nc92-online .nc92-form{gap:6px}
+#nc92-online .nc92-form label{flex:1;min-width:90px}
+#nc92-online .nc92-form select{width:100%}
+#nc92-online .nc92-players{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
