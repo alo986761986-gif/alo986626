@@ -7,6 +7,7 @@
   const local = Session.createService();
   let host = null, chosen = 'tressette', mode = 'cpu', current = null, key = null, timer = null, clock = null, selected = null;
   let busy = false, fetching = false, epoch = 0, rulesOpen = false, leaveOpen = false, originFocus = null, offset = 0;
+  let pendingInvitation = null;
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const by = id => host && host.querySelector('#' + id);
   const format = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(value) : String(value == null ? '—' : value);
@@ -71,7 +72,7 @@
   async function start() {
     if (busy) return;
     const mine = epoch, chosenMode = mode;
-    const input = { game: chosen, seats: Number(by('ncx-seats').value), name: by('ncx-name').value.trim() || name(), bot: mode === 'cpu', private: !!(by('ncx-private') && by('ncx-private').checked), invite: by('ncx-invite') ? by('ncx-invite').value.trim().toUpperCase() : '' };
+    const input = { game: chosen, seats: Number(by('ncx-seats').value), name: by('ncx-name').value.trim() || name(), bot: mode === 'cpu', private: !!(by('ncx-private') && by('ncx-private').checked), invite: by('ncx-invite') ? by('ncx-invite').value.trim().toUpperCase() : '', roomId: pendingInvitation && pendingInvitation.roomId || '' };
     busy = true; by('ncx-start').disabled = true; by('ncx-start').textContent = mode === 'online' ? 'Connessione…' : 'Preparazione…'; announce('');
     try {
       if (mode === 'online') {
@@ -83,6 +84,7 @@
         if (chosenMode === 'cpu') local.leave(joined.token); else request('leave', {}, joined.token).catch(() => {});
         return;
       }
+      pendingInvitation = null;
       key = joined.token; chosen = joined.state.game;
       if (mode === 'online') localStorage.setItem('ncx-online-session', JSON.stringify({ token: key, game: chosen }));
       accept(joined.state); startPolling();
@@ -231,5 +233,32 @@
   }
   d.addEventListener('keydown', event => { if (event.key === 'Escape' && host) { event.preventDefault(); close(); } });
   d.addEventListener('visibilitychange', () => { if (!d.hidden && host && key) refresh(); });
-  w.NC_EXPANSION = { open, close, isOpen: () => !!host, isPlaying: () => !!(host && current), catalog: () => Session.catalog() };
+  function invitationContext(){
+    if(mode!=='online'||!current||!key||current.seat!==0)return null;
+    return {tableToken:key,roomId:current.roomId,game:current.game,
+      status:current.status,private:current.private,code:current.code};
+  }
+  function joinInvitation(invite){
+    if(!invite||invite.kind!=='join'||!rules[invite.game])return false;
+    if(host && current && current.status==='playing')return false;
+    if(host)destroy(true);
+    if(!open(invite.game,'online'))return false;
+    pendingInvitation={roomId:typeof invite.roomId==='string'?invite.roomId:''};
+    if(invite.code && by('ncx-invite'))by('ncx-invite').value=String(invite.code);
+    if(by('ncx-seats')&&invite.seats)by('ncx-seats').value=String(invite.seats);
+    const btn=by('ncx-start');if(btn)btn.click();
+    return true;
+  }
+  function takeoverInvitation(joined){
+    if(!joined||!joined.token||!joined.state||!rules[joined.state.game])return false;
+    if(host && current && current.status==='playing')return false;
+    if(host)destroy(true);
+    if(!open(joined.state.game,'online'))return false;
+    key=joined.token;
+    localStorage.setItem('ncx-online-session',JSON.stringify({token:key,game:joined.state.game}));
+    accept(joined.state);startPolling();
+    return true;
+  }
+  w.NC_EXPANSION = { open, close, isOpen: () => !!host, isPlaying: () => !!(host && current),
+    catalog: () => Session.catalog(), invitationContext, joinInvitation, takeoverInvitation };
 })(window, document);
