@@ -1,0 +1,146 @@
+/* NAPOLI CARTE 3D · CLUB EDITION 8.4
+ * Original visual language: terrazza partenopea, colorful game tiles,
+ * clean table surfaces, comfortable controls. All gameplay stays unchanged.
+ */
+:root{--nc84-teal:#087e8b;--nc84-deep:#074b53;--nc84-ink:#153844;--nc84-paper:#fffaf0;--nc84-sand:#eee9dd;--nc84-coral:#ee6555;--nc84-gold:#f2c77f;--nc84-shadow:0 10px 24px rgba(4,30,37,.24)}
+body.nc84{background:radial-gradient(ellipse at 50% -20%,#187d87 0%,#0a6269 30%,#073c42 74%,#06282d 100%);background-attachment:fixed}
+body.nc84:before{background:radial-gradient(circle at 22% 10%,#ffffff0d 0 2px,transparent 3px),radial-gradient(circle at 65% 40%,#fff9e30a 0 1px,transparent 3px);background-size:55px 55px,39px 39px;pointer-events:none}
+body.nc84>header{max-width:1280px;min-height:76px;padding:12px 22px;gap:14px;border-bottom:1px solid rgba(255,255,255,.3);background:linear-gradient(112deg,#0ab8c1,#078b9a 48%,#086a79 100%);box-shadow:0 6px 20px #001b285c;border-radius:0 0 19px 19px}
+body.nc84>header .brand{gap:11px}
+body.nc84>header .emblem{width:46px;height:46px;border:3px solid #fff7dd;background:linear-gradient(140deg,#fff3cb,#e2b768);border-radius:13px;color:#163b46;box-shadow:0 4px 8px #073c5270;font-size:28px;transform:rotate(-5deg)}
+body.nc84>header .brand b{font-size:clamp(15px,2.6vw,21px);color:#fff;letter-spacing:.3px;text-shadow:0 1px 4px #05384970}
+body.nc84>header .brand small{font-size:10px;letter-spacing:1.2px;color:#e0fffc;text-transform:none}
+body.nc84>header .online{font-size:11px;color:#ebfffa;background:#064c55;border:1px solid #befff7a3;box-shadow:inset 0 1px #ffffff30}
+body.nc84>header .online i{background:#4ef5ac;box-shadow:0 0 9px #30f8af}
+body.nc84>header #nc76-menu-open{border:1px solid #e9ffff99!important;background:#0a7181!important;box-shadow:0 4px 8px #0037455c}
+body.nc84 button:focus-visible,body.nc84 input:focus-visible{outline:3px solid #ffb84d!important;outline-offset:3px}
+body.nc84 button:disabled{cursor:not-allowed;opacity:.56}
+body.nc84-in-lobby #root>main.wrap{max-width:1100px;margin:20px auto 50px;padding:20px 24px 40px;border-radius:27px;background:linear-gradient(145deg,#fffdf6,#f5f0e6 60%,#f0ebdd);border:1px solid #ffe2b9;box-shadow:0 17px 45px #001e2f7d;color:var(--nc84-ink)}
+body.nc84-in-lobby #root .intro{position:relative;isolation:isolate;overflow:hidden;max-width:none;padding:23px 16px 17px;text-align:left;border-radius:20px;background:linear-gradient(111deg,#0b7885 1%,#086570 54%,#085359 100%);color:#fff;box-shadow:inset 0 1px #ffffff47,0 7px 16px #0a556342}
+body.nc84-in-lobby #root .intro:after{content:"♠ ♣ ♦ ♥";position:absolute;right:-8px;bottom:8px;z-index:-1;color:#ffffff19;font-size:clamp(48px,12vw,112px);letter-spacing:-13px;transform:rotate(-13deg);white-space:nowrap;pointer-events:none}
+body.nc84-in-lobby #root .intro .eyebrow{font-size:11px;letter-spacing:1.7px;color:#fce3a8;text-transform:uppercase}
+body.nc84-in-lobby #root .intro h1{font-size:clamp(26px,5vw,44px);font-weight:850;letter-spacing:-1.2px;text-shadow:0 3px 6px #00262c80;line-height:1.13;margin:8px 0}
+body.nc84-in-lobby #root .intro h1 span{color:#f7d48c;background:none;-webkit-text-fill-color:initial}
+body.nc84-in-lobby #root .intro p{margin:0;max-width:570px;color:#e1faf8;font-size:13px;line-height:1.55}
+body.nc84-in-lobby #root .stage{display:none!important}
+body.nc84-in-lobby #root .nc84-featurestrip{display:flex;gap:9px;flex-wrap:wrap;margin:15px 0 12px;align-items:center}
+body.nc84-in-lobby #root .nc84-featurestrip span{display:inline-flex;align-items:center;gap:5px;padding:8px 11px;border-radius:99px;background:#e6f6ee;border:1px solid #c0e6d8;color:#155b60;font-size:11px;font-weight:800}
+body.nc84-in-lobby #root .nc84-featurestrip span:nth-child(2){background:#e7f2ff;border-color:#d2e3f8;color:#215978}
+body.nc84-in-lobby #root .nc84-featurestrip span:nth-child(3){background:#fff0d7;border-color:#f4d7ad;color:#86501c}
+body.nc84-in-lobby #root .section-h{margin:17px 0 12px;align-items:center}
+body.nc84-in-lobby #root .section-h h2{color:#173e51;font-size:clamp(19px,3vw,23px);font-weight:850;letter-spacing:-.5px}
+body.nc84-in-lobby #root .section-h h2:before{content:"✦";color:#eeb56c;margin-right:9px}
+body.nc84-in-lobby #root .section-h .secondary{background:#e4f5f4;color:#135c67;border:1px solid #a5d6db;box-shadow:none}
+body.nc84-in-lobby #root .games{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+body.nc84-in-lobby #root button.game{--tile:#a8e1df;--tile-light:#d7f1e8;--tile-ink:#124251;display:flex;flex-direction:column;position:relative;isolation:isolate;min-width:0;min-height:177px;overflow:hidden;padding:16px 15px 14px;text-align:left;color:var(--tile-ink);background:linear-gradient(140deg,var(--tile-light),var(--tile));border:2px solid #fff9f0;border-radius:17px;box-shadow:inset 0 1px #fff9,0 5px 0 #113e5136,0 9px 13px #143b4530;transition:transform .16s,box-shadow .16s}
+body.nc84-in-lobby #root button.game:nth-child(1){--tile:#f8bc77;--tile-light:#ffe3a9;--tile-ink:#68360c}
+body.nc84-in-lobby #root button.game:nth-child(2){--tile:#91c9e7;--tile-light:#d5ecf9;--tile-ink:#214665}
+body.nc84-in-lobby #root button.game:nth-child(3){--tile:#f2968f;--tile-light:#ffccc2;--tile-ink:#672f3d}
+body.nc84-in-lobby #root button.game:nth-child(4){--tile:#c6b5f0;--tile-light:#e9ddff;--tile-ink:#423c7b}
+body.nc84-in-lobby #root button.game:nth-child(5){--tile:#8bdbb9;--tile-light:#c7f2d8;--tile-ink:#1e634d}
+body.nc84-in-lobby #root button.game:nth-child(6){--tile:#edadd5;--tile-light:#f9d6ee;--tile-ink:#6a3665}
+body.nc84-in-lobby #root button.game:before{content:"";position:absolute;inset:auto -40px -95px auto;width:180px;height:180px;border:22px solid #ffffff37;border-radius:50%;pointer-events:none;z-index:-1}
+body.nc84-in-lobby #root button.game:after{content:"";position:absolute;right:-24px;top:-45px;width:135px;height:135px;border-radius:50%;background:#ffffff24;pointer-events:none;z-index:-1}
+body.nc84-in-lobby #root button.game .art{position:relative;display:grid;place-items:center;width:64px;height:64px;margin:3px 0 13px;border:2px solid #fff7e8;border-radius:50%;background:radial-gradient(circle at 30% 23%,#fff9,#fff3);font-size:35px;filter:none;text-shadow:0 3px 5px #0003;box-shadow:0 5px 10px #11253325,inset 0 1px #fff}
+body.nc84-in-lobby #root button.game strong{position:relative;z-index:2;max-width:100%;font-size:17px;line-height:1.13;color:var(--tile-ink);font-weight:900;text-shadow:0 1px #fff6;letter-spacing:-.25px}
+body.nc84-in-lobby #root button.game small{position:relative;z-index:2;margin:7px 0 0;color:var(--tile-ink);font-size:11px;font-weight:600;line-height:1.3;opacity:.85}
+body.nc84-in-lobby #root button.game .sel{top:12px;right:11px;z-index:3;font-size:10px;font-weight:850;letter-spacing:.35px;border-radius:99px;border:1px solid #ffffff88;color:var(--tile-ink);background:#fff9ea9e;padding:5px 10px}
+body.nc84-in-lobby #root button.game.selected{border:3px solid #087c88;box-shadow:0 0 0 3px #37bbc157,0 9px 15px #113e5138}
+body.nc84-in-lobby #root button.game:active{transform:scale(.965);box-shadow:0 2px 0 #113e5130}
+body.nc84-in-lobby #root button.game .nc84-cardfan{position:absolute;right:10px;bottom:20px;display:block;width:94px;height:79px;pointer-events:none;opacity:.77}
+body.nc84-in-lobby #root button.game .nc84-cardfan i{position:absolute;display:grid;place-items:start;width:41px;height:58px;right:22px;bottom:7px;border:2px solid #fff;border-radius:5px;background:linear-gradient(140deg,#fffdf6,#f2e8d5);color:#b64743;box-shadow:0 3px 6px #1f3d5247;font-size:13px;font-style:normal;font-weight:900;padding:3px 4px}
+body.nc84-in-lobby #root button.game .nc84-cardfan i:nth-child(1){transform:translateX(-22px) rotate(-23deg)}
+body.nc84-in-lobby #root button.game .nc84-cardfan i:nth-child(2){transform:translateX(-3px) rotate(-5deg);color:#203f81}
+body.nc84-in-lobby #root button.game .nc84-cardfan i:nth-child(3){transform:translateX(18px) rotate(14deg)}
+body.nc84-in-lobby #root .setup{margin-top:24px;padding:23px 22px;border-radius:19px;background:linear-gradient(180deg,#fffef7,#f3f5ec);border:2px solid #e1e3d7;box-shadow:0 8px 18px #1844511d;color:#173a47}
+body.nc84-in-lobby #root .setup h2{font-size:21px;color:#194c59;margin-bottom:17px}
+body.nc84-in-lobby #root .inputlabel{color:#3a6870;font-weight:900;letter-spacing:.8px;font-size:11px}
+body.nc84-in-lobby #root .txt{color:#183b48;background:#fff;border:2px solid #bcd6d4;border-radius:12px;height:47px;font-size:15px;box-shadow:inset 0 2px 4px #00000009}
+body.nc84-in-lobby #root .txt:focus{border-color:#06a8ae}
+body.nc84-in-lobby #root .opt{min-height:45px;padding:10px 8px;color:#25515b;background:#eaf4f2;border:1px solid #bbd8d4;font-weight:750}
+body.nc84-in-lobby #root .opt.active{color:white;background:linear-gradient(#0a9da7,#087586);border-color:#097282;box-shadow:0 3px 8px #06778731}
+body.nc84-in-lobby #root .switches{margin:16px 0;gap:10px}
+body.nc84-in-lobby #root .switch{min-height:47px;color:#2d6270;background:#e9f5f4;border:1px solid #c1d7d8}
+body.nc84-in-lobby #root .switch.active{color:#fff;background:linear-gradient(140deg,#168f9c,#087789);border-color:#006c7b;box-shadow:0 3px 9px #08778835}
+body.nc84-in-lobby #root .primary{min-height:54px;color:#fff;border:2px solid #e7574b;background:linear-gradient(180deg,#fb856c,#e96351 85%);box-shadow:0 5px 0 #ac483b,0 12px 14px #952b2230;text-shadow:0 1px 2px #a83935b0}
+body.nc84-in-lobby #root .primary:active{box-shadow:0 2px 0 #ac483b;transform:translateY(3px)}
+body.nc84-in-lobby #root .nc78-teamselect small,body.nc84-in-lobby #root .notice{color:#50727a;line-height:1.5}
+body.nc84-in-lobby #root .ruleslink{color:#056d89}
+body.nc84 #root .nc30-settings{background:linear-gradient(111deg,#0f7380,#07505f);border:1px solid #a8e6e099;border-radius:15px;box-shadow:0 5px 13px #022d3862}
+body.nc84 #root .nc30-settings b{color:#f7e6bd}
+body.nc84 #root .nc30-settings button{color:#ebffff;background:#0a5967;border:1px solid #7fdad6b3}
+body.nc84 #root .nc-wallet-strip{background:linear-gradient(120deg,#0d7c85,#0a5967)!important;color:#fff4d6!important;border:1px solid #baeadc!important;box-shadow:0 5px 12px #00242c65}
+body.nc84 #root .hud{max-width:1200px;margin:0 auto;padding:12px 14px 36px;border-radius:18px;background:linear-gradient(160deg,#14595d,#0a3537 76%);border:1px solid #9dd3c36b;box-shadow:0 11px 28px #011c25a3}
+body.nc84 #root .hudtop{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:8px 10px;border:1px solid #ffffff33;border-radius:11px;background:#0b6772;color:#fff}
+body.nc84 #root .hudtop .roomtitle{color:#f2faf5;font-weight:800}
+body.nc84 #root .hudtop .tag{color:#efffe7;border-color:#aad5d3;background:#12505b}
+body.nc84 #root .hudtop .secondary{background:#0b5361;border-color:#a4d5d8;color:#f5faf7}
+body.nc84 #root .board-space{filter:drop-shadow(0 13px 15px #010e19a8)}
+body.nc84:not([data-nc-table]) #root .board{border:13px ridge #a9713d!important;background:repeating-linear-gradient(128deg,#ffffff06 0 1px,transparent 1px 9px),radial-gradient(ellipse at 36% 31%,#21946e 0%,#0b6c54 54%,#044b3d 88%)!important;box-shadow:0 16px 25px #0019169c,inset 0 0 0 3px #e6c48a,inset 0 10px 35px #001c196c,0 0 0 3px #422f1e!important}
+body.nc84 #root .board:after{content:"NAPOLI · CLUB EDITION";font-size:clamp(10px,2vw,17px);letter-spacing:2px;color:#e3dca33a;text-shadow:none}
+body.nc84 #root .board .player{gap:4px;border-radius:13px;background:#092f32b5;border:1px solid #cdece04f;box-shadow:0 4px 11px #001a1b7f}
+body.nc84 #root .board .player b{font-size:clamp(10px,2.1vw,13px);max-width:130px;padding:3px 5px;letter-spacing:.1px;color:#fff6e0;font-weight:850;background:#001f21ae;text-shadow:0 1px 2px #001}
+body.nc84 #root .board .player.turn{border-color:#65fca2;box-shadow:0 0 0 3px #5df0a550,0 0 16px #39e68b9c}
+body.nc84 #root .board .player.turn .avatar{border-color:#45f6a5!important;box-shadow:0 0 0 4px #45ed91a1,0 0 17px #3ffeaa!important}
+body.nc84 #root .board .player .avatar{border:3px solid #e5cf94;border-radius:50%;width:48px;height:48px;background:radial-gradient(circle at 30% 20%,#b8ded5,#2b756e 70%);box-shadow:0 4px 8px #001a20bd}
+body.nc84 #root .board .player small{font-size:10px;color:#d6efe7}
+body.nc84 #root .playing-card{border-color:#e4d5b5;box-shadow:0 3px 7px #08151d7a,inset 0 1px 0 #fff}
+body.nc84 #root .myhand .playing-card{filter:drop-shadow(1px 5px 3px #06151d66)}
+body.nc84 #root .ch-seat.active .ch-avatar{border-color:#50ef99!important;box-shadow:0 0 0 4px #4beaa07a,0 0 17px #2be990cc!important}
+body.nc84 #root .ch-seat .ch-avatar{border:3px solid #e8c789!important;box-shadow:0 3px 8px #001d1ebd}
+body.nc84 #root .ch-seat>b{color:#fff1d4!important;font-weight:850!important;text-shadow:0 1px 2px #000}
+body.nc84:not([data-nc-table]) #root .ch-felt{--ch-felt-light:#249970;--ch-felt-dark:#075140;--ch-wood:#ae7944}
+body.nc84 #root .ch-head{border-radius:12px;box-shadow:0 4px 14px #00161c8a}
+body.nc84 #root .ch-score-item strong{font-variant-numeric:tabular-nums}
+body.nc84 #root .waiting{background:linear-gradient(#fffefa,#e8f4ef);color:#193f4b;border:2px solid #b9d3cb;border-radius:21px;box-shadow:0 9px 23px #00192563}
+body.nc84 #root .waiting h2{color:#19566a}
+body.nc84 #root .waiting p{color:#3a5e6a}
+body.nc84 #root .waiting .secondary{background:#0c7886;color:#fff;border-color:#acd8d5}
+body.nc84 #nc-market83{background:linear-gradient(145deg,#065b65,#073940 60%,#052a35)!important;color:#e9fff6}
+body.nc84 #nc-market83 .head h1{color:#ffdc9a}
+body.nc84 #nc-market83 .note{background:#0f7280;border-color:#8bd2c8;color:#fff}
+body.nc84 #nc-market83 .tabs{padding:15px 0}
+body.nc84 #nc-market83 .tabs button{background:#0b5662;color:#e8ffff;border:1px solid #6db3b4}
+body.nc84 #nc-market83 .tabs button[aria-selected=true]{background:#f9d58f;color:#3b331f;border-color:#fff2cd;font-weight:900}
+body.nc84 #nc-market83 .item{background:#fff9ed;color:#163e49;border:2px solid #fff;border-radius:15px;box-shadow:0 5px 14px #001d2869}
+body.nc84 #nc-market83 .item h3{color:#163947;font-size:15px}
+body.nc84 #nc-market83 .item .muted{color:#42636c}
+body.nc84 #nc-market83 .item button{border-radius:10px;background:linear-gradient(#0c8ea0,#096778);color:#fff;font-weight:850;border:1px solid #08778a}
+body.nc84 #nc-market83 .item button:disabled{background:#a7bbb9;color:#2c5456;border-color:#c6d6d5;opacity:1}
+body.nc84 #nc-market83 #nc83-refresh{background:#e7f3ee;color:#0a5f6e;border-color:#b5dfdd}
+@media(max-width:720px){
+body.nc84>header{padding:9px 12px;min-height:62px;border-radius:0 0 12px 12px}
+body.nc84>header .emblem{width:38px;height:38px;font-size:23px}
+body.nc84>header .brand b{font-size:15px;line-height:1.15}
+body.nc84>header .brand small{font-size:9px}
+body.nc84>header .online{font-size:9px;padding:5px 7px;max-width:125px;overflow:hidden;text-overflow:ellipsis}
+body.nc84-in-lobby #root>main.wrap{margin:10px 8px 32px;padding:12px 10px 25px;border-radius:18px}
+body.nc84-in-lobby #root .intro{padding:19px 14px 16px}
+body.nc84-in-lobby #root .intro h1{font-size:31px}
+body.nc84-in-lobby #root .intro p{font-size:12px}
+body.nc84-in-lobby #root .games{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+body.nc84-in-lobby #root button.game{min-height:163px;padding:11px 10px 12px}
+body.nc84-in-lobby #root button.game .art{width:55px;height:55px;font-size:30px;margin-bottom:14px}
+body.nc84-in-lobby #root button.game strong{font-size:14px;max-width:100%}
+body.nc84-in-lobby #root button.game small{font-size:10px;max-width:100%}
+body.nc84-in-lobby #root button.game .nc84-cardfan{transform:scale(.73);transform-origin:right bottom;right:3px;bottom:16px;opacity:.6}
+body.nc84-in-lobby #root button.game .sel{top:8px;right:7px;font-size:8px;padding:4px 6px}
+body.nc84-in-lobby #root .setup{padding:16px 12px}
+body.nc84 #root .board{border-width:9px!important;min-height:352px}
+body.nc84 #root .board .player .avatar{width:40px;height:40px}
+body.nc84 #root .hud{padding:7px 6px 27px}
+body.nc84 #root .nc30-settings{padding:8px}
+}
+@media(max-width:360px){
+body.nc84>header .brand b{font-size:13px}
+body.nc84>header .online{max-width:92px;font-size:8px}
+body.nc84-in-lobby #root button.game{min-height:159px}
+body.nc84-in-lobby #root button.game .nc84-cardfan{opacity:.35}
+body.nc84-in-lobby #root .intro h1{font-size:26px}
+body.nc84-in-lobby #root .switches{gap:5px}
+body.nc84-in-lobby #root .switch{font-size:11px;padding:9px 4px}
+}
+@media(prefers-reduced-motion:reduce){
+body.nc84 button.game,body.nc84 .playing-card{transition:none!important;animation:none!important}
+body.nc84 .nc84-cardfan i{transition:none!important}
+}
