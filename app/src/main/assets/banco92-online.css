@@ -133,3 +133,8 @@ body.nc90-in-lobby #root button.game.nc91-launch strong{color:#ffefb5!important}
 #nc92-online .nc92-form select{width:100%}
 #nc92-online .nc92-players{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* Dedicated multiplayer launch tile */
+body.nc90-in-lobby #root button.game.nc92-launch{--g0:#39b5f4;--g1:#1268b1;--g2:#092d70;background:radial-gradient(circle at 35% 5%,var(--g0),var(--g1) 55%,var(--g2))!important;border-color:#ffe39f!important}
+body.nc90-in-lobby #root button.game.nc92-launch .art{background:radial-gradient(circle,#9ce7ff,#1557ad)!important}
+body.nc90-in-lobby #root button.game.nc92-launch strong{color:#fff1bf!important}
