@@ -21,7 +21,8 @@ function textMessage(value){const message=String(value??'').trim();if(!message||
 function parseAudio(data,mime,duration){
  if(typeof data!=='string'||!data||data.length>Math.ceil(MAX_AUDIO_BYTES*4/3)+10||!(/^[A-Za-z0-9+/]+={0,2}$/.test(data)))fail(413,'Vocale troppo grande');
  const bytes=Buffer.from(data,'base64');
- if(bytes.length<100||bytes.length>MAX_AUDIO_BYTES||bytes.toString('base64')!==data)fail(400,'Registrazione non valida');
+ if(bytes.length>MAX_AUDIO_BYTES)fail(413,'Vocale troppo grande');
+ if(bytes.length<100||bytes.toString('base64')!==data)fail(400,'Registrazione non valida');
  const type=String(mime||'').toLowerCase().split(';')[0].trim();
  if(!AUDIO_TYPES.has(type))fail(415,'Formato vocale non supportato');
  const seconds=Number(duration);
