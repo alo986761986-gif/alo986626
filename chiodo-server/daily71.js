@@ -53,4 +53,4 @@ async function route(req,send,path){
   return send(200,await claim(uid));
  }catch(e){console.error('daily reward:',e.message);return send(e.status||503,{error:e.status===401?e.message:'Bonus temporaneamente non disponibile'});}
 }
-module.exports={route,REWARDS,day,status,claim};
+module.exports={route,REWARDS,day,status,claim,setup};

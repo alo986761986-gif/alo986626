@@ -8,6 +8,8 @@ on:
       - 'chiodo-server/daily71.js'
       - 'chiodo-server/chat77.js'
       - 'chiodo-server/feedback78.js'
+      - 'chiodo-server/profile79.js'
+      - 'chiodo-server/test-profile79.js'
       - 'chiodo-server/test-formats-feedback78.js'
       - 'chiodo-server/test-chat77.js'
       - 'chiodo-server/test-chat77-integration.js'
@@ -46,6 +48,8 @@ jobs:
           node --check chiodo-server/daily71.js
           node --check chiodo-server/chat77.js
           node --check chiodo-server/feedback78.js
+          node --check chiodo-server/profile79.js
+          node --check chiodo-server/test-profile79.js
           node --check chiodo-server/test-formats-feedback78.js
           node --check chiodo-server/test-chat77.js
       - name: Verify private chat and voice security
@@ -60,6 +64,10 @@ jobs:
         env:
           DATABASE_URL: postgresql://qa_user:qa_password@127.0.0.1:5432/napoli_chat_qa
         run: node chiodo-server/test-formats-feedback78.js
+      - name: Verify profile features and XP with isolated PostgreSQL
+        env:
+          DATABASE_URL: postgresql://qa_user:qa_password@127.0.0.1:5432/napoli_chat_qa
+        run: node chiodo-server/test-profile79.js
       - name: Verify available endpoints and mandatory Firebase authentication
         run: node chiodo-server/test-social-daily-routes.js
 
