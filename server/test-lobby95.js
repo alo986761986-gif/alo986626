@@ -6,13 +6,13 @@ test('classic games remain available with direct play, preserving their rules',(
  for(const fn of ['function setGame(g)','function setMode(m)','async function joinGame()','function drawLobby()'])assert.ok(html.includes(fn),fn);
  for(const id of ['scopa','scopone','briscola','sette','asso','ruba'])assert.ok(html.includes("'"+id+"'"));
  assert.match(clean,/NC95_CLEAN_LOBBY/);
- assert.match(html,/NC95_QUICK_PLAY|e\.stopImmediatePropagation\(\)/);
- assert.match(html,/w\.setGame\(match\[1\]\)/);
- assert.match(html,/w\.setMode\('bot'\)/);
- assert.match(html,/w\.joinGame\(\)/);
+ assert.match(clean,/e\.stopImmediatePropagation\(\)/);
+ assert.match(clean,/w\.setGame\(match\[1\]\)/);
+ assert.match(clean,/w\.setMode\('bot'\)/);
+ assert.match(clean,/w\.joinGame\(\)/);
 });
 test('unwanted lobby setup and floating launcher are removed only from view',()=>{
- assert.match(html,/#root main\.wrap>\.setup\s*,/);
+ assert.match(clean,/#root main\.wrap>\.setup\s*,/);
  for(const selector of ['#root main.wrap>.nc30-settings','#root main.wrap>.nc30-achievements','#nc72-launch'])assert.ok(clean.includes(selector),selector);
  assert.match(clean,/display:none!important/);
  assert.match(clean,/style.id='nc95-clean-lobby'/);
