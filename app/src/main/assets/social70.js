@@ -16,7 +16,7 @@ function el(tag,cls,text){const node=document.createElement(tag);if(cls)node.cla
 function button(text,handler){const b=el('button','nc70-btn',text);b.type='button';b.addEventListener('click',handler);return b;}
 function message(value){const n=document.getElementById('nc70-message');if(n)n.textContent=value||'';}
 function panel(){return document.getElementById('nc70-body')}
-function close(){if(overlay){overlay.remove();overlay=null;}clearInterval(heartbeat);heartbeat=null;}
+function close(){endViewer();if(overlay){overlay.remove();overlay=null;}clearInterval(heartbeat);heartbeat=null;}
 function heading(parent,title){parent.append(el('h3','',title));}
 function settingsForm(p,first){
  const root=panel();root.replaceChildren();heading(root,first?'Crea il tuo nickname':'Profilo pubblico');
@@ -65,14 +65,166 @@ async function progress(){
  const r=await call('progress',{read:true});
  for(const g of Object.keys(names)){const s=r.progress.find(x=>x.game===g),row=el('div','nc70-stat');row.append(el('strong','',names[g]),el('span','',s?'Salvataggio presente · '+new Date(s.updated_at).toLocaleDateString('it-IT'):'Nessun salvataggio'));root.append(row);}
 }
+let viewerTimer=null;
+const GAME_LABELS={tressette:'Tressette',traversone:'Traversone',briscola_chiamata:'Briscola chiamata',bestia:'Bestia',
+  trentuno:'Trentuno',cucu:'Cucù',cirulla:'Cirulla',asino:'Asino',dubito:'Dubito',tressette_morto:'Tressette col morto',mercante:'Mercante in fiera'};
+function endViewer(){if(viewerTimer){clearInterval(viewerTimer);viewerTimer=null;}}
+function invitationOptions(parent, context, target, audience){
+ const options=el('div','nc70-controls');
+ const kinds=context.status==='waiting'?[['join','Invita a giocare']]:
+   [['watch','Invita a guardare'],['takeover','Richiedi subentro']];
+ for(const [kind,label] of kinds){
+  if(kind==='takeover'&&!context.vacantSeats)continue;
+  const action=button(label,async()=>{
+   action.disabled=true;
+   try{
+    const r=await call('inviteSend',{tableToken:context.tableToken,recipientUid:target.uid,audience,kind});
+    message('Invito inviato a '+r.recipientNickname+' · valido 60 secondi');
+   }catch(e){message(e.message);}finally{action.disabled=false;}
+  });options.append(action);
+ }
+ parent.append(options);
+}
+async function showInvites(){
+ tab='invites';endViewer();const root=panel();root.replaceChildren();
+ heading(root,'Inviti e partite LIVE');
+ root.append(el('p','nc70-muted','Gli inviti diretti scadono dopo 60 secondi. Ogni giocatore sceglie quali richieste ricevere.'));
+ const ctx=window.NC_EXPANSION?.invitationContext?.();
+ if(ctx){
+  heading(root,'Invita dal tuo tavolo');
+  root.append(el('p','nc70-muted',GAME_LABELS[ctx.game]||ctx.game));
+  const controls=el('div','nc70-controls');
+  const friendsButton=button('Amici',()=>invitationRecipients(ctx,'friends',root));
+  const secondButton=button('Amici di amici',()=>invitationRecipients(ctx,'friends_of_friends',root));
+  controls.append(friendsButton,secondButton);
+  if(ctx.status==='waiting'&&!ctx.private)controls.append(button('Pubblica per tutti online',async()=>{
+   try{await call('invitePublish',{tableToken:ctx.tableToken});message('Il tuo tavolo è visibile tra i tavoli pubblici per 3 minuti.');}
+   catch(e){message(e.message);}
+  }));
+  root.append(controls);
+  const recipients=el('div');recipients.id='nc94-recipients';root.append(recipients);
+ }
+ const inbox=el('div');inbox.id='nc94-inbox';root.append(inbox);
+ heading(inbox,'Inviti ricevuti');
+ const items=await call('inviteList');
+ if(!items.invites?.length)inbox.append(el('p','nc70-muted','Nessun nuovo invito.'));
+ for(const inv of items.invites||[]){
+  const row=el('div','nc70-person');
+  row.append(el('strong','',(GAME_LABELS[inv.game]||inv.game)+' · '+inv.sender_nickname));
+  row.append(el('small','nc70-muted',inv.kind==='watch'?'Guarda la partita':inv.kind==='takeover'?'Subentra in una partita':'Entra in partita'));
+  const actions=el('div','nc70-controls');
+  if(inv.status==='pending'){
+   actions.append(button('Accetta',async()=>{
+    try{await call('inviteRespond',{id:inv.id,accept:true});await enterInvite(inv.id);}
+    catch(e){message(e.message);}
+   }));
+   actions.append(button('Rifiuta',async()=>{
+    try{await call('inviteRespond',{id:inv.id,accept:false});await showInvites();}
+    catch(e){message(e.message);}
+   }));
+  }else if(inv.status==='accepted')actions.append(button('Entra',()=>enterInvite(inv.id)));
+  row.append(actions);inbox.append(row);
+ }
+ const publicTitle=el('h3','','Tavoli pubblici');root.append(publicTitle);
+ const browse=await call('inviteBrowse');
+ if(!browse.rooms?.length)root.append(el('p','nc70-muted','Nessun tavolo pubblico disponibile.'));
+ for(const item of browse.rooms||[]){
+  const line=el('div','nc70-person');
+  line.append(el('strong','',(GAME_LABELS[item.game]||item.game)+' · '+item.host));
+  line.append(button('Entra al tavolo',()=>{
+   const ok=window.NC_EXPANSION?.joinInvitation?.({kind:'join',game:item.game,roomId:item.room_id});
+   if(ok)close();else message('Lascia prima la partita attuale.');
+  }));root.append(line);
+ }
+ root.append(button('Preferenze inviti',()=>invitePreferences()));
+}
+async function invitationRecipients(ctx,audience,root){
+ const into=root.querySelector('#nc94-recipients');if(!into)return;
+ into.replaceChildren();
+ let people=[];
+ if(audience==='friends'){
+  const r=await call('friends');people=(r.friends||[]).filter(x=>x.status==='accepted');
+ }else{
+  const r=await call('inviteCandidates');people=r.users||[];
+ }
+ if(!people.length)into.append(el('p','nc70-muted','Nessun contatto disponibile per questa categoria.'));
+ for(const person of people){
+  const row=personRow(person,[]);
+  invitationOptions(row,ctx,person,audience);
+  into.append(row);
+ }
+}
+async function enterInvite(id){
+ try{
+  const data=await call('inviteEnter',{id});
+  if(data.kind==='join'){
+   if(window.NC_EXPANSION?.joinInvitation?.(data)){close();return;}
+   throw Error('Termina prima la partita attuale.');
+  }
+  if(data.kind==='takeover'){
+   if(window.NC_EXPANSION?.takeoverInvitation?.(data.joined)){close();return;}
+   throw Error('Termina prima la partita attuale.');
+  }
+  if(data.kind==='watch'){startViewer(id,data.state);return;}
+  throw Error('Tipo di invito non disponibile.');
+ }catch(e){message(e.message);}
+}
+function startViewer(inviteId,initial){
+ endViewer();tab='invites';
+ const root=panel();root.replaceChildren();
+ heading(root,'👁 Spettatore · '+(GAME_LABELS[initial.game]||initial.game));
+ const status=el('div','nc70-stat');root.append(status);
+ root.append(el('p','nc70-muted','Visualizzazione in sola lettura: le mani private e le mosse disponibili non sono trasmesse agli spettatori.'));
+ root.append(button('Esci dalla visione',()=>{endViewer();showInvites().catch(e=>message(e.message));}));
+ let inflight=false;
+ function drawLive(v){
+  if(!status.isConnected)return;
+  status.replaceChildren();
+  const active=v.players?.[v.turn];
+  status.append(el('strong','',v.status==='finished'?'Partita conclusa':'Turno di '+(active?.name||'—')));
+  status.append(el('span','',(v.players||[]).map(p=>p.name+(p.bot?' 🤖':'')).join(' · ')));
+  const cards=(v.trick?.length?v.trick.map(t=>t.card):v.table)||[];
+  status.append(el('span','',cards.length?'Carte sul tavolo: '+cards.map(c=>(c.v||'?')+' '+(['Denari','Coppe','Spade','Bastoni'][c.s]||'')).join(' · '):'Tavolo in attesa di una carta'));
+ }
+ drawLive(initial);
+ viewerTimer=setInterval(async()=>{
+  if(inflight||document.hidden||!status.isConnected)return;
+  inflight=true;
+  try{const data=await call('inviteWatch',{id:inviteId});drawLive(data.state);}
+  catch(e){endViewer();message(e.message);}
+  finally{inflight=false;}
+ },3000);
+}
+async function invitePreferences(){
+ tab='invites';endViewer();
+ const root=panel();root.replaceChildren();heading(root,'Preferenze inviti e privacy');
+ const data=await call('invitePreferences',{read:true});
+ const prefs=data.preferences||{};
+ const fields=[['direct','Ricevi inviti dagli amici'],['second_degree','Permetti inviti dagli amici degli amici'],
+   ['public_invites','Ricevi inviti da chiunque (opt-in)'],['allow_watch','Accetta richieste per guardare partite']];
+ const form=el('form','nc70-form'),controls={};
+ for(const [key,label] of fields){
+  const line=el('label'),box=el('input');box.type='checkbox';box.checked=prefs[key]===true;controls[key]=box;
+  line.append(box,document.createTextNode(' '+label));form.append(line);
+ }
+ const save=button('Salva preferenze',()=>{});save.type='submit';form.append(save);
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();save.disabled=true;
+  try{await call('invitePreferences',Object.fromEntries(fields.map(([k])=>[k,controls[k].checked])));
+    message('Preferenze inviti salvate');await showInvites();}
+  catch(e){message(e.message);}finally{save.disabled=false;}
+ });
+ root.append(form);root.append(button('Torna agli inviti',()=>showInvites()));
+}
+
 async function show(view){
- try{message('');if(view==='profile'){const a=await call('me');if(a.registered)window.NC80_IDENTITY?.set?.(a.profile.nickname);settingsForm(a.profile,!a.registered);return;}const profile=await ensureProfile();if(!profile)return;
- await ({friends,search,stats,progress})[view]();}catch(e){message(e.message);}
+ try{if(view!=='invites')endViewer();message('');if(view==='profile'){const a=await call('me');if(a.registered)window.NC80_IDENTITY?.set?.(a.profile.nickname);settingsForm(a.profile,!a.registered);return;}const profile=await ensureProfile();if(!profile)return;
+ await ({friends,search,stats,progress,invites:showInvites})[view]();}catch(e){message(e.message);}
 }
 function open(view='friends'){if(overlay){show(view);return;}overlay=el('section','nc70-overlay');overlay.id='nc70-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Amici e statistiche');overlay.innerHTML='<div class="nc70-sheet"><header><strong>👥 COMUNITÀ NAPOLI CARTE</strong><button type="button" id="nc70-close" aria-label="Chiudi">×</button></header><nav id="nc70-tabs"></nav><div id="nc70-message" role="status"></div><main id="nc70-body"></main></div>';
  document.body.append(overlay);overlay.querySelector('#nc70-close').onclick=close;
  overlay.onclick=e=>{if(e.target===overlay)close()};
- const nav=overlay.querySelector('#nc70-tabs');for(const [key,label] of [['friends','Amici'],['search','Cerca'],['stats','Statistiche'],['progress','Cloud'],['profile','Profilo']])nav.append(button(label,()=>show(key)));
+ const nav=overlay.querySelector('#nc70-tabs');for(const [key,label] of [['friends','Amici'],['invites','Inviti'],['search','Cerca'],['stats','Statistiche'],['progress','Cloud'],['profile','Profilo']])nav.append(button(label,()=>show(key)));
  show(view);heartbeat=setInterval(()=>{if(document.visibilityState==='visible')call('heartbeat').catch(()=>{})},45000);call('heartbeat').catch(()=>{});
 }
 const style=el('style');style.textContent=`
@@ -96,5 +248,5 @@ const style=el('style');style.textContent=`
 `;document.head.append(style);
 // The friends screen is launched from Area personale in the main menu.
 // Do not create floating actions while a game is running.
-window.NC70_SOCIAL={open,openTab:open,close,call};
+window.NC70_SOCIAL={open,openTab:open,close,call,openInvite:(id)=>{open('invites');return !!id;}};
 })();

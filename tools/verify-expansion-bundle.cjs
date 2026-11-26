@@ -22,8 +22,8 @@ function checkBundle(root) {
   const assets = path.join(root, 'app/src/main/assets');
   const expectedIds = manifest.app.expansionIds.slice().sort();
   const gradle = fs.readFileSync(path.join(root, 'app/build.gradle'), 'utf8');
-  assert.match(gradle, /\bversionCode\s+93\b/, 'Android versionCode must be 93');
-  assert.match(gradle, /\bversionName\s+['"]9\.3\.0['"]/, 'Android versionName must be 9.3.0');
+  assert.match(gradle, /\bversionCode\s+94\b/, 'Android versionCode must be 94');
+  assert.match(gradle, /\bversionName\s+['"]9\.4\.0['"]/, 'Android versionName must be 9.4.0');
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'app/package.json'), 'utf8')).type, 'commonjs',
     'Application UMD modules need their own CommonJS package scope');
 
@@ -56,7 +56,7 @@ function checkBundle(root) {
     return { id, title: engine.title, seats: engine.seats };
   });
   const session = require(path.join(assets, 'expansion-session.js'));
-  assert.equal(session.VERSION, manifest.app.versionName, 'Shared session version must match the APK');
+  assert.equal(session.VERSION, manifest.backendProtocolVersion, 'Shared session protocol must match the multiplayer backend');
   assert.deepEqual(session.catalog().map(game => game.id).sort(), expectedIds, 'Session catalogue must expose all engines');
 
   const index = fs.readFileSync(path.join(assets, 'index.html'), 'utf8');

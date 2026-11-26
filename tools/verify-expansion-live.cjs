@@ -53,7 +53,7 @@ function createClient(base) {
   return { origin: origin.origin, request, close: () => agent.destroy() };
 }
 function stateChecks(state) {
-  assert.equal(state.version, manifest.app.versionName, 'Live session version must be 9.3.0');
+  assert.equal(state.version, manifest.backendProtocolVersion, 'Live session version must be 9.3.0');
   assert.equal(state.game, 'tressette');
   assert.equal(state.status, 'playing');
   assert.equal(state.seats, 2);
@@ -104,7 +104,7 @@ async function runLiveQa(reportFile) {
   const client = createClient(base), participants = [];
   const report = {
     ok: false, startedAt: new Date().toISOString(), endpoint: client.origin,
-    expectedVersion: manifest.app.versionName, game: 'tressette', privateTable: true,
+    expectedVersion: manifest.backendProtocolVersion, game: 'tressette', privateTable: true,
     catalogAttempts: 0, moves: [], cleanup: { attempted: 0, succeeded: 0, errors: [] }
   };
   try {
@@ -116,7 +116,7 @@ async function runLiveQa(reportFile) {
         const remaining = deadline - Date.now();
         const response = await client.request('catalog', { timeoutMs: Math.min(15000, Math.max(1, remaining)) });
         const candidate = response.data;
-        if (candidate.version === manifest.app.versionName && Array.isArray(candidate.games)) {
+        if (candidate.version === manifest.backendProtocolVersion && Array.isArray(candidate.games)) {
           assert.deepEqual(candidate.games.map(game => game.id).sort(), manifest.app.expansionIds.slice().sort());
           catalog = candidate; break;
         }

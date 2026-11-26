@@ -7,6 +7,7 @@
   const local = Session.createService();
   let host = null, chosen = 'tressette', mode = 'cpu', current = null, key = null, timer = null, clock = null, selected = null;
   let busy = false, fetching = false, epoch = 0, rulesOpen = false, leaveOpen = false, originFocus = null, offset = 0;
+  let pendingInvitation = null;
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const by = id => host && host.querySelector('#' + id);
   const format = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 }).format(value) : String(value == null ? '—' : value);
@@ -71,7 +72,7 @@
   async function start() {
     if (busy) return;
     const mine = epoch, chosenMode = mode;
-    const input = { game: chosen, seats: Number(by('ncx-seats').value), name: by('ncx-name').value.trim() || name(), bot: mode === 'cpu', private: !!(by('ncx-private') && by('ncx-private').checked), invite: by('ncx-invite') ? by('ncx-invite').value.trim().toUpperCase() : '' };
+    const input = { game: chosen, seats: Number(by('ncx-seats').value), name: by('ncx-name').value.trim() || name(), bot: mode === 'cpu', private: !!(by('ncx-private') && by('ncx-private').checked), invite: by('ncx-invite') ? by('ncx-invite').value.trim().toUpperCase() : '', roomId: pendingInvitation && pendingInvitation.roomId || '' };
     busy = true; by('ncx-start').disabled = true; by('ncx-start').textContent = mode === 'online' ? 'Connessione…' : 'Preparazione…'; announce('');
     try {
       if (mode === 'online') {
@@ -83,6 +84,7 @@
         if (chosenMode === 'cpu') local.leave(joined.token); else request('leave', {}, joined.token).catch(() => {});
         return;
       }
+      pendingInvitation = null;
       key = joined.token; chosen = joined.state.game;
       if (mode === 'online') localStorage.setItem('ncx-online-session', JSON.stringify({ token: key, game: chosen }));
       accept(joined.state); startPolling();
@@ -130,7 +132,8 @@
     shell();
     const s = current, target = by('ncx-main');
     if (s.status === 'waiting') {
-      target.innerHTML = '<section class="ncx-wait"><div class="ncx-spinner" aria-hidden="true"></div><h2>Stiamo preparando il tavolo</h2><p>' + s.humanCount + ' giocatori reali · ' + s.seats + ' posti</p>' + (s.code ? '<p class="ncx-note">Invita i tuoi amici con il codice</p><strong class="ncx-code">' + esc(s.code) + '</strong>' : '') + '<div class="ncx-players">' + s.players.map(p => '<div class="ncx-player"><span>👤</span><b>' + esc(p.name) + '</b></div>').join('') + '</div><p id="ncx-search-clock" class="ncx-note"></p><button id="ncx-fill" class="ncx-primary" ' + (s.canFill ? '' : 'hidden') + '>Completa il tavolo con CPU</button><p class="ncx-note">Puoi tornare indietro in qualsiasi momento.</p></section>';
+      target.innerHTML = '<section class="ncx-wait"><div class="ncx-spinner" aria-hidden="true"></div><h2>Stiamo preparando il tavolo</h2><p>' + s.humanCount + ' giocatori reali · ' + s.seats + ' posti</p>' + (s.code ? '<p class="ncx-note">Invita i tuoi amici con il codice</p><strong class="ncx-code">' + esc(s.code) + '</strong>' : '') + '<div class="ncx-players">' + s.players.map(p => '<div class="ncx-player"><span>👤</span><b>' + esc(p.name) + '</b></div>').join('') + '</div><p id="ncx-search-clock" class="ncx-note"></p>' + (mode === 'online' && s.seat === 0 ? '<button type="button" id="ncx-open-invites" class="ncx-secondary">✉ Invita amici al tavolo</button>' : '') + '<button id="ncx-fill" class="ncx-primary" ' + (s.canFill ? '' : 'hidden') + '>Completa il tavolo con CPU</button><p class="ncx-note">Puoi tornare indietro in qualsiasi momento.</p></section>';
+      if(by('ncx-open-invites'))by('ncx-open-invites').onclick=()=>w.NC70_SOCIAL?.open('invites');
       by('ncx-fill').onclick = async () => {
         if (busy) return; busy = true; const mine = epoch;
         try { const next = await request('fill', {}, key); if (host && mine === epoch) accept(next); } catch (error) { if (host && mine === epoch) announce(error.message); }
@@ -139,7 +142,8 @@
       tickClock(); return;
     }
     const turnName = s.players[s.turn] ? s.players[s.turn].name : '';
-    target.innerHTML = '<div class="ncx-game-meta"><span>' + (mode === 'cpu' ? 'CONTRO CPU' : 'ONLINE · ' + s.humanCount + ' reali · ' + s.botCount + ' CPU') + '</span><span>' + (s.status === 'finished' ? 'PARTITA CONCLUSA' : s.turn === s.seat ? 'IL TUO TURNO' : 'TURNO DI ' + esc(turnName.toUpperCase())) + '</span><span id="ncx-turn-clock"></span></div><section class="ncx-players" aria-label="Giocatori">' + s.players.map((p, i) => '<div class="ncx-player' + (s.status === 'playing' && i === s.turn ? ' active' : '') + (p.eliminated ? ' eliminated' : '') + '"><span>' + (p.bot ? '🤖' : '👤') + '</span><b>' + esc(p.name) + (i === s.seat ? ' · TU' : '') + '</b><small>' + (p.handCount == null ? '' : p.handCount + ' carte · ') + (p.score == null ? '—' : format(p.score)) + ' pt' + (p.team != null ? ' · Squadra ' + (Number(p.team) + 1) : '') + (p.lives != null ? ' · ' + p.lives + ' vite' : '') + '</small></div>').join('') + '</section><p class="ncx-message" role="status">' + esc(s.message || '') + '</p><div id="ncx-public-info" class="ncx-public-info"></div><section class="ncx-table" aria-label="Tavolo"><div id="ncx-table-cards" class="ncx-table-cards"></div><div id="ncx-extra"></div></section><section class="ncx-hand-wrap"><h2>' + (s.status === 'finished' ? 'La tua mano finale' : 'Le tue carte') + '</h2><div id="ncx-hand" class="ncx-hand"></div></section><section id="ncx-actions" class="ncx-actions" aria-label="Mosse disponibili"></section><section id="ncx-result"></section><details class="ncx-log"><summary>Ultime mosse</summary><ol>' + (s.log || []).slice(0, 10).map(line => '<li>' + esc(line) + '</li>').join('') + '</ol></details>';
+    target.innerHTML = '<div class="ncx-game-meta"><span>' + (mode === 'cpu' ? 'CONTRO CPU' : 'ONLINE · ' + s.humanCount + ' reali · ' + s.botCount + ' CPU') + '</span>' + (mode==='online' && s.seat===0 ? '<button type="button" id="ncx-open-invites" class="ncx-secondary">✉ Invita spettatori</button>' : '') + '<span>' + (s.status === 'finished' ? 'PARTITA CONCLUSA' : s.turn === s.seat ? 'IL TUO TURNO' : 'TURNO DI ' + esc(turnName.toUpperCase())) + '</span><span id="ncx-turn-clock"></span></div><section class="ncx-players" aria-label="Giocatori">' + s.players.map((p, i) => '<div class="ncx-player' + (s.status === 'playing' && i === s.turn ? ' active' : '') + (p.eliminated ? ' eliminated' : '') + '"><span>' + (p.bot ? '🤖' : '👤') + '</span><b>' + esc(p.name) + (i === s.seat ? ' · TU' : '') + '</b><small>' + (p.handCount == null ? '' : p.handCount + ' carte · ') + (p.score == null ? '—' : format(p.score)) + ' pt' + (p.team != null ? ' · Squadra ' + (Number(p.team) + 1) : '') + (p.lives != null ? ' · ' + p.lives + ' vite' : '') + '</small></div>').join('') + '</section><p class="ncx-message" role="status">' + esc(s.message || '') + '</p><div id="ncx-public-info" class="ncx-public-info"></div><section class="ncx-table" aria-label="Tavolo"><div id="ncx-table-cards" class="ncx-table-cards"></div><div id="ncx-extra"></div></section><section class="ncx-hand-wrap"><h2>' + (s.status === 'finished' ? 'La tua mano finale' : 'Le tue carte') + '</h2><div id="ncx-hand" class="ncx-hand"></div></section><section id="ncx-actions" class="ncx-actions" aria-label="Mosse disponibili"></section><section id="ncx-result"></section><details class="ncx-log"><summary>Ultime mosse</summary><ol>' + (s.log || []).slice(0, 10).map(line => '<li>' + esc(line) + '</li>').join('') + '</ol></details>';
+    if(by('ncx-open-invites'))by('ncx-open-invites').onclick=()=>w.NC70_SOCIAL?.open('invites');
     publicInformation(s);
     const table = by('ncx-table-cards');
     const visibleTrick = s.trick && s.trick.length ? s.trick : s.lastTrick || [];
@@ -231,5 +235,32 @@
   }
   d.addEventListener('keydown', event => { if (event.key === 'Escape' && host) { event.preventDefault(); close(); } });
   d.addEventListener('visibilitychange', () => { if (!d.hidden && host && key) refresh(); });
-  w.NC_EXPANSION = { open, close, isOpen: () => !!host, isPlaying: () => !!(host && current), catalog: () => Session.catalog() };
+  function invitationContext(){
+    if(mode!=='online'||!current||!key||current.seat!==0)return null;
+    return {tableToken:key,roomId:current.roomId,game:current.game,
+      status:current.status,private:current.private,code:current.code};
+  }
+  function joinInvitation(invite){
+    if(!invite||invite.kind!=='join'||!rules[invite.game])return false;
+    if(host && current && current.status==='playing')return false;
+    if(host)destroy(true);
+    if(!open(invite.game,'online'))return false;
+    pendingInvitation={roomId:typeof invite.roomId==='string'?invite.roomId:''};
+    if(invite.code && by('ncx-invite'))by('ncx-invite').value=String(invite.code);
+    if(by('ncx-seats')&&invite.seats)by('ncx-seats').value=String(invite.seats);
+    const btn=by('ncx-start');if(btn)btn.click();
+    return true;
+  }
+  function takeoverInvitation(joined){
+    if(!joined||!joined.token||!joined.state||!rules[joined.state.game])return false;
+    if(host && current && current.status==='playing')return false;
+    if(host)destroy(true);
+    if(!open(joined.state.game,'online'))return false;
+    key=joined.token;
+    localStorage.setItem('ncx-online-session',JSON.stringify({token:key,game:joined.state.game}));
+    accept(joined.state);startPolling();
+    return true;
+  }
+  w.NC_EXPANSION = { open, close, isOpen: () => !!host, isPlaying: () => !!(host && current),
+    catalog: () => Session.catalog(), invitationContext, joinInvitation, takeoverInvitation };
 })(window, document);

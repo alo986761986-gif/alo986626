@@ -150,18 +150,22 @@ public final class MainActivity extends Activity {
     private String pendingPushDestination;
     private String pendingPushSender;
     private String pendingPushSenderName;
+    private String pendingInviteId;
     private void pushIntent(Intent intent){
         if(intent==null)return;
         String destination=intent.getStringExtra(GameNotificationService.EXTRA_DESTINATION);
         if(!GameNotificationService.FRIENDS.equals(destination)&&
            !GameNotificationService.CHAT.equals(destination)&&
-           !GameNotificationService.BONUS.equals(destination))return;
+           !GameNotificationService.BONUS.equals(destination)&&
+           !GameNotificationService.INVITES.equals(destination))return;
         pendingPushDestination=destination;
         pendingPushSender=intent.getStringExtra("notification_sender_uid");
         pendingPushSenderName=intent.getStringExtra("notification_sender_name");
+        pendingInviteId=intent.getStringExtra("notification_invite_id");
         intent.removeExtra(GameNotificationService.EXTRA_DESTINATION);
         intent.removeExtra("notification_sender_uid");
         intent.removeExtra("notification_sender_name");
+        intent.removeExtra("notification_invite_id");
         deliverPushDestination();
     }
     private void deliverPushDestination(){
@@ -169,9 +173,10 @@ public final class MainActivity extends Activity {
         String destination=pendingPushDestination;
         String sender=pendingPushSender==null?"":pendingPushSender;
         String name=pendingPushSenderName==null?"":pendingPushSenderName;
+        String invite=pendingInviteId==null?"":pendingInviteId;
         web.evaluateJavascript("Boolean(window.NC82_OPEN_NOTIFICATION&&window.NC82_OPEN_NOTIFICATION("+
-            org.json.JSONObject.quote(destination)+","+org.json.JSONObject.quote(sender)+","+org.json.JSONObject.quote(name)+"))",value->{
-                if("true".equals(value)){pendingPushDestination=null;pendingPushSender=null;pendingPushSenderName=null;}
+            org.json.JSONObject.quote(destination)+","+org.json.JSONObject.quote(sender)+","+org.json.JSONObject.quote(name)+","+org.json.JSONObject.quote(invite)+"))",value->{
+                if("true".equals(value)){pendingPushDestination=null;pendingPushSender=null;pendingPushSenderName=null;pendingInviteId=null;}
             });
     }
     @Override protected void onNewIntent(Intent intent){
@@ -183,7 +188,7 @@ public final class MainActivity extends Activity {
     // Dedicated authenticated transport: Firebase credentials never enter the WebView.
     private final class SocialBridge {
         @android.webkit.JavascriptInterface public void request(String id,String operation,String json){
-            if(id==null||!id.matches("[0-9]{1,10}")||operation==null||!operation.matches("(me|profile|search|friends|request|accept|remove|block|heartbeat|stats|progress|daily|claim|chatThreads|chatMessages|chatAudio|chatSend|chatRead|report|pSummary|pPhoto|pPhotoSave|pMissions|pMissionClaim|pBoostClaim|pNotifications|pNotifRead|pAchievements|pPerformance|pRanking|marketState|marketBuy|marketEquip|b92Rooms|b92State|b92Join|b92Start|b92Leave)"))return;
+            if(id==null||!id.matches("[0-9]{1,10}")||operation==null||!operation.matches("(me|profile|search|friends|request|accept|remove|block|heartbeat|stats|progress|daily|claim|chatThreads|chatMessages|chatAudio|chatSend|chatRead|report|pSummary|pPhoto|pPhotoSave|pMissions|pMissionClaim|pBoostClaim|pNotifications|pNotifRead|pAchievements|pPerformance|pRanking|marketState|marketBuy|marketEquip|b92Rooms|b92State|b92Join|b92Start|b92Leave|inviteList|invitePreferences|inviteCandidates|inviteSend|invitePublish|inviteBrowse|inviteRespond|inviteEnter|inviteWatch)"))return;
             if(json==null||json.length()>("chatSend".equals(operation)?375000:"pPhotoSave".equals(operation)?70000:16000))return;
             com.google.firebase.auth.FirebaseUser user=rewardUser();
             if(user==null){socialCallback(id,401,"{\"error\":\"Accedi con email o Google\"}");return;}
@@ -195,8 +200,14 @@ public final class MainActivity extends Activity {
                     try{
                         org.json.JSONObject body=new org.json.JSONObject(json);
                         boolean get=("me".equals(operation)||"search".equals(operation)||"friends".equals(operation)||"stats".equals(operation)||"daily".equals(operation)) ||
-                            ("marketState".equals(operation)||"b92Rooms".equals(operation)||"b92State".equals(operation))||("progress".equals(operation)&&body.optBoolean("read",false))||"chatThreads".equals(operation)||"chatMessages".equals(operation)||"chatAudio".equals(operation)||"pSummary".equals(operation)||"pPhoto".equals(operation)||"pMissions".equals(operation)||"pNotifications".equals(operation)||"pAchievements".equals(operation)||"pPerformance".equals(operation)||"pRanking".equals(operation);
-                        String route="daily".equals(operation)?"daily/status":"claim".equals(operation)?"daily/claim":"chatThreads".equals(operation)?"chat/threads":"chatMessages".equals(operation)?"chat/messages":"chatAudio".equals(operation)?"chat/audio":"chatSend".equals(operation)?"chat/send":"chatRead".equals(operation)?"chat/read":"report".equals(operation)?"feedback/report":"pSummary".equals(operation)?"profile79/summary":"pPhoto".equals(operation)?"profile79/photo":"pPhotoSave".equals(operation)?"profile79/photo/save":"pMissions".equals(operation)?"profile79/missions":"pMissionClaim".equals(operation)?"profile79/mission/claim":"pBoostClaim".equals(operation)?"profile79/boost/claim":"pNotifications".equals(operation)?"profile79/notifications":"pNotifRead".equals(operation)?"profile79/notifications/read":"pAchievements".equals(operation)?"profile79/achievements":"pPerformance".equals(operation)?"profile79/performance":"pRanking".equals(operation)?"profile79/ranking":"marketState".equals(operation)?"market/state":"marketBuy".equals(operation)?"market/buy":"marketEquip".equals(operation)?"market/equip":"b92Rooms".equals(operation)?"banco92/rooms":"b92State".equals(operation)?"banco92/state":"b92Join".equals(operation)?"banco92/join":"b92Start".equals(operation)?"banco92/start":"b92Leave".equals(operation)?"banco92/leave":"social/"+operation;
+                            ("marketState".equals(operation)||"b92Rooms".equals(operation)||"b92State".equals(operation))||("progress".equals(operation)&&body.optBoolean("read",false))||"chatThreads".equals(operation)||"chatMessages".equals(operation)||"chatAudio".equals(operation)||"pSummary".equals(operation)||"pPhoto".equals(operation)||"pMissions".equals(operation)||"pNotifications".equals(operation)||"pAchievements".equals(operation)||"pPerformance".equals(operation)||"pRanking".equals(operation)||"inviteList".equals(operation)||"inviteCandidates".equals(operation)||"inviteBrowse".equals(operation)||("invitePreferences".equals(operation)&&body.optBoolean("read",false))||"inviteWatch".equals(operation);
+                        String route="daily".equals(operation)?"daily/status":"claim".equals(operation)?"daily/claim":"chatThreads".equals(operation)?"chat/threads":"chatMessages".equals(operation)?"chat/messages":"chatAudio".equals(operation)?"chat/audio":"chatSend".equals(operation)?"chat/send":"chatRead".equals(operation)?"chat/read":"report".equals(operation)?"feedback/report":"pSummary".equals(operation)?"profile79/summary":"pPhoto".equals(operation)?"profile79/photo":"pPhotoSave".equals(operation)?"profile79/photo/save":"pMissions".equals(operation)?"profile79/missions":"pMissionClaim".equals(operation)?"profile79/mission/claim":"pBoostClaim".equals(operation)?"profile79/boost/claim":"pNotifications".equals(operation)?"profile79/notifications":"pNotifRead".equals(operation)?"profile79/notifications/read":"pAchievements".equals(operation)?"profile79/achievements":"pPerformance".equals(operation)?"profile79/performance":"pRanking".equals(operation)?"profile79/ranking":"marketState".equals(operation)?"market/state":"marketBuy".equals(operation)?"market/buy":"marketEquip".equals(operation)?"market/equip":"b92Rooms".equals(operation)?"banco92/rooms":"b92State".equals(operation)?"banco92/state":"b92Join".equals(operation)?"banco92/join":"b92Start".equals(operation)?"banco92/start":"b92Leave".equals(operation)?"banco92/leave":
+                            "inviteList".equals(operation)?"invites94/list":"invitePreferences".equals(operation)?"invites94/preferences":
+                            "inviteCandidates".equals(operation)?"invites94/friends-of-friends":
+                            "inviteSend".equals(operation)?"invites94/send":"invitePublish".equals(operation)?"invites94/publish":
+                            "inviteBrowse".equals(operation)?"invites94/browse":"inviteRespond".equals(operation)?"invites94/respond":
+                            "inviteEnter".equals(operation)?"invites94/enter":"inviteWatch".equals(operation)?"invites94/watch":
+                            "social/"+operation;
                         String url="https://napoli-chiodo-121.onrender.com/"+route;
                         if("search".equals(operation))url+="?q="+java.net.URLEncoder.encode(body.optString("q",""),"UTF-8");
                         if("b92State".equals(operation))url+="?roomId="+java.net.URLEncoder.encode(body.optString("roomId",""),"UTF-8");
@@ -206,6 +217,7 @@ public final class MainActivity extends Activity {
                             if(body.has("before"))url+="&before="+java.net.URLEncoder.encode(body.optString("before",""),"UTF-8");
                         }
                         if("chatAudio".equals(operation))url+="?id="+java.net.URLEncoder.encode(body.optString("id",""),"UTF-8");
+                        if("inviteWatch".equals(operation))url+="?id="+java.net.URLEncoder.encode(body.optString("id",""),"UTF-8");
                         c=(javax.net.ssl.HttpsURLConnection)new java.net.URL(url).openConnection();
                         c.setInstanceFollowRedirects(false);c.setConnectTimeout(15000);c.setReadTimeout(22000);
                         c.setRequestProperty("X-Firebase-Token",access);

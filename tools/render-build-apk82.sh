@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Existing Render APK builder, upgraded to 9.3. This script publishes only a
+# Existing Render APK builder, upgraded to 9.4. This script publishes only a
 # verified release and never substitutes a debug APK for the final artifact.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -32,7 +32,7 @@ trap 'exit 143' TERM
 rm -rf -- "$DIST"
 mkdir -p "$DIST/qa"
 SOURCE_COMMIT="$(git rev-parse HEAD)"
-printf 'NAPOLI CARTE 3D 9.3 build source: %s\n' "$SOURCE_COMMIT"
+printf 'NAPOLI CARTE 3D 9.4 build source: %s\n' "$SOURCE_COMMIT"
 
 fetch() {
   local url="$1" destination="$2"
@@ -131,7 +131,7 @@ assert.equal(r.onlinePassed,m.uiQa.expectedOnlineCases);
 assert.ok(String(r.browserVersion).includes(m.toolchain.chrome.version));
 for(const key of ['errors','pageErrors','localFailures'])assert.equal(r[key].length,0,key);
 NODE
-printf '%s\n' 'NC93_PREDEPLOY_QA_PASSED: rule tests, app/server parity and fresh browser UI checks are green.'
+printf '%s\n' 'NC94_PREDEPLOY_QA_PASSED: rule tests, app/server parity and fresh browser UI checks are green.'
 
 # Pin a complete JDK instead of relying on a partial Java runtime in the image.
 verified_archive "$(config toolchain.jdk.url)" "$TOOLS/jdk17.tar.gz" "$(config toolchain.jdk.sha256)"
@@ -230,22 +230,22 @@ const summary={
 };
 fs.writeFileSync(path.join(dist,'qa/release.json'),JSON.stringify(summary,null,2)+'\n');
 fs.writeFileSync(path.join(dist,'README.txt'),[
-  'NAPOLI CARTE 3D 9.3.0 — 19 giochi',
+  'NAPOLI CARTE 3D 9.4.0 — 19 giochi + inviti',
   'APK release: '+m.app.apkFile,
-  'Certificato identico alla versione 9.2 pubblicata.',
+  'Certificato identico alla versione 9.3 pubblicata.',
   'Verifiche: regole, parità app/server, interfaccia, asset, musica, firma e tavolo HTTPS privato a due.',
-  'Il file 9.2 resta soltanto come archivio e riferimento per il certificato.',
+  'Il file 9.3 resta soltanto come archivio e riferimento per il certificato.',
   'Il collaudo su telefoni Android fisici non è incluso in questa build.',
   'Rapporto completo: qa/release.json',
   'Sorgente: '+commit,''
 ].join('\n'));
 const html='<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-  '<title>NAPOLI CARTE 3D 9.3</title><style>body{margin:0;background:#082937;color:#f5f4ed;font:18px system-ui;line-height:1.6}'+
+  '<title>NAPOLI CARTE 3D 9.4</title><style>body{margin:0;background:#082937;color:#f5f4ed;font:18px system-ui;line-height:1.6}'+
   'main{max-width:760px;margin:auto;padding:56px 24px}h1{line-height:1.15}a{color:#ffc966}'+
   '.download{display:inline-block;padding:14px 22px;background:#ffd06f;color:#142d36;border-radius:12px;font-weight:700;text-decoration:none}'+
   'code{overflow-wrap:anywhere;font-size:.8em}small{color:#c3d6da}</style><main><p>NAPOLI CARTE 3D</p>'+
-  '<h1>19 giochi. Versione 9.3.</h1><p>APK Android firmato con lo stesso certificato della versione 9.2.</p>'+
-  '<p><a class="download" href="'+m.app.apkFile+'">Scarica NAPOLI CARTE 3D 9.3</a></p>'+
+  '<h1>19 giochi. Versione 9.4. Inviti &amp; Partite Live.</h1><p>APK Android firmato con lo stesso certificato della versione 9.3.</p>'+
+  '<p><a class="download" href="'+m.app.apkFile+'">Scarica NAPOLI CARTE 3D 9.4</a></p>'+
   '<p>Verifiche completate: regole dei giochi, interfaccia, musica, firma e un tavolo online privato con due partecipanti.</p>'+
   '<p><a href="qa/release.json">Rapporto delle verifiche</a> · <a href="SHA256SUMS.txt">SHA-256 dei file APK</a></p>'+
   '<p><small>La verifica su telefoni Android fisici resta da eseguire.</small></p>'+
@@ -257,5 +257,5 @@ NODE
   cd "$DIST"
   sha256sum "$APK_NAME" "$PREVIOUS_NAME" > SHA256SUMS.txt
 )
-printf '%s\n' 'NC93_RELEASE_QA_PASSED: signed release APK and public QA reports are ready.'
+printf '%s\n' 'NC94_RELEASE_QA_PASSED: signed release APK and public QA reports are ready.'
 ls -lh "$DIST"

@@ -28,7 +28,7 @@ async function route(req, send, path) {
     let data;
     try { data = JSON.parse(body || '{}'); } catch (_) { return send(400, { error: 'Richiesta JSON non valida.' }); }
     if (!data || typeof data !== 'object' || Array.isArray(data)) return send(400, { error: 'Richiesta non valida.' });
-    if (path === '/expansion/join') return send(200, service.join({ game: data.game, seats: data.seats, name: data.name, private: data.private === true, invite: data.invite, bot: false }));
+    if (path === '/expansion/join') return send(200, service.join({ game: data.game, seats: data.seats, name: data.name, private: data.private === true, invite: data.invite, roomId: data.roomId, bot: false }));
     if (path === '/expansion/move') return send(200, service.move(key, data));
     if (path === '/expansion/fill') return send(200, service.fill(key));
     return send(200, service.leave(key));
