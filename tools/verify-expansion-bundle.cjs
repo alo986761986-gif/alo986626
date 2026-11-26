@@ -56,7 +56,7 @@ function checkBundle(root) {
     return { id, title: engine.title, seats: engine.seats };
   });
   const session = require(path.join(assets, 'expansion-session.js'));
-  assert.equal(session.VERSION, manifest.app.versionName, 'Shared session version must match the APK');
+  assert.equal(session.VERSION, manifest.backendProtocolVersion, 'Shared session protocol must match the multiplayer backend');
   assert.deepEqual(session.catalog().map(game => game.id).sort(), expectedIds, 'Session catalogue must expose all engines');
 
   const index = fs.readFileSync(path.join(assets, 'index.html'), 'utf8');
