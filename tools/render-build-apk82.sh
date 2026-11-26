@@ -34,6 +34,8 @@ unzip -q "$TOOLS/gradle.zip" -d "$TOOLS"
 export PATH="$TOOLS/gradle-8.11.1/bin:$PATH"
 gradle --version
 
+bash server/restore_bass_audio.sh
+
 if [[ -n "${UPLOAD_KEYSTORE_BASE64:-}" && -n "${UPLOAD_STORE_PASSWORD:-}" && -n "${UPLOAD_KEY_ALIAS:-}" && -n "${UPLOAD_KEY_PASSWORD:-}" ]]; then
   umask 077
   printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$TOOLS/upload-keystore.p12"
