@@ -61,7 +61,8 @@ async function notify(uid,type,details={}){
   const rows=(await db.query('SELECT token FROM nc_push_devices WHERE uid=$1 ORDER BY updated_at DESC LIMIT 500',[uid])).rows;
   if(!rows.length)return false;
   const tokens=rows.map(x=>x.token);
-  const data={type};
+  // Target UID ensures old-device tokens cannot display data for a different account.
+  const data={type,recipientUid:String(uid)};
   if((type==='chat_message'||type==='friend_request')&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
   if(details.senderNickname)data.senderNickname=String(details.senderNickname).slice(0,24);
   // Data-only messages let the Android service control channel, privacy and deeplink.
