@@ -35,6 +35,16 @@ export PATH="$TOOLS/gradle-8.11.1/bin:$PATH"
 gradle --version
 
 bash server/restore_bass_audio.sh
+# Market 8.3 static checks: no credit purchases without verified backend.
+node --check app/src/main/assets/market83.js
+node --check app/src/main/assets/store52.js
+node --check chiodo-server/market83.js
+node --check chiodo-server/admob-ssv.js
+node --check app/src/main/assets/compat81.js
+node --test server/test-market83.js server/test-admob-wallet.js server/test-play-billing68.js
+test -s app/src/main/assets/market83-themes.css
+grep -q 'market83.js' app/src/main/assets/store52.js
+grep -q 'versionCode 83' app/build.gradle
 
 if [[ -n "${UPLOAD_KEYSTORE_BASE64:-}" && -n "${UPLOAD_STORE_PASSWORD:-}" && -n "${UPLOAD_KEY_ALIAS:-}" && -n "${UPLOAD_KEY_PASSWORD:-}" ]]; then
   umask 077
@@ -44,16 +54,20 @@ if [[ -n "${UPLOAD_KEYSTORE_BASE64:-}" && -n "${UPLOAD_STORE_PASSWORD:-}" && -n 
   APK="$ROOT/app/build/outputs/apk/release/app-release.apk"
   test -s "$APK"
   "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_2_FINALE_FIRMATO.apk"
+  unzip -Z1 "$APK" | grep -qx 'assets/market83.js'
+  unzip -Z1 "$APK" | grep -qx 'assets/market83-themes.css'
+  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_3_FINALE_FIRMATO.apk"
   rm -f "$UPLOAD_KEYSTORE"
 else
   gradle --no-daemon --console=plain --max-workers=2 :app:assembleDebug
   APK="$ROOT/app/build/outputs/apk/debug/app-debug.apk"
   test -s "$APK"
   "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_2_DEBUG_SOLO_TEST.apk"
+  unzip -Z1 "$APK" | grep -qx 'assets/market83.js'
+  unzip -Z1 "$APK" | grep -qx 'assets/market83-themes.css'
+  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_3_DEBUG_SOLO_TEST.apk"
 fi
 (cd "$ROOT/dist" && sha256sum *.apk > SHA256SUMS.txt)
-printf '%s\n' 'NAPOLI CARTE 3D 8.2.0' 'DEBUG_SOLO_TEST e una build di prova e non aggiorna installazioni con firme diverse.' 'FINALE_FIRMATO e prodotto solo con la chiave upload originale.' > "$ROOT/dist/README.txt"
-echo "APK signing verification completed"
+printf '%s\n' 'NAPOLI CARTE 3D 8.3.0' 'DEBUG_SOLO_TEST e una build di prova e non aggiorna installazioni con firme diverse.' 'FINALE_FIRMATO e prodotto solo con la chiave upload originale.' > "$ROOT/dist/README.txt"
+echo "APK signing verification completed for Market 8.3"
 ls -lh "$ROOT/dist"
