@@ -1,0 +1,55 @@
+name: Napoli Carte 3D - inviti e partite live regression
+on:
+  push:
+    branches: [feature/inviti-partite-live-94]
+    paths:
+      - 'chiodo-server/invites94.js'
+      - 'chiodo-server/expansion.js'
+      - 'chiodo-server/http.js'
+      - 'chiodo-server/push82.js'
+      - 'chiodo-server/games/expansion-session.js'
+      - 'app/src/main/assets/expansion-session.js'
+      - 'app/src/main/assets/expansion-ui.js'
+      - 'app/src/main/assets/social70.js'
+      - 'app/src/main/assets/push82.js'
+      - 'app/src/main/java/it/napolicarte/game/**'
+      - 'server/test-invites94.js'
+      - '.github/workflows/invites94-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check chiodo-server/invites94.js
+          node --check chiodo-server/http.js
+          node --check chiodo-server/push82.js
+          node --check app/src/main/assets/social70.js
+          node --check app/src/main/assets/expansion-ui.js
+          node --check app/src/main/assets/push82.js
+          node --check app/src/main/assets/expansion-session.js
+          node --check chiodo-server/games/expansion-session.js
+      - name: Verify card-engine parity and social rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmp app/src/main/assets/expansion-session.js chiodo-server/games/expansion-session.js
+          node --test --test-reporter=spec server/test-invites94.js server/test-expansion-session.js
+      - name: Validate Android bridge integration
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'inviteWatch' app/src/main/java/it/napolicarte/game/MainActivity.java
+          grep -q 'GameNotificationService.INVITES' app/src/main/java/it/napolicarte/game/MainActivity.java
+          grep -q 'game_invite' app/src/main/java/it/napolicarte/game/GameNotificationService.java
+          grep -q 'invites94' chiodo-server/http.js
