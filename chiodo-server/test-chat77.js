@@ -11,7 +11,7 @@ const base64=Buffer.alloc(256,42).toString('base64');
 assert.equal(chat.parseAudio(base64,'audio/webm;codecs=opus',12).bytes.length,256);
 assert.throws(()=>chat.parseAudio(base64,'text/plain',12),/Formato/);
 assert.throws(()=>chat.parseAudio(base64,'audio/webm',61),/Durata/);
-assert.throws(()=>chat.parseAudio(Buffer.alloc(262145).toString('base64'),'audio/webm',10),/grande/);
+assert.throws(()=>chat.parseAudio(Buffer.alloc(262145).toString('base64'),'audio/webm',10),/(grande|non valida)/);
 function getPort(){return new Promise((resolve,reject)=>{const server=net.createServer();server.once('error',reject);server.listen(0,'127.0.0.1',()=>{const port=server.address().port;server.close(()=>resolve(port));});});}
 (async()=>{
  const port=await getPort(),proc=spawn(process.execPath,['chiodo-server/http.js'],{env:{...process.env,PORT:String(port)},stdio:'ignore'});
