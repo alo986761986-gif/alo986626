@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "app": {
+    "packageName": "it.napolicarte.game",
+    "versionCode": 93,
+    "versionName": "9.3.0",
+    "minSdk": 24,
+    "targetSdk": 36,
+    "gameCount": 19,
+    "classicIds": [
+      "scopa",
+      "scopone",
+      "briscola",
+      "sette",
+      "asso",
+      "ruba"
+    ],
+    "separateGames": [
+      "chiodo",
+      "banco"
+    ],
+    "expansionIds": [
+      "tressette",
+      "traversone",
+      "tressette_morto",
+      "briscola_chiamata",
+      "bestia",
+      "trentuno",
+      "cirulla",
+      "cucu",
+      "asino",
+      "dubito",
+      "mercante"
+    ],
+    "apkFile": "NAPOLI_CARTE_3D_9_3_19GIOCHI_FIRMATO.apk"
+  },
+  "previousRelease": {
+    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk",
+    "file": "NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk",
+    "versionCode": 92
+  },
+  "toolchain": {
+    "jdk": {
+      "version": "17.0.21.1+2",
+      "url": "https://github.com/adoptium/temurin17-binaries/releases/download/jdk-17.0.21.1%2B2/OpenJDK17U-jdk_x64_linux_hotspot_17.0.21.1_2.tar.gz",
+      "sha256": "0b0ac5eab6db6abaec68c9913bcddb31321e5da411c45073d520d9c125e6f7b4"
+    },
+    "androidCli": {
+      "version": "19.0",
+      "url": "https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip",
+      "sha256": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee"
+    },
+    "gradle": {
+      "version": "8.11.1",
+      "url": "https://services.gradle.org/distributions/gradle-8.11.1-bin.zip",
+      "sha256": "f397b287023acdba1e9f6fc5ea72d22dd63669d59ed4a289a29b1a76eee151c6"
+    },
+    "androidPlatform": 36,
+    "androidBuildTools": "35.0.0",
+    "playwright": {
+      "version": "1.65.1",
+      "minimumNodeMajor": 20,
+      "source": "https://github.com/microsoft/playwright/releases/tag/v1.65.1"
+    },
+    "chrome": {
+      "version": "158.0.8127.88",
+      "platform": "linux64",
+      "url": "https://storage.googleapis.com/chrome-for-testing-public/158.0.8127.88/linux64/chrome-headless-shell-linux64.zip",
+      "manifestUrl": "https://googlechromelabs.github.io/chrome-for-testing/known-good-versions-with-downloads.json",
+      "expectedSha256": null,
+      "integrityPolicy": "Official HTTPS download, fixed version and URL checked against the official manifest; archive SHA-256 is recorded after download, not compared with an official checksum."
+    }
+  },
+  "engineFiles": [
+    "expansion-tricks.js",
+    "expansion-table.js",
+    "expansion-party.js"
+  ],
+  "sharedFiles": [
+    "expansion-tricks.js",
+    "expansion-table.js",
+    "expansion-party.js",
+    "expansion-session.js"
+  ],
+  "requiredAssets": [
+    "banco91-core.js",
+    "banco91.css",
+    "banco91.js",
+    "banco92-online.css",
+    "banco92-online.js",
+    "chat77.css",
+    "chat77.js",
+    "chiodo-network.js",
+    "chiodo-profile69.js",
+    "chiodo-scene65.js",
+    "chiodo.js",
+    "chiodo65.js",
+    "club84.css",
+    "club84.js",
+    "compat81.js",
+    "daily71.js",
+    "expansion-party.js",
+    "expansion-session.js",
+    "expansion-table.js",
+    "expansion-tricks.js",
+    "expansion-ui.js",
+    "expansion.css",
+    "feedback78.css",
+    "feedback78.js",
+    "identity80.js",
+    "index.html",
+    "market83-themes.css",
+    "market83.js",
+    "motion60.js",
+    "music/alfonso-neri-bass-on-fire.mp3",
+    "nc90-napoli-bay.svg",
+    "nc90-premium.css",
+    "nc90-premium.js",
+    "online-hub72.js",
+    "premium50.js",
+    "profile79.css",
+    "profile79.js",
+    "push82.js",
+    "server_url.txt",
+    "settings76.css",
+    "settings76.js",
+    "social70.js",
+    "store52.js",
+    "studio.jpg",
+    "touch62.js",
+    "turn59.js",
+    "voice51.js",
+    "voice64.js",
+    "wallet.js",
+    "welcome74.js"
+  ],
+  "music": {
+    "path": "music/alfonso-neri-bass-on-fire.mp3",
+    "bytes": 11464051,
+    "sha256": "fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226"
+  },
+  "icons": {
+    "densities": [
+      "mdpi",
+      "hdpi",
+      "xhdpi",
+      "xxhdpi",
+      "xxxhdpi"
+    ],
+    "sourceGitBlob": "fdec54a0262337de36b8365ecda1510ab6a261c5"
+  },
+  "tests": [
+    "chiodo-server/test-banco92.js",
+    "server/test-banco92-ui.js",
+    "server/test-banco91.js",
+    "server/test-premium90.js",
+    "server/test-club84.js",
+    "server/test-market83.js",
+    "server/test-admob-wallet.js",
+    "server/test-play-billing68.js",
+    "server/test-expansion-tricks.js",
+    "server/test-expansion-table.js",
+    "server/test-expansion-party.js",
+    "server/test-expansion-session.js",
+    "chiodo-server/test-social-daily-routes.js",
+    "server/test-chiodo-pairs91.js"
+  ],
+  "excludedDatabaseTests": [
+    "chiodo-server/test-formats-feedback78.js",
+    "chiodo-server/test-profile79.js"
+  ],
+  "uiQa": {
+    "script": "server/verify-expansion-ui.cjs",
+    "expectedGameCases": 22,
+    "expectedOnlineCases": 1,
+    "timeoutSeconds": 300
+  },
+  "liveQa": {
+    "script": "tools/verify-expansion-live.cjs",
+    "catalogWaitMs": 300000,
+    "expectedMoves": 2
+  },
+  "backendModulesDir": "chiodo-server/games"
+}

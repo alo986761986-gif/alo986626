@@ -17,10 +17,16 @@ assert.equal(state(pairMate.token).id,state(pairs.token).id,'Same format and siz
 assert.throws(()=>join(2,'Impossibile','pairs'),/Modalita non valida/);
 leave(solo.token);leave(pairs.token);leave(pairMate.token);
 const game=new Game(4,'pairs');
-for(let i=0;i<4;i++){game.players[i].score=[10,18,20,30][i];}
-game.players[0].hand=[];
+// A winning pair is final only when a combined team total reaches 121.
+// Fixed hands keep this regression independent of the shuffled opening deal.
+for(let i=0;i<4;i++){
+ game.players[i].score=[10,58,20,58][i];
+ game.players[i].hand=i?[{id:'fixture-'+i,s:i,v:3}]:[];
+}
 game.pending={i:0,c:{v:4},calls:[]};
 game.resolve([]);
+assert.equal(game.matchFinished,true);
+assert.deepEqual(game.teamScores,[33,122]);
 assert.deepEqual(game.winners,[0,2],'Partners must be credited with the lower team score');
 async function call(uid,payload){
  const req=Readable.from([JSON.stringify(payload)]);
@@ -47,3 +53,4 @@ async function call(uid,payload){
   console.log('PASS: Chiodo solo/coppie matchmaking & winners, authenticated support reports, PostgreSQL persistence, rate limiting');
  }finally{const db=social.db();await db.end();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
+

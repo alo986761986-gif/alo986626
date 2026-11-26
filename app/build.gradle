@@ -6,8 +6,8 @@ android {
         applicationId 'it.napolicarte.game'
         minSdk 24
         targetSdk 36
-        versionCode 92
-        versionName '9.2.0'
+        versionCode 93
+        versionName '9.3.0'
     }
     signingConfigs {
         release {

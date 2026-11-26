@@ -29,7 +29,25 @@
     const fan = count > 0 && count <= 7 && step >= 44;
     return {fan, step: fan ? step : cardWidth + 7, overlap: fan ? Math.min(0, step-cardWidth) : 0};
   }
-  const helpers = {suitIcon, handLayout};
+  function resultSummary(s, history) {
+    const pairs=s.format==='pairs', me=s.seat||0, winners=s.winners||[];
+    const finished=!!s.matchFinished||(!pairs&&winners.length===1);
+    const win=finished&&!s.draw;
+    const groups=pairs?[[0,2],[1,3]]:s.players.map((_,i)=>[i]);
+    const rows=groups.map((members,i)=>{
+      const total=members.reduce((n,seat)=>n+(Number(s.players[seat]?.score)||0),0);
+      const known=members.every(seat=>history?.[seat]?.before!=null);
+      const before=known?members.reduce((n,seat)=>n+Number(history[seat].before),0):null;
+      return {name:pairs?'Squadra '+(i+1):s.players[i].name,
+        detail:members.map(seat=>s.players[seat]?.name||'').join(' + '),
+        before,total,delta:before===null?null:Math.max(0,total-before),own:members.includes(me),
+        out:!pairs&&!!(s.players[i].eliminated||total>=121)};
+    });
+    const title=finished?(s.draw?'Pareggio fra le squadre':pairs?'Vince la squadra '+(winners[0]%2+1):s.players[winners[0]].name+' vince'):'Mano conclusa';
+    const subtitle=pairs?(finished?(s.draw?'Stesse penalità · 100 crediti restituiti a ciascuno':'Meno penalità · 200 crediti per ciascun vincitore'):'Si sommano le penalità dei due compagni'):finished?'Ultimo giocatore sotto 121 punti':'I punti della mano si aggiungono al totale';
+    return {pairs,finished,win,title,subtitle,rows,foot:pairs?'LIMITE DI SQUADRA · 121 PUNTI':'LIMITE DI ELIMINAZIONE · 121 PUNTI'};
+  }
+  const helpers = {suitIcon, handLayout, resultSummary};
   if (typeof module !== 'undefined') module.exports = helpers;
   if (typeof document === 'undefined') return;
 
@@ -153,22 +171,24 @@
     if(s.status!=='finished'){rec.result=null;rec.resultKey=null;return;}
     const resultKey=String(s.id||s.roomId||'cpu')+'|'+s.players.map(p=>Number(p.score)||0).join(',')+'|'+(s.winners||[]).join(',');
     if(!rec.result||rec.resultKey!==resultKey){rec.resultKey=resultKey;rec.result=s.players.map((p,i)=>({before:old?.players?.[i]&&Number.isFinite(Number(old.players[i].score))?Number(old.players[i].score):null,total:Number(p.score)||0}));}
-    const winner=s.winners?.length===1?s.players[s.winners[0]]:null;
-    const summary=document.createElement('section');summary.className='ch65-summary';summary.setAttribute('aria-label',winner?'Risultato della partita':'Riepilogo della mano');
-    summary.innerHTML='<div class="ch65-summary-title"><span class="ch65-summary-medal">'+icon(winner?'crown':'cards')+'</span><div><h2>'+esc(winner?winner.name+' vince':'Mano conclusa')+'</h2><p>'+esc(winner?'Ultimo giocatore sotto 121 punti':'I punti della mano si aggiungono al totale')+'</p></div></div><table><thead><tr><th>Giocatore</th><th>Prima</th><th>Mano</th><th>Totale</th></tr></thead><tbody>'+s.players.map((p,i)=>{const row=rec.result[i]||{before:null,total:Number(p.score)||0};const delta=row.before===null?null:Math.max(0,row.total-row.before);return '<tr data-own="'+(i===(s.seat||0)?1:0)+'" data-out="'+(p.eliminated||p.score>=121?1:0)+'"><td title="'+esc(p.name)+'">'+esc(p.name)+'</td><td>'+(row.before===null?'—':row.before)+'</td><td>'+(delta===null?'—':'+'+delta)+'</td><td>'+row.total+'</td></tr>';}).join('')+'</tbody></table><p class="ch65-summary-foot">LIMITE DI ELIMINAZIONE · 121 PUNTI</p>';
+    const model=resultSummary(s,rec.result);
+    const summary=document.createElement('section');summary.className='ch65-summary';summary.dataset.matchFinished=String(model.finished);summary.dataset.format=s.format||'individual';summary.setAttribute('aria-label',model.finished?'Risultato della partita':'Riepilogo della mano');
+    summary.innerHTML='<div class="ch65-summary-title"><span class="ch65-summary-medal">'+icon(model.win?'crown':'cards')+'</span><div><h2>'+esc(model.title)+'</h2><p>'+esc(model.subtitle)+'</p></div></div><table><thead><tr><th>'+(model.pairs?'Squadra':'Giocatore')+'</th><th>Prima</th><th>Mano</th><th>Totale</th></tr></thead><tbody>'+model.rows.map(row=>'<tr data-own="'+(row.own?1:0)+'" data-out="'+(row.out?1:0)+'"><td title="'+esc(row.detail)+'">'+esc(row.name)+'</td><td>'+(row.before===null?'—':row.before)+'</td><td>'+(row.delta===null?'—':'+'+row.delta)+'</td><td>'+row.total+'</td></tr>').join('')+'</tbody></table><p class="ch65-summary-foot">'+model.foot+'</p>';
     root.querySelector('.ch-arena')?.append(summary);
   }
   function decorate(root,s,old,rec) {
-    const count=s.n||s.players.length,me=s.seat||0;
-    root.dataset.players=String(count);root.dataset.stage=s.status;root.style.setProperty('--ch65-players',String(count));
+    const count=s.n||s.players.length,me=s.seat||0,pairs=s.format==='pairs';
+    root.dataset.players=String(count);root.dataset.stage=s.status;root.dataset.format=s.format||'individual';root.style.setProperty('--ch65-players',String(pairs?2:count));
     const back=root.querySelector('.ch-head>button');if(back){back.innerHTML=icon('back');back.setAttribute('aria-label','Esci dal tavolo');back.title='Esci';}
     const rules=root.querySelector('[data-ch-rules]');if(rules){rules.innerHTML=icon('book');rules.setAttribute('aria-label','Regole di Chiodo 121');rules.title='Regole';}
     const settings=root.querySelector('[data-ch-settings]');if(settings){settings.innerHTML=icon('gear');settings.title='Impostazioni di Chiodo';}
     const mode=root.querySelector('.ch-head small');if(mode){mode.title=s.mode||'';mode.textContent=s.mode||'';}
     root.querySelectorAll('.ch-score-item').forEach((node,i)=>{
-      const p=s.players[i],value=Number(p.score)||0;
-      node.dataset.own=i===me?'1':'0';node.setAttribute('aria-label',p.name+': '+value+' punti, limite 121');
-      node.innerHTML='<b title="'+esc(p.name)+'">'+esc(p.name)+'</b><span class="ch65-score-total"><strong>'+value+'</strong><small>/ 121</small></span><div class="ch-score-track"><i style="width:'+clamp(value/121*100,0,100)+'%"></i></div>'+(p.eliminated?'<small class="ch65-score-out">ELIMINATO</small>':'');
+      if(pairs&&i>=2){node.remove();return;}
+      const p=s.players[i],value=pairs?(Number(s.players[i]?.score)||0)+(Number(s.players[i+2]?.score)||0):Number(p.score)||0;
+      const name=pairs?'Squadra '+(i+1):p.name,detail=pairs?s.players[i].name+' + '+s.players[i+2].name:p.name;
+      node.dataset.own=(pairs?i===me%2:i===me)?'1':'0';node.dataset.risk=value>=100?'high':value>=70?'medium':'low';node.setAttribute('aria-label',name+' · '+detail+': '+value+' punti, limite 121');
+      node.innerHTML='<b title="'+esc(detail)+'">'+esc(name)+(pairs?' · '+esc(detail):'')+'</b><span class="ch65-score-total"><strong>'+value+'</strong><small>/ 121</small></span><div class="ch-score-track"><i style="width:'+clamp(value/121*100,0,100)+'%"></i></div>'+(!pairs&&p.eliminated?'<small class="ch65-score-out">ELIMINATO</small>':'');
     });
     const spots=count===2?[[50,84,'own'],[50,17,'top']]:count===3?[[50,84,'own'],[18,22,'upper-left'],[82,22,'upper-right']]:[[50,84,'own'],[14,48,'left'],[50,17,'top'],[86,48,'right']];
     root.querySelectorAll('.ch-seat[data-seat]').forEach(node=>{
@@ -176,7 +196,7 @@
       node.style.left=spot[0]+'%';node.style.top=spot[1]+'%';node.dataset.position=spot[2];
       const name=node.querySelector(':scope>b');if(name){name.title=p.name+(p.bot?' · CPU':'');name.textContent=p.name+(i===me&&p.name!=='Tu'?' · Tu':'');}
       const line=node.querySelector(':scope>small'),backs=node.querySelector(':scope>.ch-backs');
-      if(line){line.textContent=p.eliminated?'Eliminato':(p.count||0)+' carte'+(p.bot?' · CPU':'');if(backs&&!p.eliminated)line.append(backs);}
+      if(line){line.textContent=p.eliminated&&!pairs?'Eliminato':(pairs?'Sq. '+(i%2+1)+' · ':'')+(p.count||0)+' carte'+(p.bot?' · CPU':'');if(backs&&(!p.eliminated||pairs))line.append(backs);}
       if(name&&line){const caption=document.createElement('div');caption.className='ch65-seat-caption';caption.append(name,line);node.append(caption);}
     });
     const arena=root.querySelector('.ch-arena');if(arena){const mark=document.createElement('div');mark.className='ch65-tablemark';mark.innerHTML='CHIODO 121<small>NAPOLI · CARTE DA GIOCO</small>';arena.append(mark);}
@@ -235,8 +255,9 @@
     const items=Array.from(root.querySelectorAll('.ch-score-item strong'));
     const totals=Array.from(root.querySelectorAll('.ch65-summary tbody tr td:last-child'));
     const changes=[];
-    s.players.forEach((player,i)=>{
-      const previous=Number(old.players?.[i]?.score),value=Number(player.score);
+    const groups=s.format==='pairs'?[[0,2],[1,3]]:s.players.map((_,i)=>[i]);
+    groups.forEach((members,i)=>{
+      const previous=members.reduce((n,seat)=>n+Number(old.players?.[seat]?.score),0),value=members.reduce((n,seat)=>n+Number(s.players[seat].score),0);
       if(!Number.isFinite(previous)||!Number.isFinite(value)||value<=previous)return;
       for(const node of [items[i],totals[i]])if(node){const counter={node,value,previous};changes.push(counter);rec.counters.add(counter);node.textContent=String(previous);}
     });
@@ -280,3 +301,4 @@
   g.NC65_CHIODO_UI={dispose,resize,handLayout,suitIcon,version:'6.5.0'};
   install();
 })(typeof window==='undefined'?globalThis:window);
+

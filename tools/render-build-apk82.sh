@@ -1,107 +1,258 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Disposable Render static-site pipeline; does not modify the online game backend.
-ROOT="$PWD"
-TOOLS="$ROOT/.apk82-toolchain"
-export ANDROID_SDK_ROOT="$TOOLS/android-sdk"
-export ANDROID_HOME="$ANDROID_SDK_ROOT"
-mkdir -p "$TOOLS" "$ROOT/dist"
-fetch(){ echo "Downloading $(basename "$2")"; curl --fail --location --retry 3 --retry-delay 4 --silent --show-error "$1" --output "$2"; test -s "$2"; }
+# Existing Render APK builder, upgraded to 9.3. This script publishes only a
+# verified release and never substitutes a debug APK for the final artifact.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+bash -n "$ROOT/tools/render-build-apk82.sh"
 
-if ! command -v java >/dev/null 2>&1 || ! java -version 2>&1 | grep -Eq '(version "(17|21)|openjdk (17|21))'; then
-  fetch 'https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jdk/hotspot/normal/eclipse' "$TOOLS/jdk17.tar.gz"
-  mkdir -p "$TOOLS/jdk17"
-  tar -xzf "$TOOLS/jdk17.tar.gz" -C "$TOOLS/jdk17" --strip-components=1
-  export JAVA_HOME="$TOOLS/jdk17"
-  export PATH="$JAVA_HOME/bin:$PATH"
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+for command in node npm curl unzip tar sha256sum base64 git timeout ldd; do
+  command -v "$command" >/dev/null 2>&1 || die "Required command is unavailable: $command"
+done
+[[ "$(uname -s)" == Linux && "$(uname -m)" == x86_64 ]] || die "The pinned build tools require Linux x86_64"
+node -e 'if(Number(process.versions.node.split(".")[0])<20)throw Error("Node.js 20 or newer is required")'
+for variable in UPLOAD_KEYSTORE_BASE64 UPLOAD_STORE_PASSWORD UPLOAD_KEY_ALIAS UPLOAD_KEY_PASSWORD; do
+  [[ -n "${!variable:-}" ]] || die "Missing release-signing variable: $variable"
+done
+
+config() {
+  node -e 'const m=require("./tools/build93-manifest.json");let x=m;for(const k of process.argv[1].split("."))x=x[k];if(x===undefined)throw Error("Unknown manifest key");process.stdout.write(String(x));' "$1"
+}
+TOOLS="$ROOT/.apk93-toolchain"
+mkdir -p "$TOOLS"
+RUN_DIR="$(mktemp -d "$TOOLS/run.XXXXXX")"
+DIST="$ROOT/dist"
+cleanup() {
+  if [[ -n "${RUN_DIR:-}" && "$RUN_DIR" == "$TOOLS"/run.* ]]; then rm -rf -- "$RUN_DIR"; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+rm -rf -- "$DIST"
+mkdir -p "$DIST/qa"
+SOURCE_COMMIT="$(git rev-parse HEAD)"
+printf 'NAPOLI CARTE 3D 9.3 build source: %s\n' "$SOURCE_COMMIT"
+
+fetch() {
+  local url="$1" destination="$2"
+  printf 'Downloading %s\n' "$(basename "$destination")"
+  curl --fail --location --proto '=https' --proto-redir '=https' \
+    --connect-timeout 20 --max-time 900 --retry 3 --retry-delay 4 \
+    --silent --show-error "$url" --output "$destination.download"
+  test -s "$destination.download"
+  mv -- "$destination.download" "$destination"
+}
+verified_archive() {
+  local url="$1" destination="$2" expected="$3"
+  [[ "$expected" =~ ^[0-9a-f]{64}$ ]] || die "Invalid expected SHA-256 for $(basename "$destination")"
+  if [[ ! -s "$destination" ]] || ! printf '%s  %s\n' "$expected" "$destination" | sha256sum --check --status; then
+    fetch "$url" "$destination"
+  fi
+  printf '%s  %s\n' "$expected" "$destination" | sha256sum --check --status
+}
+
+# Fetch the public 9.2 reference before this deployment replaces the static site.
+# It will retain its original filename in dist so subsequent builds can compare.
+PREVIOUS_NAME="$(config previousRelease.file)"
+PREVIOUS_APK="$RUN_DIR/$PREVIOUS_NAME"
+fetch "$(config previousRelease.url)" "$PREVIOUS_APK"
+unzip -t "$PREVIOUS_APK" >/dev/null
+
+# Local QA has no database or release-signing credentials in its child processes.
+QA_ENV=(env -u DATABASE_URL -u UPLOAD_KEYSTORE_BASE64 -u UPLOAD_KEYSTORE \
+  -u UPLOAD_STORE_PASSWORD -u UPLOAD_KEY_ALIAS -u UPLOAD_KEY_PASSWORD \
+  -u GOOGLE_APPLICATION_CREDENTIALS)
+bash server/restore_bass_audio.sh
+for file in app/src/main/assets/*.js chiodo-server/expansion*.js chiodo-server/games/expansion*.js \
+  chiodo-server/http.js chiodo-server/banco92-core.js chiodo-server/banco92.js \
+  chiodo-server/market83.js chiodo-server/admob-ssv.js \
+  tools/verify-expansion-bundle.cjs tools/verify-release-apk93.cjs \
+  tools/verify-expansion-live.cjs server/verify-expansion-ui.cjs; do
+  "${QA_ENV[@]}" node --check "$file"
+done
+"${QA_ENV[@]}" node tools/verify-expansion-bundle.cjs "$DIST/qa/bundle.json"
+TEST_LIST="$(node -e 'console.log(require("./tools/build93-manifest.json").tests.join("\n"))')"
+mapfile -t TEST_FILES <<< "$TEST_LIST"
+[[ "${#TEST_FILES[@]}" -gt 0 ]] || die "The Node QA suite is empty"
+timeout 600 "${QA_ENV[@]}" node --test --test-concurrency=1 --test-reporter=tap \
+  "${TEST_FILES[@]}" | tee "$DIST/qa/node-tests.tap"
+
+# Playwright is isolated from the application dependencies. Browser installation
+# scripts are disabled; Chrome is fetched from the official, fixed CfT URL.
+PW_VERSION="$(config toolchain.playwright.version)"
+mkdir -p "$RUN_DIR/ui"
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --prefix "$RUN_DIR/ui" \
+  --ignore-scripts --no-audit --no-fund --save-exact "playwright@$PW_VERSION"
+export NC_UI_PLAYWRIGHT_MODULE="$RUN_DIR/ui/node_modules/playwright"
+CHROME_VERSION="$(config toolchain.chrome.version)"
+fetch "$(config toolchain.chrome.manifestUrl)" "$RUN_DIR/chrome-known-versions.json"
+node - "$RUN_DIR/chrome-known-versions.json" "$DIST/qa/chrome-source.json" <<'NODE'
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const m=require('./tools/build93-manifest.json').toolchain.chrome;
+const data=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+const version=data.versions.find(v=>v.version===m.version);
+assert.ok(version,'Pinned Chrome version is absent from the official CfT manifest');
+const binary=version.downloads['chrome-headless-shell'].find(d=>d.platform===m.platform);
+assert.ok(binary,'Official Linux headless-shell download is missing');
+assert.equal(binary.url,m.url,'Pinned Chrome URL differs from the official manifest');
+fs.writeFileSync(process.argv[3],JSON.stringify({
+  version:version.version,revision:version.revision,platform:m.platform,url:binary.url,
+  manifestUrl:m.manifestUrl,expectedSha256:m.expectedSha256,integrityPolicy:m.integrityPolicy
+},null,2)+'\n');
+NODE
+fetch "$(config toolchain.chrome.url)" "$RUN_DIR/chrome.zip"
+CHROME_EXPECTED_SHA="$(config toolchain.chrome.expectedSha256)"
+if [[ "$CHROME_EXPECTED_SHA" != null ]]; then
+  printf '%s  %s\n' "$CHROME_EXPECTED_SHA" "$RUN_DIR/chrome.zip" | sha256sum --check --status
 fi
+mkdir -p "$RUN_DIR/chrome"
+unzip -q "$RUN_DIR/chrome.zip" -d "$RUN_DIR/chrome"
+export NC_UI_CHROME_EXECUTABLE="$RUN_DIR/chrome/chrome-headless-shell-linux64/chrome-headless-shell"
+export NC_UI_QA_DIR="$DIST/qa/ui"
+export NC_UI_ASSETS_ROOT="$ROOT/app/src/main/assets"
+unset NC_UI_BASE_URL
+test -x "$NC_UI_CHROME_EXECUTABLE"
+BROWSER_LIBS="$(ldd "$NC_UI_CHROME_EXECUTABLE")"
+if [[ "$BROWSER_LIBS" == *"not found"* ]]; then
+  printf '%s\n' "$BROWSER_LIBS" >&2
+  die "The Render build image is missing the Chrome shared libraries listed above; UI QA cannot run"
+fi
+CHROME_ACTUAL="$("$NC_UI_CHROME_EXECUTABLE" --version)"
+[[ "$CHROME_ACTUAL" == *"$CHROME_VERSION"* ]] || die "Downloaded Chrome version differs from the manifest"
+timeout "$(config uiQa.timeoutSeconds)" "${QA_ENV[@]}" node server/verify-expansion-ui.cjs \
+  | tee "$DIST/qa/ui-console.log"
+node - "$DIST/qa/ui/report.json" <<'NODE'
+const fs=require('node:fs'),assert=require('node:assert/strict'),m=require('./tools/build93-manifest.json');
+const r=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+assert.equal(r.ok,true);assert.equal(r.passed,m.uiQa.expectedGameCases);
+assert.equal(r.onlinePassed,m.uiQa.expectedOnlineCases);
+assert.ok(String(r.browserVersion).includes(m.toolchain.chrome.version));
+for(const key of ['errors','pageErrors','localFailures'])assert.equal(r[key].length,0,key);
+NODE
+printf '%s\n' 'NC93_PREDEPLOY_QA_PASSED: rule tests, app/server parity and fresh browser UI checks are green.'
+
+# Pin a complete JDK instead of relying on a partial Java runtime in the image.
+verified_archive "$(config toolchain.jdk.url)" "$TOOLS/jdk17.tar.gz" "$(config toolchain.jdk.sha256)"
+mkdir -p "$RUN_DIR/jdk17"
+tar -xzf "$TOOLS/jdk17.tar.gz" -C "$RUN_DIR/jdk17" --strip-components=1
+export JAVA_HOME="$RUN_DIR/jdk17"
+export PATH="$JAVA_HOME/bin:$PATH"
+test -x "$JAVA_HOME/bin/javac"
+test -x "$JAVA_HOME/bin/jlink"
 java -version
 
-fetch 'https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip' "$TOOLS/cmdline-tools.zip"
-echo "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee  $TOOLS/cmdline-tools.zip" | sha256sum --check --status
-mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-unzip -q "$TOOLS/cmdline-tools.zip" -d "$ANDROID_SDK_ROOT/cmdline-tools"
-mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
-export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/build-tools/35.0.0:$PATH"
-set +o pipefail
-yes | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null 2>&1
-set -o pipefail
-sdkmanager --sdk_root="$ANDROID_SDK_ROOT" 'platforms;android-36' 'build-tools;35.0.0'
+export ANDROID_SDK_ROOT="$TOOLS/android-sdk"
+export ANDROID_HOME="$ANDROID_SDK_ROOT"
+verified_archive "$(config toolchain.androidCli.url)" "$TOOLS/cmdline-tools.zip" "$(config toolchain.androidCli.sha256)"
+mkdir -p "$RUN_DIR/android-cli" "$ANDROID_SDK_ROOT/cmdline-tools"
+unzip -q "$TOOLS/cmdline-tools.zip" -d "$RUN_DIR/android-cli"
+rm -rf -- "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+mv "$RUN_DIR/android-cli/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+BUILD_TOOLS="$(config toolchain.androidBuildTools)"
+export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS:$PATH"
+(yes || true) | sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null
+sdkmanager --sdk_root="$ANDROID_SDK_ROOT" "platforms;android-$(config toolchain.androidPlatform)" "build-tools;$BUILD_TOOLS"
+printf 'sdk.dir=%s\n' "$ANDROID_SDK_ROOT" > "$ROOT/local.properties"
 
-fetch 'https://services.gradle.org/distributions/gradle-8.11.1-bin.zip' "$TOOLS/gradle.zip"
-echo "f397b287023acdba1e9f6fc5ea72d22dd63669d59ed4a289a29b1a76eee151c6  $TOOLS/gradle.zip" | sha256sum --check --status
-unzip -q "$TOOLS/gradle.zip" -d "$TOOLS"
-export PATH="$TOOLS/gradle-8.11.1/bin:$PATH"
+GRADLE_VERSION="$(config toolchain.gradle.version)"
+verified_archive "$(config toolchain.gradle.url)" "$TOOLS/gradle.zip" "$(config toolchain.gradle.sha256)"
+unzip -q "$TOOLS/gradle.zip" -d "$RUN_DIR"
+export PATH="$RUN_DIR/gradle-$GRADLE_VERSION/bin:$PATH"
 gradle --version
 
-bash server/restore_bass_audio.sh
-# Market 8.3 static checks: no credit purchases without verified backend.
-node --check app/src/main/assets/banco91-core.js
-node --check app/src/main/assets/banco91.js
-node --check app/src/main/assets/banco92-online.js
-node --check chiodo-server/banco92-core.js
-node --check chiodo-server/banco92.js
-node --check app/src/main/assets/nc90-premium.js
-node --check app/src/main/assets/club84.js
-node --check app/src/main/assets/market83.js
-node --check app/src/main/assets/store52.js
-node --check chiodo-server/market83.js
-node --check chiodo-server/admob-ssv.js
-node --check app/src/main/assets/compat81.js
-node --test chiodo-server/test-banco92.js server/test-banco92-ui.js server/test-banco91.js server/test-premium90.js server/test-club84.js server/test-market83.js server/test-admob-wallet.js server/test-play-billing68.js
-test -s app/src/main/assets/banco92-online.css
-test -s app/src/main/assets/banco92-online.js
-test -s app/src/main/assets/banco91.css
-test -s app/src/main/assets/banco91-core.js
-test -s app/src/main/assets/nc90-napoli-bay.svg
-test -s app/src/main/assets/nc90-premium.css
-test -s app/src/main/assets/club84.css
-test -s app/src/main/assets/market83-themes.css
-grep -q 'market83.js' app/src/main/assets/store52.js
-grep -q 'versionCode 92' app/build.gradle
+# Preserve the existing release signing configuration and secrets.
+(umask 077; printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$RUN_DIR/upload-keystore.p12")
+export UPLOAD_KEYSTORE="$RUN_DIR/upload-keystore.p12"
+test -s "$UPLOAD_KEYSTORE"
+gradle --no-daemon --console=plain --max-workers=2 :app:assembleRelease
+APK="$ROOT/app/build/outputs/apk/release/app-release.apk"
+test -s "$APK"
+node tools/verify-release-apk93.cjs --apk "$APK" --previous "$PREVIOUS_APK" \
+  --sdk "$ANDROID_SDK_ROOT" --source "$ROOT" --report "$DIST/qa/apk.json"
+rm -f -- "$UPLOAD_KEYSTORE"
+unset UPLOAD_KEYSTORE
 
-if [[ -n "${UPLOAD_KEYSTORE_BASE64:-}" && -n "${UPLOAD_STORE_PASSWORD:-}" && -n "${UPLOAD_KEY_ALIAS:-}" && -n "${UPLOAD_KEY_PASSWORD:-}" ]]; then
-  umask 077
-  printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > "$TOOLS/upload-keystore.p12"
-  export UPLOAD_KEYSTORE="$TOOLS/upload-keystore.p12"
-  gradle --no-daemon --console=plain --max-workers=2 :app:assembleRelease
-  APK="$ROOT/app/build/outputs/apk/release/app-release.apk"
-  test -s "$APK"
-  "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  unzip -t "$APK" 'assets/banco92-online.js' >/dev/null
-  unzip -t "$APK" 'assets/banco92-online.css' >/dev/null
-  unzip -t "$APK" 'assets/banco91.js' >/dev/null
-  unzip -t "$APK" 'assets/banco91-core.js' >/dev/null
-  unzip -t "$APK" 'assets/banco91.css' >/dev/null
-  unzip -t "$APK" 'assets/market83.js' >/dev/null
-  unzip -t "$APK" 'assets/nc90-premium.css' >/dev/null
-  unzip -t "$APK" 'assets/nc90-premium.js' >/dev/null
-  unzip -t "$APK" 'assets/nc90-napoli-bay.svg' >/dev/null
-  unzip -t "$APK" 'assets/club84.css' >/dev/null
-  unzip -t "$APK" 'assets/club84.js' >/dev/null
-  unzip -t "$APK" 'assets/market83-themes.css' >/dev/null
-  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_9_2_FINALE_FIRMATO.apk"
-  rm -f "$UPLOAD_KEYSTORE"
-else
-  gradle --no-daemon --console=plain --max-workers=2 :app:assembleDebug
-  APK="$ROOT/app/build/outputs/apk/debug/app-debug.apk"
-  test -s "$APK"
-  "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  unzip -t "$APK" 'assets/banco92-online.js' >/dev/null
-  unzip -t "$APK" 'assets/banco92-online.css' >/dev/null
-  unzip -t "$APK" 'assets/banco91.js' >/dev/null
-  unzip -t "$APK" 'assets/banco91-core.js' >/dev/null
-  unzip -t "$APK" 'assets/banco91.css' >/dev/null
-  unzip -t "$APK" 'assets/market83.js' >/dev/null
-  unzip -t "$APK" 'assets/nc90-premium.css' >/dev/null
-  unzip -t "$APK" 'assets/nc90-premium.js' >/dev/null
-  unzip -t "$APK" 'assets/nc90-napoli-bay.svg' >/dev/null
-  unzip -t "$APK" 'assets/club84.css' >/dev/null
-  unzip -t "$APK" 'assets/club84.js' >/dev/null
-  unzip -t "$APK" 'assets/market83-themes.css' >/dev/null
-  cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_9_2_DEBUG_SOLO_TEST.apk"
-fi
-(cd "$ROOT/dist" && sha256sum *.apk > SHA256SUMS.txt)
-printf '%s\n' 'NAPOLI CARTE 3D 9.2.0' 'DEBUG_SOLO_TEST e una build di prova e non aggiorna installazioni con firme diverse.' 'FINALE_FIRMATO e prodotto solo con la chiave upload originale.' > "$ROOT/dist/README.txt"
-echo "APK signing verification completed for Il Banco Online 9.2"
-ls -lh "$ROOT/dist"
+# The coordinator deploys backend 9.3 after the predeploy marker above.
+# This probe waits up to five minutes for its catalogue, then opens and closes
+# one private two-person table. No wallet, purchase, or public matchmaking API.
+timeout 600 "${QA_ENV[@]}" node tools/verify-expansion-live.cjs "$DIST/qa/live.json" \
+  | tee "$DIST/qa/live-console.log"
+
+APK_NAME="$(config app.apkFile)"
+cp -- "$APK" "$DIST/$APK_NAME"
+cp -- "$PREVIOUS_APK" "$DIST/$PREVIOUS_NAME"
+cp -- tools/build93-manifest.json "$DIST/qa/build-manifest.json"
+cp -- "$RUN_DIR/ui/package-lock.json" "$DIST/qa/playwright-package-lock.json"
+node - "$RUN_DIR" "$TOOLS" "$DIST" "$SOURCE_COMMIT" <<'NODE'
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {spawnSync}=require('node:child_process'),assert=require('node:assert/strict');
+const [run,tools,dist,commit]=process.argv.slice(2),m=require('./tools/build93-manifest.json');
+const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const read=file=>JSON.parse(fs.readFileSync(path.join(dist,file),'utf8'));
+const bundle=read('qa/bundle.json'),ui=read('qa/ui/report.json'),apk=read('qa/apk.json'),live=read('qa/live.json');
+for(const r of [bundle,ui,apk,live])assert.equal(r.ok,true,'Every QA stage must pass');
+const chromeSource=read('qa/chrome-source.json');
+chromeSource.downloadedSha256=sha(path.join(run,'chrome.zip'));
+chromeSource.checksumVerifiedAgainstExpected=!!m.toolchain.chrome.expectedSha256;
+fs.writeFileSync(path.join(dist,'qa/chrome-source.json'),JSON.stringify(chromeSource,null,2)+'\n');
+const java=spawnSync('java',['-version'],{encoding:'utf8'});
+const toolchain={
+  node:process.version,npm:spawnSync('npm',['--version'],{encoding:'utf8'}).stdout.trim(),
+  java:(java.stdout+java.stderr).trim(),jdkArchiveSha256:sha(path.join(tools,'jdk17.tar.gz')),
+  gradleVersion:m.toolchain.gradle.version,gradleArchiveSha256:sha(path.join(tools,'gradle.zip')),
+  androidCliVersion:m.toolchain.androidCli.version,androidCliArchiveSha256:sha(path.join(tools,'cmdline-tools.zip')),
+  androidPlatform:fs.readFileSync(path.join(process.env.ANDROID_SDK_ROOT,'platforms','android-'+m.toolchain.androidPlatform,'source.properties'),'utf8'),
+  androidBuildTools:fs.readFileSync(path.join(process.env.ANDROID_SDK_ROOT,'build-tools',m.toolchain.androidBuildTools,'source.properties'),'utf8'),
+  playwrightVersion:require(path.join(run,'ui/node_modules/playwright/package.json')).version,
+  chrome:chromeSource,browserVersion:ui.browserVersion
+};
+assert.equal(toolchain.playwrightVersion,m.toolchain.playwright.version);
+fs.writeFileSync(path.join(dist,'qa/toolchain.json'),JSON.stringify(toolchain,null,2)+'\n');
+const tap=fs.readFileSync(path.join(dist,'qa/node-tests.tap'),'utf8');
+const count=Array.from(tap.matchAll(/^# tests (\d+)$/gm)).at(-1);
+assert.ok(count&&Number(count[1])>0,'Node test summary is missing');
+const summary={
+  ok:true,version:m.app.versionName,versionCode:m.app.versionCode,sourceCommit:commit,
+  generatedAt:new Date().toISOString(),apk:{...apk.apk,file:m.app.apkFile},
+  signingCertificateSha256:apk.signature.certificateSha256,signatureMatchesPreviousRelease:true,
+  games:bundle.gameCount,expansionEngines:bundle.expansionCount,assetsChecked:apk.checkedAssetCount,
+  nodeTestsPassed:Number(count[1]),uiGameCasesPassed:ui.passed,uiOnlineCasesPassed:ui.onlinePassed,
+  livePrivateParticipants:2,liveMoves:live.moves.length,liveCleanup:live.cleanup.succeeded,
+  musicSha256:apk.music.sha256,
+  reports:{bundle:'qa/bundle.json',node:'qa/node-tests.tap',ui:'qa/ui/report.json',apk:'qa/apk.json',live:'qa/live.json',toolchain:'qa/toolchain.json'},
+  screenshots:ui.screenshots.map(file=>path.relative(dist,file).split(path.sep).join('/')),
+  previousRelease:{file:m.previousRelease.file,versionCode:m.previousRelease.versionCode,sha256:apk.previous.sha256},
+  limitations:['No physical Android phone installation test was performed by this build.']
+};
+fs.writeFileSync(path.join(dist,'qa/release.json'),JSON.stringify(summary,null,2)+'\n');
+fs.writeFileSync(path.join(dist,'README.txt'),[
+  'NAPOLI CARTE 3D 9.3.0 — 19 giochi',
+  'APK release: '+m.app.apkFile,
+  'Certificato identico alla versione 9.2 pubblicata.',
+  'Verifiche: regole, parità app/server, interfaccia, asset, musica, firma e tavolo HTTPS privato a due.',
+  'Il file 9.2 resta soltanto come archivio e riferimento per il certificato.',
+  'Il collaudo su telefoni Android fisici non è incluso in questa build.',
+  'Rapporto completo: qa/release.json',
+  'Sorgente: '+commit,''
+].join('\n'));
+const html='<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+  '<title>NAPOLI CARTE 3D 9.3</title><style>body{margin:0;background:#082937;color:#f5f4ed;font:18px system-ui;line-height:1.6}'+
+  'main{max-width:760px;margin:auto;padding:56px 24px}h1{line-height:1.15}a{color:#ffc966}'+
+  '.download{display:inline-block;padding:14px 22px;background:#ffd06f;color:#142d36;border-radius:12px;font-weight:700;text-decoration:none}'+
+  'code{overflow-wrap:anywhere;font-size:.8em}small{color:#c3d6da}</style><main><p>NAPOLI CARTE 3D</p>'+
+  '<h1>19 giochi. Versione 9.3.</h1><p>APK Android firmato con lo stesso certificato della versione 9.2.</p>'+
+  '<p><a class="download" href="'+m.app.apkFile+'">Scarica NAPOLI CARTE 3D 9.3</a></p>'+
+  '<p>Verifiche completate: regole dei giochi, interfaccia, musica, firma e un tavolo online privato con due partecipanti.</p>'+
+  '<p><a href="qa/release.json">Rapporto delle verifiche</a> · <a href="SHA256SUMS.txt">SHA-256 dei file APK</a></p>'+
+  '<p><small>La verifica su telefoni Android fisici resta da eseguire.</small></p>'+
+  '<details><summary>Archivio 9.2</summary><p>Questa versione precedente è conservata per confrontare il certificato.</p>'+
+  '<a href="'+m.previousRelease.file+'">APK 9.2 originale</a></details></main></html>\n';
+fs.writeFileSync(path.join(dist,'index.html'),html);
+NODE
+(
+  cd "$DIST"
+  sha256sum "$APK_NAME" "$PREVIOUS_NAME" > SHA256SUMS.txt
+)
+printf '%s\n' 'NC93_RELEASE_QA_PASSED: signed release APK and public QA reports are ready.'
+ls -lh "$DIST"
