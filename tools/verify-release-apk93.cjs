@@ -1,6 +1,7 @@
 'use strict';
 // Usage: node tools/verify-release-apk93.cjs --apk new.apk --previous old.apk
-//        --sdk /path/to/android-sdk --source /path/to/repository --report qa.json
+//        --sdk /path/to/android-sdk --java /path/to/jdk/bin/java
+//        --source /path/to/repository --report qa.json
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -42,8 +43,8 @@ function packageInfo(badging) {
 }
 function readEntry(apk, name) { return run('unzip', ['-p', apk, name], true); }
 function listEntries(apk) { return run('unzip', ['-Z1', apk]).trim().split(/\r?\n/).filter(Boolean); }
-function verifySignature(signer, apk) {
-  const output = run(signer, ['verify', '--verbose', '--print-certs', apk]);
+function verifySignature(java, signerJar, apk) {
+  const output = run(java, ['-jar', signerJar, 'verify', '--verbose', '--print-certs', apk]);
   assert.ok(!/certificate DN:.*(?:CN=Android Debug|CN=AndroidDebug)/i.test(output),
     'A debug certificate cannot be published as a release');
   return { certificateSha256: certDigests(output), verified: true,
@@ -59,11 +60,17 @@ function checkApk(options) {
   const apk = path.resolve(options.apk), previous = path.resolve(options.previous);
   const source = path.resolve(options.source);
   const buildTools = path.join(path.resolve(options.sdk), 'build-tools', manifest.toolchain.androidBuildTools);
-  const signer = path.join(buildTools, 'apksigner'), aapt = path.join(buildTools, 'aapt');
+  // Use the pinned JDK directly: the SDK shell wrapper depends on an ambient PATH.
+  assert.ok(path.isAbsolute(options.java), '--java must be an absolute path to the pinned JDK executable');
+  const java = options.java, signerJar = path.join(buildTools, 'lib', 'apksigner.jar');
+  const aapt = path.join(buildTools, 'aapt');
+  fs.accessSync(java, fs.constants.X_OK);
+  assert.ok(fs.statSync(signerJar).isFile(), 'The Android SDK apksigner JAR must exist');
   assert.ok(fs.statSync(apk).size > 0 && fs.statSync(previous).size > 0, 'Both APKs must exist');
   run('unzip', ['-t', apk]);
   run('unzip', ['-t', previous]);
-  const signature = verifySignature(signer, apk), previousSignature = verifySignature(signer, previous);
+  const signature = verifySignature(java, signerJar, apk);
+  const previousSignature = verifySignature(java, signerJar, previous);
   assert.deepEqual(signature.certificateSha256, previousSignature.certificateSha256,
     'Release certificate differs from the previously published APK');
   assert.ok(signature.v2 || signature.v3, 'Release APK must support Android APK Signature Scheme v2 or v3');
@@ -128,11 +135,11 @@ function argumentsFor(argv) {
   const options = { source: path.resolve(__dirname, '..') };
   for (let index = 0; index < argv.length; index += 2) {
     const key = argv[index].replace(/^--/, '');
-    assert.ok(['apk', 'previous', 'sdk', 'source', 'report'].includes(key) && argv[index + 1],
-      'Expected --apk, --previous, --sdk, --source and --report arguments');
+    assert.ok(['apk', 'previous', 'sdk', 'java', 'source', 'report'].includes(key) && argv[index + 1],
+      'Expected --apk, --previous, --sdk, --java, --source and --report arguments');
     options[key] = argv[index + 1];
   }
-  for (const key of ['apk', 'previous', 'sdk', 'report']) assert.ok(options[key], 'Missing --' + key);
+  for (const key of ['apk', 'previous', 'sdk', 'java', 'report']) assert.ok(options[key], 'Missing --' + key);
   return options;
 }
 if (require.main === module) {

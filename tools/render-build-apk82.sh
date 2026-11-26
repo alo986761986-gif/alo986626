@@ -141,7 +141,7 @@ export JAVA_HOME="$RUN_DIR/jdk17"
 export PATH="$JAVA_HOME/bin:$PATH"
 test -x "$JAVA_HOME/bin/javac"
 test -x "$JAVA_HOME/bin/jlink"
-java -version
+"$JAVA_HOME/bin/java" -version
 
 export ANDROID_SDK_ROOT="$TOOLS/android-sdk"
 export ANDROID_HOME="$ANDROID_SDK_ROOT"
@@ -170,7 +170,8 @@ gradle --no-daemon --console=plain --max-workers=2 :app:assembleRelease
 APK="$ROOT/app/build/outputs/apk/release/app-release.apk"
 test -s "$APK"
 node tools/verify-release-apk93.cjs --apk "$APK" --previous "$PREVIOUS_APK" \
-  --sdk "$ANDROID_SDK_ROOT" --source "$ROOT" --report "$DIST/qa/apk.json"
+  --sdk "$ANDROID_SDK_ROOT" --java "$JAVA_HOME/bin/java" \
+  --source "$ROOT" --report "$DIST/qa/apk.json"
 rm -f -- "$UPLOAD_KEYSTORE"
 unset UPLOAD_KEYSTORE
 
@@ -197,7 +198,8 @@ const chromeSource=read('qa/chrome-source.json');
 chromeSource.downloadedSha256=sha(path.join(run,'chrome.zip'));
 chromeSource.checksumVerifiedAgainstExpected=!!m.toolchain.chrome.expectedSha256;
 fs.writeFileSync(path.join(dist,'qa/chrome-source.json'),JSON.stringify(chromeSource,null,2)+'\n');
-const java=spawnSync('java',['-version'],{encoding:'utf8'});
+const java=spawnSync(path.join(run,'jdk17/bin/java'),['-version'],{encoding:'utf8'});
+assert.equal(java.status,0,'The pinned JDK must be available for the toolchain report');
 const toolchain={
   node:process.version,npm:spawnSync('npm',['--version'],{encoding:'utf8'}).stdout.trim(),
   java:(java.stdout+java.stderr).trim(),jdkArchiveSha256:sha(path.join(tools,'jdk17.tar.gz')),
