@@ -102,6 +102,8 @@ async function route(req,send,path){
    const result=await db.query(
     'INSERT INTO nc_chat_messages(sender,recipient,kind,body,audio,audio_mime,duration) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING '+fields,
     [uid,peer,payload.kind,body,voice?.bytes||null,voice?.mime||null,voice?.seconds||null]);
+   const sender=await db.query('SELECT nickname FROM nc_social_users WHERE uid=$1',[uid]);
+   require('./push82.js').notify(peer,'chat_message',{senderUid:uid,senderNickname:sender.rows[0]?.nickname}).catch(()=>{});
    return send(200,{message:result.rows[0]});
   }
  }catch(e){
