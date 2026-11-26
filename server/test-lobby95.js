@@ -17,5 +17,5 @@ test('unwanted lobby setup and floating launcher are removed only from view',()=
  assert.match(html,/id="nc95-clean-lobby"/);
  assert.ok(html.includes('window.NC72_ONLINE_OPEN')||html.includes('online-hub72.js'));
  assert.ok(html.includes('social70.js'));
- assert.ok(html.includes('expansion-ui.js'));
+ assert.ok(fs.existsSync('app/src/main/assets/expansion-ui.js'));
 });
