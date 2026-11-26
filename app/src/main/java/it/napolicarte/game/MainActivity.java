@@ -150,18 +150,22 @@ public final class MainActivity extends Activity {
     private String pendingPushDestination;
     private String pendingPushSender;
     private String pendingPushSenderName;
+    private String pendingInviteId;
     private void pushIntent(Intent intent){
         if(intent==null)return;
         String destination=intent.getStringExtra(GameNotificationService.EXTRA_DESTINATION);
         if(!GameNotificationService.FRIENDS.equals(destination)&&
            !GameNotificationService.CHAT.equals(destination)&&
-           !GameNotificationService.BONUS.equals(destination))return;
+           !GameNotificationService.BONUS.equals(destination)&&
+           !GameNotificationService.INVITES.equals(destination))return;
         pendingPushDestination=destination;
         pendingPushSender=intent.getStringExtra("notification_sender_uid");
         pendingPushSenderName=intent.getStringExtra("notification_sender_name");
+        pendingInviteId=intent.getStringExtra("notification_invite_id");
         intent.removeExtra(GameNotificationService.EXTRA_DESTINATION);
         intent.removeExtra("notification_sender_uid");
         intent.removeExtra("notification_sender_name");
+        intent.removeExtra("notification_invite_id");
         deliverPushDestination();
     }
     private void deliverPushDestination(){
@@ -169,9 +173,10 @@ public final class MainActivity extends Activity {
         String destination=pendingPushDestination;
         String sender=pendingPushSender==null?"":pendingPushSender;
         String name=pendingPushSenderName==null?"":pendingPushSenderName;
+        String invite=pendingInviteId==null?"":pendingInviteId;
         web.evaluateJavascript("Boolean(window.NC82_OPEN_NOTIFICATION&&window.NC82_OPEN_NOTIFICATION("+
-            org.json.JSONObject.quote(destination)+","+org.json.JSONObject.quote(sender)+","+org.json.JSONObject.quote(name)+"))",value->{
-                if("true".equals(value)){pendingPushDestination=null;pendingPushSender=null;pendingPushSenderName=null;}
+            org.json.JSONObject.quote(destination)+","+org.json.JSONObject.quote(sender)+","+org.json.JSONObject.quote(name)+","+org.json.JSONObject.quote(invite)+"))",value->{
+                if("true".equals(value)){pendingPushDestination=null;pendingPushSender=null;pendingPushSenderName=null;pendingInviteId=null;}
             });
     }
     @Override protected void onNewIntent(Intent intent){
