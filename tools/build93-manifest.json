@@ -163,7 +163,8 @@
     "server/test-expansion-party.js",
     "server/test-expansion-session.js",
     "chiodo-server/test-social-daily-routes.js",
-    "server/test-chiodo-pairs91.js"
+    "server/test-chiodo-pairs91.js",
+    "server/test-invites94.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",
