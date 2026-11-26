@@ -140,10 +140,65 @@
       if (!room.state) {
         room.members.splice(seat, 1);
         room.members.forEach((p, i) => { const s = sessions.get(p.token); if (s) s.seat = i; });
-      } else room.members[seat] = { name: 'CPU ' + (seat + 1), bot: true, requests: [] };
+      } else room.members[seat] = { name: 'CPU ' + (seat + 1), bot: true, replaced: true, requests: [] };
       room.revision++;
       if (!room.members.some(p => !p.bot)) remove(room);
       return { ok: true };
+    }
+    // Only trusted server-side endpoints call these methods. A room ID is not a session credential.
+    function invitationContext(key) {
+      const session = auth(key), room = session.room;
+      return {
+        roomId: room.id, game: room.game, seats: room.seats, owner: session.seat === 0,
+        private: room.private, code: room.private && !room.state ? room.code : null,
+        status: room.state ? room.state.status : 'waiting',
+        vacantSeats: room.state ? room.members.filter(m => m.bot && m.replaced === true).length : 0
+      };
+    }
+    function publicRoom(roomId) {
+      const room = rooms.get(String(roomId || ''));
+      if (!room) fail('Tavolo non disponibile.', 404);
+      return { roomId: room.id, game: room.game, title: engines[room.game].title,
+        seats: room.seats, status: room.state ? room.state.status : 'waiting',
+        humanCount: room.members.filter(m => !m.bot).length, private: room.private,
+        vacantSeats: room.members.filter(m => m.bot && m.replaced === true).length };
+    }
+    // A spectator never gets an engine seat, a private hand, a move or a session token.
+    function spectatorView(roomId) {
+      const room = rooms.get(String(roomId || ''));
+      if (!room || !room.state) fail('La partita non è ancora iniziata.', 404);
+      const base = engines[room.game].view(room.state, 0);
+      const visibleCard = c => c && Number.isInteger(c.v) && c.v >= 1 && c.v <= 10 && Number.isInteger(c.s) && c.s >= 0 && c.s < 4 ?
+        { v: c.v, s: c.s } : null;
+      return {
+        roomId: room.id, game: room.game, title: engines[room.game].title,
+        status: room.state.status, phase: room.state.phase, turn: room.state.turn,
+        revision: room.revision, seats: room.seats,
+        players: room.members.map((m, i) => ({ seat: i, name: m.name, bot: !!m.bot })),
+        table: Array.isArray(base.table) ? base.table.map(visibleCard).filter(Boolean) : [],
+        trick: Array.isArray(base.trick) ? base.trick.map(t => {
+          const card = visibleCard(t && (t.card || t));
+          return card ? { seat: Number.isInteger(t.seat) ? t.seat : -1, card } : null;
+        }).filter(Boolean) : [],
+        serverNow: now(), turnDeadline: room.deadline || 0
+      };
+    }
+    // Substitution is possible only for a player who really disconnected. Never
+    // replace a CPU that belongs to the original game or expose a previous token.
+    function takeover(roomId, playerName) {
+      const room = rooms.get(String(roomId || ''));
+      if (!room || !room.state || room.state.status !== 'playing') fail('La partita non è più disponibile.', 409);
+      const seat = room.members.findIndex(m => m.bot && m.replaced === true);
+      if (seat < 0) fail('Non ci sono posti liberi per il subentro.', 409);
+      const token = makeToken(), name = cleanName(playerName);
+      room.members[seat] = { token, name, bot: false, requests: [] };
+      if (room.state.players && room.state.players[seat]) room.state.players[seat].name = name;
+      const session = { room, seat };
+      sessions.set(token, session);
+      if (room.state.turn === seat) room.deadline = now() + TURN_MS;
+      room.revision++;
+      room.updated = now();
+      return { token, state: view(session) };
     }
     function tick() {
       for (const room of rooms.values()) {
@@ -151,7 +206,7 @@
         try { tickRoom(room); } catch (error) { if (typeof options.onError === 'function') options.onError(error, room.game); }
       }
     }
-    return { catalog, join, state, move, fill, leave, tick, size: () => rooms.size };
+    return { catalog, join, state, move, fill, leave, tick, invitationContext, publicRoom, spectatorView, takeover, size: () => rooms.size };
   }
   return { VERSION, TURN_MS, SEARCH_MS, catalog, createService };
 });
