@@ -51,7 +51,7 @@
   const prizes=core.AWARDS.map(name=>'<span class="nc91-prize'+(game.awards.includes(name)?' earned':'')+'">'+(game.awards.includes(name)?'★ ':'◇ ')+name+'</span>').join('');
   const history=game.drawn.length?game.drawn.slice(-12).reverse().map(n=>'<b title="'+escap(core.getMeaning(n).name)+'">'+n+'</b>').join(''):'<span class="nc91-empty">Nessun numero estratto</span>';
   const content='<div class="nc91-wrap">'+
-   '<header class="nc91-head"><button type="button" data-nc91="close" aria-label="Torna ai giochi">❮ Indietro</button><span class="nc91-balance">🪙 '+money(balance)+' crediti</span><button type="button" data-nc91="new" aria-label="Nuova partita">↻ Nuova</button></header>'+
+   '<header class="nc91-head"><button type="button" data-nc91="close" aria-label="Torna ai giochi">❮ Indietro</button><span class="nc91-balance">🪙 '+money(balance)+' crediti</span><button type="button" data-nc91="online" aria-label="Gioca a Tombola online">🌍 Online</button><button type="button" data-nc91="new" aria-label="Nuova partita">↻ Nuova</button></header>'+
    '<section class="nc91-hero"><div class="nc91-crest">N</div><h1>IL BANCO</h1><div class="nc91-subtitle">Smorfia Napoletana</div><p class="nc91-caption">♛ La Tombola di Napoli · 90 numeri · Cartelle classiche ♛</p></section>'+
    '<section class="nc91-latest"><div class="nc91-ball'+(meaning?' pop':'')+'" aria-label="Ultimo numero estratto '+num+'">'+num+'</div><div class="nc91-meaning"><p>ULTIMO NUMERO ESTRATTO</p><h2>'+escap(title)+'</h2><span class="nc91-desc">'+escap(desc)+'</span><div class="nc91-game-stats"><span>Estratti: '+game.drawn.length+' / 90</span><span>Rimanenti: '+game.deck.length+'</span><span>Cartelle: '+game.tickets.length+'</span></div></div></section>'+
    '<div class="nc91-body"><div>'+
@@ -94,6 +94,7 @@
   const button=event.target.closest('button[data-nc91]');if(!button||!dialog?.contains(button))return;
   const action=button.dataset.nc91;
   if(action==='close'){close();return;}
+  if(action==='online'){if(game?.drawn.length&&!w.confirm('Passando online terminerai questa partita locale. Continuare?'))return;close();w.NC_BANCO_ONLINE_OPEN?.();return;}
   if(action==='draw'){callNext();return;}
   if(action==='new'){reset();return;}
   if(action==='auto'){if(autoDraw){stopAuto();announce('Estrazione automatica fermata.');render();}else startAuto();return;}
