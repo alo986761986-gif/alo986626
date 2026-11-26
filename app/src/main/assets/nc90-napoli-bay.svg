@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="sky" x2="0" y2="1"><stop stop-color="#0064c9"/><stop offset=".38" stop-color="#4ca9ef"/><stop offset=".66" stop-color="#b7e4fb"/><stop offset="1" stop-color="#ffe8b3"/></linearGradient>
+<linearGradient id="sea" x2="0" y2="1"><stop stop-color="#0b8dd7"/><stop offset=".3" stop-color="#004c9b"/><stop offset=".7" stop-color="#082a6a"/><stop offset="1" stop-color="#021c52"/></linearGradient>
+<linearGradient id="hill" x2="0" y2="1"><stop stop-color="#4a75b3"/><stop offset=".7" stop-color="#305a98"/><stop offset="1" stop-color="#1f3c74"/></linearGradient>
+<linearGradient id="stone" x2="0" y2="1"><stop stop-color="#f4d6a1"/><stop offset=".5" stop-color="#ab9e8d"/><stop offset="1" stop-color="#625e5f"/></linearGradient>
+<linearGradient id="city" x2="0" y2="1"><stop stop-color="#f9d6ac"/><stop offset="1" stop-color="#627fa9"/></linearGradient>
+<linearGradient id="vignette" x2="0" y2="0"><stop stop-color="#0f2b73" stop-opacity=".18"/><stop offset=".48" stop-opacity="0"/><stop offset="1" stop-color="#031439" stop-opacity=".45"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#ffefc4" stop-opacity=".7"/><stop offset="1" stop-color="#ffedb9" stop-opacity="0"/></radialGradient>
+<filter id="blur"><feGaussianBlur stdDeviation="15"/></filter>
+<pattern id="waves" width="135" height="19" patternUnits="userSpaceOnUse"><path d="M0 12 Q33 2 67 12 T135 12" fill="none" stroke="#a8eaff" stroke-opacity=".22" stroke-width="2"/></pattern>
+<pattern id="windows" width="26" height="22" patternUnits="userSpaceOnUse"><path d="M7 8h4v6H7zM18 10h3v4h-3z" fill="#e9d7b8" opacity=".75"/></pattern>
+</defs>
+<path fill="url(#sky)" d="M0 0h1920v1080H0z"/>
+<ellipse cx="1505" cy="220" rx="400" ry="300" fill="url(#glow)"/>
+<path d="M0 196 Q180 135 370 199T765 173T1150 191T1560 184T1920 205v145H0z" fill="#ffffff" opacity=".16" filter="url(#blur)"/>
+<path d="M0 275 Q110 242 190 270T420 252T605 262T852 245T1170 260T1550 257T1920 255" fill="none" stroke="#fff" stroke-width="26" opacity=".19" filter="url(#blur)"/>
+<!-- original Vesuvius silhouette -->
+<path d="M1025 606 Q1095 567 1174 548 L1250 493 L1290 437 L1343 396 L1386 347 L1428 320 L1485 347 L1526 312 L1584 332 L1627 391 L1682 442 L1763 511 L1870 549 L1920 568v117H1025z" fill="url(#hill)"/>
+<path d="M1374 362l54-42 56 26 44-34 49 29-23 17-36-3-39 34-35-18-39 12z" fill="#d4e6fc" opacity=".55"/>
+<path d="M1000 610Q1160 557 1232 554T1429 550T1631 547T1920 561v76H1000z" fill="#3a659d" opacity=".67"/>
+<path d="M0 558 Q175 504 300 531T563 520T799 549T1120 559v115H0z" fill="#4c79a8" opacity=".85"/>
+<!-- coastline and layered waterfront buildings -->
+<path d="M580 591Q765 547 965 575Q1180 556 1355 568T1920 572v111H580z" fill="#426f9a"/>
+<g fill="url(#city)" stroke="#395f86" stroke-width="2">
+<path d="M575 559h35v-30h31v34h21v-22h26v24h31v-35h35v39h29v-28h28v32h32v-37h38v38h28v-25h31v28h34v-44h26v44h31v-23h25v25h35v-36h29v38h26v-23h33v23h36v-29h30v26h27v-26h43v32h30v-30h30v29h41v-23h27v27h24v-20h33v23h41v-22h31v22h33v-26h43v27h30v-18h26v22h40v-19h35v22h37v-17h44v72H575z"/>
+</g>
+<path d="M575 583h1330v54H575z" fill="url(#windows)" opacity=".78"/>
+<!-- Castel Sant'Elmo style original medieval fortress silhouette -->
+<path d="M68 540h340v111H68z" fill="#504e63" opacity=".38"/>
+<path d="M86 490l12-39h31v-34h44v18h33v-31h43v27h27v-34h45v35h31v30h34v29h-30v48H86z" fill="url(#stone)" stroke="#4a536b" stroke-width="5"/>
+<path d="M92 514h305v115H92z" fill="#a7a49b" stroke="#56657c" stroke-width="5"/>
+<path d="M111 519h40v23h-40zM184 519h34v23h-34zM256 519h41v23h-41zM332 519h39v23h-39z" fill="#5e7288"/>
+<path d="M127 570h19v43h-19zM195 570h20v43h-20zM266 570h20v43h-20zM342 570h20v43h-20z" fill="#455d77"/>
+<path d="M78 649Q245 641 407 651v41H78z" fill="#48556b"/>
+<path d="M0 613Q129 635 280 645T540 629T970 604T1920 618v462H0z" fill="url(#sea)"/>
+<path d="M0 655Q340 617 582 660T1170 648T1920 655v425H0z" fill="url(#waves)"/>
+<path d="M0 691Q210 680 420 692T820 693T1280 688T1920 695" fill="none" stroke="#a4eaff" stroke-opacity=".38" stroke-width="4"/>
+<path d="M0 745Q330 735 570 752T1270 748T1920 746" fill="none" stroke="#9cdfff" stroke-opacity=".24" stroke-width="3"/>
+<path d="M0 826Q250 819 530 839T1060 831T1920 838" fill="none" stroke="#9cdfff" stroke-opacity=".2" stroke-width="4"/>
+<!-- boats -->
+<g opacity=".84"><path d="M1670 672l64 0-15 13h-38z" fill="#122552"/><path d="M1695 665V631l24 35z" fill="#fff6de"/><path d="M455 713h88l-20 14h-56z" fill="#1c3c73"/><path d="M480 704v-38l38 39z" fill="#fffaed"/></g>
+<!-- foreground terrace -->
+<path d="M0 889Q235 831 489 872Q610 893 772 905L900 1080H0z" fill="#8e8b86"/>
+<path d="M0 907Q260 861 469 899Q620 922 765 929" fill="none" stroke="#d0cab7" stroke-width="13"/>
+<path d="M0 942l260-45 220 31-82 152H0z" fill="#cbb79b" opacity=".8"/>
+<path d="M0 954l260-46 42 172H0z" fill="#7b7e7b" opacity=".55"/>
+<path d="M0 1026l320-92M100 1080l308-134M0 972l400-47" stroke="#f4ddbe" stroke-opacity=".5" stroke-width="4"/>
+<!-- lemons and Bougainvillea -->
+<g transform="translate(40 800)"><path d="M14 180Q-14 73 54 4M42 154Q42 74 104 25" stroke="#285a45" stroke-width="13" fill="none"/><path d="M18 93Q70 60 99 101Q44 145 18 93zM12 52Q74 19 95 58Q57 83 12 52zM48 132Q96 112 116 140Q78 158 48 132z" fill="#25795c"/><ellipse cx="70" cy="75" rx="24" ry="30" fill="#ffd94f" transform="rotate(25 70 75)"/><ellipse cx="94" cy="148" rx="22" ry="27" fill="#ffcd42" transform="rotate(-24 94 148)"/></g>
+<path d="M1710 0Q1812 104 1900 221" stroke="#2b7654" stroke-width="14" fill="none"/>
+<g fill="#ee56a2" stroke="#d23e92" stroke-width="3"><ellipse cx="1760" cy="82" rx="32" ry="21" transform="rotate(30 1760 82)"/><ellipse cx="1818" cy="123" rx="28" ry="24"/><ellipse cx="1863" cy="172" rx="39" ry="23" transform="rotate(-25 1863 172)"/><ellipse cx="1898" cy="204" rx="30" ry="20"/></g>
+<path fill="url(#vignette)" d="M0 0h1920v1080H0z"/>
+</svg>
