@@ -81,7 +81,7 @@
       const room = session.room, seat = session.seat;
       const base = room.state ? engines[room.game].view(room.state, seat) : { status: 'waiting', turn: null, phase: 'waiting', hand: [], table: [], trick: [], players: [], actions: [], result: null, message: 'Ricerca di altri giocatori…', log: [] };
       const players = room.members.map((member, i) => Object.assign({}, base.players && base.players[i] || {}, { seat: i, name: member.name, bot: !!member.bot }));
-      return Object.assign({}, base, { players, game: room.game, title: engines[room.game].title, seats: room.seats, seat, roomId: room.id, code: room.private ? room.code : null, private: room.private, revision: room.revision, serverNow: now(), turnDeadline: room.deadline || 0, searchDeadline: room.searchDeadline, canFill: !room.state && seat === 0 && now() >= room.searchDeadline, humanCount: room.members.filter(p => !p.bot).length, botCount: room.members.filter(p => p.bot).length, version: VERSION, rules: engines[room.game].rules });
+      return Object.assign({}, base, { players, game: room.game, title: engines[room.game].title, seats: room.seats, seat, roomId: room.id, code: room.private ? room.code : null, private: room.private, revision: room.revision, serverNow: now(), turnDeadline: room.deadline || 0, searchDeadline: room.searchDeadline, canFill: !room.state && seat === 0 && now() >= room.searchDeadline, humanCount: room.members.filter(p => !p.bot).length, botCount: room.members.filter(p => p.bot).length, vacantSeats: room.members.filter(p => p.bot && p.replaced === true).length, version: VERSION, rules: engines[room.game].rules });
     }
     function join(input) {
       input = input || {};
@@ -94,7 +94,8 @@
         if (!room) fail('Sala privata non disponibile o già iniziata.', 404);
         game = room.game; seats = room.seats;
       }
-      const selectedRoomId = typeof input.roomId==='string' && /^[a-f0-9]{48}$/.test(input.roomId) ? input.roomId : null;
+      if (input.roomId && (typeof input.roomId !== 'string' || !/^[a-f0-9]{48}$/.test(input.roomId))) fail('Identificativo del tavolo non valido.',400);
+      const selectedRoomId = input.roomId || null;
       if(!room && selectedRoomId && !input.private && !input.bot){
         const listed=rooms.get(selectedRoomId);
         if(!listed || listed.private || listed.local || listed.state || listed.members.length>=listed.seats)
