@@ -8,6 +8,7 @@ on:
       - 'chiodo-server/daily71.js'
       - 'chiodo-server/chat77.js'
       - 'chiodo-server/test-chat77.js'
+      - 'chiodo-server/test-chat77-integration.js'
       - 'chiodo-server/test-social-daily-routes.js'
       - '.github/workflows/chiodo-social-daily.yml'
   workflow_dispatch:
@@ -16,7 +17,21 @@ permissions:
 jobs:
   endpoint-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qa_user
+          POSTGRES_PASSWORD: qa_password
+          POSTGRES_DB: napoli_chat_qa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U qa_user -d napoli_chat_qa"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,6 +46,12 @@ jobs:
           node --check chiodo-server/test-chat77.js
       - name: Verify private chat and voice security
         run: node chiodo-server/test-chat77.js
+      - name: Install isolated PostgreSQL client
+        run: npm install --no-save --no-package-lock --ignore-scripts pg@8
+      - name: Test real SQL chat flows with isolated test users
+        env:
+          DATABASE_URL: postgresql://qa_user:qa_password@127.0.0.1:5432/napoli_chat_qa
+        run: node chiodo-server/test-chat77-integration.js
       - name: Verify available endpoints and mandatory Firebase authentication
         run: node chiodo-server/test-social-daily-routes.js
 
