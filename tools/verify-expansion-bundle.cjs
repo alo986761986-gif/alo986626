@@ -67,6 +67,7 @@ function checkBundle(root) {
     assert.deepEqual(ids.slice().sort(), manifest.app.classicIds.slice().sort(),
       'The six original classic games must be preserved');
   }
+  assert.ok(fs.readFileSync(path.join(assets, 'expansion-ui.js'), 'utf8').includes(manifest.backendUrl), 'Expansion UI and live probe must target the same backend');
   const sessionPos = index.indexOf('expansion-session.js');
   const uiPos = index.indexOf('expansion-ui.js');
   assert.ok(sessionPos >= 0 && uiPos > sessionPos, 'Load expansion session before its UI');

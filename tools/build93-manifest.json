@@ -180,5 +180,6 @@
     "catalogWaitMs": 300000,
     "expectedMoves": 2
   },
-  "backendModulesDir": "chiodo-server/games"
+  "backendModulesDir": "chiodo-server/games",
+  "backendUrl": "https://napoli-chiodo-121.onrender.com"
 }

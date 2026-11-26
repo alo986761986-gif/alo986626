@@ -100,7 +100,7 @@ function pairedChecks(states) {
 }
 async function runLiveQa(reportFile) {
   const root = path.resolve(__dirname, '..');
-  const base = process.env.NC_LIVE_BASE_URL || fs.readFileSync(path.join(root, 'app/src/main/assets/server_url.txt'), 'utf8').trim();
+  const base = process.env.NC_LIVE_BASE_URL || manifest.backendUrl;
   const client = createClient(base), participants = [];
   const report = {
     ok: false, startedAt: new Date().toISOString(), endpoint: client.origin,
