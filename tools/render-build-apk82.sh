@@ -54,8 +54,8 @@ if [[ -n "${UPLOAD_KEYSTORE_BASE64:-}" && -n "${UPLOAD_STORE_PASSWORD:-}" && -n 
   APK="$ROOT/app/build/outputs/apk/release/app-release.apk"
   test -s "$APK"
   "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  unzip -Z1 "$APK" | grep -qx 'assets/market83.js'
-  unzip -Z1 "$APK" | grep -qx 'assets/market83-themes.css'
+  unzip -t "$APK" 'assets/market83.js' >/dev/null
+  unzip -t "$APK" 'assets/market83-themes.css' >/dev/null
   cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_3_FINALE_FIRMATO.apk"
   rm -f "$UPLOAD_KEYSTORE"
 else
@@ -63,8 +63,8 @@ else
   APK="$ROOT/app/build/outputs/apk/debug/app-debug.apk"
   test -s "$APK"
   "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-  unzip -Z1 "$APK" | grep -qx 'assets/market83.js'
-  unzip -Z1 "$APK" | grep -qx 'assets/market83-themes.css'
+  unzip -t "$APK" 'assets/market83.js' >/dev/null
+  unzip -t "$APK" 'assets/market83-themes.css' >/dev/null
   cp "$APK" "$ROOT/dist/NAPOLI_CARTE_3D_8_3_DEBUG_SOLO_TEST.apk"
 fi
 (cd "$ROOT/dist" && sha256sum *.apk > SHA256SUMS.txt)
