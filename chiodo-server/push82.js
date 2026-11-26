@@ -2,10 +2,14 @@
 // Private per-account FCM push delivery. Tokens and credentials never enter the WebView.
 const social=require('./social70.js');
 let initialized=null, messagingInstance;
+let lastConfigurationWarning=0;
 const VALID_TYPES=new Set(['friend_request','chat_message','daily_bonus']);
 function messaging(){
  if(messagingInstance)return messagingInstance;
- if(!process.env.FIREBASE_SERVICE_ACCOUNT_JSON)return null;
+ if(!process.env.FIREBASE_SERVICE_ACCOUNT_JSON){
+  if(Date.now()-lastConfigurationWarning>3600000){console.warn('FCM not configured: FIREBASE_SERVICE_ACCOUNT_JSON missing');lastConfigurationWarning=Date.now();}
+  return null;
+ }
  const admin=require('firebase-admin');
  if(!admin.apps.length){
   const service=JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
@@ -53,7 +57,7 @@ async function notify(uid,type,details={}){
   if(!rows.length)return false;
   const tokens=rows.map(x=>x.token);
   const data={type};
-  if(type==='chat_message'&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
+  if((type==='chat_message'||type==='friend_request')&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
   if(details.senderNickname)data.senderNickname=String(details.senderNickname).slice(0,24);
   // Data-only messages let the Android service control channel, privacy and deeplink.
   const out=await messaging().sendEachForMulticast({tokens,data,android:{priority:'high'}});
@@ -72,7 +76,7 @@ async function dailyTick(){
  if(Number(local)<10)return;
  dailyRunning=true;
  try{
-  await setup();const db=social.db();
+  await setup();await require('./daily71.js').setup();const db=social.db();
   // Daily rewards follow the backend's UTC day, not the handset's editable clock.
   const today=new Date().toISOString().slice(0,10);
   const users=(await db.query(
