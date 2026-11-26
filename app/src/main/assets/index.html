@@ -2286,4 +2286,36 @@ window.NC26_AUDIO_RELAY={start,prime,stop,isReady:()=>connected,state,setMuted(i
  window.addEventListener('online',status);window.addEventListener('offline',status);
  connTimer=window.setInterval(status,3200);
  if(doc.querySelector('#root .wrap')){installPanel();installAwards()}
-})();</script><script src="wallet.js"></script><script src="chiodo.js"></script><script src="chiodo-network.js"></script><script src="premium50.js"></script><script src="voice51.js"></script><script src="store52.js"></script><script src="turn59.js"></script><script src="touch62.js"></script><script src="voice64.js"></script><script src="chiodo-scene65.js"></script><script src="chiodo65.js"></script><script src="chiodo-profile69.js"></script><script src="social70.js"></script><script src="daily71.js"></script><script src="online-hub72.js"></script><script src="identity80.js"></script><script src="welcome74.js"></script><script src="settings76.js"></script><script src="feedback78.js"></script><script src="chat77.js"></script><script src="profile79.js"></script><script src="compat81.js"></script><script src="push82.js"></script><link rel="stylesheet" href="club84.css"><script src="club84.js"></script><script>window.NC64_CLASSIC_VOICE?.refresh();</script><link rel="stylesheet" href="nc90-premium.css"><script src="nc90-premium.js"></script><link rel="stylesheet" href="banco91.css"><script src="banco91-core.js"></script><script src="banco91.js"></script><link rel="stylesheet" href="banco92-online.css"><script src="banco92-online.js"></script></body></html>
+})();</script><script src="wallet.js"></script><script src="chiodo.js"></script><script src="chiodo-network.js"></script><script src="premium50.js"></script><script src="voice51.js"></script><script src="store52.js"></script><script src="turn59.js"></script><script src="touch62.js"></script><script src="voice64.js"></script><script src="chiodo-scene65.js"></script><script src="chiodo65.js"></script><script src="chiodo-profile69.js"></script><script src="social70.js"></script><script src="daily71.js"></script><script src="online-hub72.js"></script><script src="identity80.js"></script><script src="welcome74.js"></script><script src="settings76.js"></script><script src="feedback78.js"></script><script src="chat77.js"></script><script src="profile79.js"></script><script src="compat81.js"></script><script src="push82.js"></script><link rel="stylesheet" href="club84.css"><script src="club84.js"></script><script>window.NC64_CLASSIC_VOICE?.refresh();</script><link rel="stylesheet" href="nc90-premium.css"><script src="nc90-premium.js"></script><link rel="stylesheet" href="banco91.css"><script src="banco91-core.js"></script><script src="banco91.js"></script><link rel="stylesheet" href="banco92-online.css"><script src="banco92-online.js"></script><style id="nc95-clean-lobby">
+/* Clean lobby 9.5: hide the overgrown setup UI without removing its game state. */
+#root main.wrap>.setup,
+#root main.wrap>.nc30-settings,
+#root main.wrap>.nc30-achievements,
+#root main.wrap>.nc30-banner,
+#root main.wrap #nc-ultimate-options,
+#nc72-launch{display:none!important}
+#root main.wrap>.games{margin-bottom:24px!important}
+#root main.wrap>.games button.game{cursor:pointer}
+#root main.wrap>.games button.game:focus-visible{outline:3px solid #ffe3a0!important;outline-offset:3px}
+@media(max-width:760px){#root main.wrap>.games{padding-bottom:22px!important}}
+</style>
+<script id="nc95-clean-lobby-js">
+(function(w,d){
+ 'use strict';
+ // Existing selectors and inputs remain mounted for the native game engine.
+ // A tap on a classic game tile opens that game directly against CPU.
+ let opening=false;
+ d.addEventListener('click',function(e){
+  const tile=e.target.closest&&e.target.closest('#root main.wrap .games button.game');
+  if(!tile)return;
+  const handler=tile.getAttribute('onclick')||'';
+  const match=/setGame\('([a-z_]+)'\)/.exec(handler);
+  if(!match||opening)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(typeof w.setGame!=='function'||typeof w.setMode!=='function'||typeof w.joinGame!=='function')return;
+  opening=true;
+  try{w.setGame(match[1]);w.setMode('bot');Promise.resolve(w.joinGame()).finally(function(){opening=false});}
+  catch(err){opening=false;if(typeof w.toast==='function')w.toast('Impossibile avviare il gioco');}
+ },true);
+})(window,document);
+</script></body></html>
