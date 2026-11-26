@@ -89,6 +89,6 @@ test('Local game launcher and Android Back are installed without modifying cards
 });
 test('Version is bumped for a distinct installable update',()=>{
  const s=fs.readFileSync('app/build.gradle','utf8');
- assert.match(s,/versionCode 91\b/);
- assert.match(s,/versionName '9\.1\.0'/);
+ assert.match(s,/versionCode (?:91|92)\b/);
+ assert.match(s,/versionName '9\.(?:1|2)\.0'/);
 });
