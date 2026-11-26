@@ -24,6 +24,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Exclude unused legacy nested Gradle wrapper from verification
+        shell: bash
+        run: |
+          # The Android APK build uses official Gradle installed below, not this nested wrapper.
+          rm -f android/gradle/wrapper/gradle-wrapper.jar
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
