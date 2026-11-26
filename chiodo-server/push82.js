@@ -3,7 +3,7 @@
 const social=require('./social70.js');
 let initialized=null, messagingInstance;
 let lastConfigurationWarning=0;
-const VALID_TYPES=new Set(['friend_request','chat_message','daily_bonus']);
+const VALID_TYPES=new Set(['friend_request','chat_message','daily_bonus','game_invite']);
 function messaging(){
  if(messagingInstance)return messagingInstance;
  if(!process.env.FIREBASE_SERVICE_ACCOUNT_JSON){
@@ -65,6 +65,12 @@ async function notify(uid,type,details={}){
   const data={type,recipientUid:String(uid)};
   if((type==='chat_message'||type==='friend_request')&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
   if(details.senderNickname)data.senderNickname=String(details.senderNickname).slice(0,24);
+  if(type==='game_invite'){
+   if(!/^[0-9a-f-]{36}$/i.test(String(details.inviteId||'')))return false;
+   data.inviteId=String(details.inviteId);
+   data.game=String(details.game||'').slice(0,32);
+   if(details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
+  }
   // Data-only messages let the Android service control channel, privacy and deeplink.
   const out=await messaging().sendEachForMulticast({tokens,data,android:{priority:type==='daily_bonus'?'normal':'high'}});
   const expired=[];
