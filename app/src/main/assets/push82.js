@@ -1,6 +1,7 @@
 (function(w){'use strict';
-w.NC82_OPEN_NOTIFICATION=function(destination,sender,name){
+w.NC82_OPEN_NOTIFICATION=function(destination,sender,name,inviteId){
   try{
+    if(destination==='game_invites'){if(!w.NC70_SOCIAL?.open)return false;w.NC70_SOCIAL.openInvite?.(inviteId);return true;}
     if(destination==='friends'){if(!w.NC70_SOCIAL?.open)return false;w.NC70_SOCIAL.open('friends');return true;}
     if(destination==='chat'){
       if(!w.NC77_CHAT?.open)return false;
