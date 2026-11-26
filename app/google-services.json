@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "178687050786",
+    "project_id": "napoli-carte-3d",
+    "storage_bucket": "napoli-carte-3d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:178687050786:android:dabed29e681bf303a9f67b",
+        "android_client_info": {
+          "package_name": "it.napolicarte.game"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "178687050786-2g8jnj70sfn5l03hlmpqsnps1sgl9ul2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "it.napolicarte.game",
+            "certificate_hash": "f08f93afc1767c4fa56d4d9bb1f0ffb0cd36f19c"
+          }
+        },
+        {
+          "client_id": "178687050786-4b52efh6jak98gjbghno2em9e721acke.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "it.napolicarte.game",
+            "certificate_hash": "354db9773196a9deaa8a81125df2440453890515"
+          }
+        },
+        {
+          "client_id": "178687050786-n2at6vj2cnfbpi3t3gp10101kqttuc8p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAE4p7JZzeh-zy2xt1sXHsPTb_Qa-uz5HE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "178687050786-n2at6vj2cnfbpi3t3gp10101kqttuc8p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

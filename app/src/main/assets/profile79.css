@@ -1,0 +1,49 @@
+/* Dedicated profile menu · Napoli Carte 3D */
+.nc79-overlay{position:fixed;inset:0;z-index:2147483630;display:flex;align-items:stretch;justify-content:flex-end;background:rgba(2,16,13,.83);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#faf0d6}
+.nc79-sheet{display:flex;flex-direction:column;height:100%;height:100dvh;width:min(610px,100%);background:radial-gradient(ellipse at 70% 0%,#14674e 0%,#0b3027 47%,#051d18 100%);border-left:2px solid #d1ab65;box-shadow:-18px 0 45px #000b;overflow:hidden}
+.nc79-header{position:relative;display:flex;align-items:center;justify-content:space-between;gap:9px;background:linear-gradient(130deg,#0a2f24,#04291e);padding:12px 15px;border-bottom:2px solid #d9b971;min-height:77px;flex-shrink:0}
+.nc79-brand{display:flex;align-items:center;gap:6px;color:#ffe4ac;font:700 14px/1.08 Georgia,serif;letter-spacing:-.3px}.nc79-brand>span{font-size:28px}
+.nc79-coin{border:2px solid #f2ce72;border-radius:100%;color:#ffe7a7;background:linear-gradient(#876522,#513b12);padding:5px 8px;font-weight:900;min-width:38px;text-align:center;font-size:12px;white-space:nowrap}
+.nc79-heading{display:flex;align-items:center;justify-content:center;border:1px solid #dfbf75;border-radius:25px;min-width:0;flex:1;background:#0b4233;color:#ffe4b2;padding:12px 5px;font-weight:900;white-space:nowrap;font-size:16px;letter-spacing:.6px}
+#nc79-close{background:none;border:0;color:#fff2d4;font-size:33px;min-width:43px;min-height:47px}
+.nc79-scroll{overflow-y:auto;overscroll-behavior:contain;flex:1;padding:16px 14px 32px}
+.nc79-summary{display:flex;align-items:center;gap:16px;padding:16px 13px;background:linear-gradient(130deg,#124635,#063a30);border:1.5px solid #dfb76f;border-radius:19px;box-shadow:inset 0 0 12px #d2af4c25,0 8px 23px #0004}
+.nc79-avatar{width:104px;height:104px;min-width:104px;border:3px solid #f5d68c;border-radius:50%;background:linear-gradient(155deg,#328a66,#104b42);overflow:hidden;display:grid;place-items:center;box-shadow:0 0 0 4px #185444;font-size:49px;cursor:pointer}
+.nc79-avatar img{width:100%;height:100%;object-fit:cover;grid-area:1/1}.nc79-avatar img[hidden],.nc79-avatar span[hidden]{display:none}.nc79-avatar span{grid-area:1/1}
+.nc79-stats{flex:1;min-width:0}.nc79-stats h2{margin:0 0 10px;font-size:clamp(17px,4vw,25px);overflow-wrap:anywhere;line-height:1.12;color:#fff5df}
+.nc79-level{font-size:13px;color:#f6e8ba;font-weight:750}
+.nc79-progress{height:11px;margin-top:6px;background:#4e554e;border-radius:10px;overflow:hidden;border:1px solid #a1b8a5}
+.nc79-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#66b83a,#d3e553)}
+.nc79-numbers{display:grid;grid-template-columns:1fr 1fr;margin-top:12px}.nc79-numbers>div{text-align:center;border-right:1px solid #d9b9705c}.nc79-numbers>div:last-child{border:0}.nc79-numbers b{font-size:21px;display:block;color:#fff6de}.nc79-numbers small{font-size:10px;font-weight:900;color:#ebd098;letter-spacing:1px}
+#nc79-nav{display:flex;flex-direction:column;gap:7px;margin-top:21px}
+.nc79-entry{display:flex;align-items:center;gap:9px;text-align:left;padding:11px 12px;width:100%;min-height:67px;border-radius:12px;background:linear-gradient(145deg,#095344,#073b32);color:#f9f2dc;border:1px solid #c6a66c80;box-shadow:inset 0 1px 0 #ffffff12,0 3px 10px #0003}
+.nc79-entry:active,.nc79-entry:hover{background:linear-gradient(145deg,#1d624e,#105041)}
+.nc79-entry-icon{font-size:26px;min-width:42px;max-width:42px;text-align:center;color:#f8d18a;border-right:1px solid #a9894e;padding-right:8px}
+.nc79-entry-name{font-weight:850;flex:1;font-size:clamp(11px,3vw,16px);letter-spacing:.2px}
+.nc79-chevron{font-size:29px;line-height:1;color:#f1cc84}.nc79-pill{font-size:12px;border-radius:17px;padding:4px 9px;color:#0e281c;background:#ffc349;font-weight:950}
+.nc79-pill[hidden]{display:none}.nc79-entry[data-section=logout] .nc79-entry-icon{color:#f46a5e}
+#nc79-status{min-height:15px;color:#ffdfa3;margin:12px 3px 4px;font-size:12px;overflow-wrap:anywhere}
+.nc79-details{margin:13px 0;padding:14px;background:#06291f;border:1px solid #d6b57785;border-radius:15px}.nc79-details[hidden]{display:none}
+.nc79-section-head h3{color:#ffe4a5;font-size:19px;margin:3px 0 6px}.nc79-section-head p{font-size:12px;color:#d5decf;line-height:1.5;margin:0 0 13px}
+.nc79-line{display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #d2b77746;padding:10px 3px;line-height:1.4}
+.nc79-line span{flex:1;min-width:0}.nc79-line strong{display:block;font-size:13px}.nc79-line small{display:block;color:#bfcfc3;margin-top:3px;font-size:11px}.nc79-line b{font-size:13px;color:#ffe09c;max-width:50%;text-align:right;overflow-wrap:anywhere}
+.nc79-note{color:#d7e4d5;font-size:12px;line-height:1.5;margin:10px 2px}
+.nc79-button{width:100%;text-align:center;border:1px solid #efd9a4;border-radius:10px;background:linear-gradient(#d7b575,#a87932);color:#0d3026;min-height:43px;padding:9px;font-weight:850;margin-top:9px}
+.nc79-button:disabled{background:#536b5b;color:#c8d1c7;border-color:#77856b}
+.nc79-button.nc79-muted-button{background:#174a3b;color:#ffe4b4;border-color:#d9b26b}
+.nc79-task{border:1px solid #d6b67269;border-radius:10px;padding:10px;margin:9px 0;background:#124034}
+.nc79-task .nc79-line{padding-top:0}.nc79-photo-preview{display:block;width:min(185px,65%);aspect-ratio:1;object-fit:cover;border-radius:50%;border:2px solid #d9b56b;margin:12px auto}
+.nc79-file{display:block;width:100%;color:#ffe6bf;font-size:12px}.nc79-foot{font-size:10px;color:#9ebeb0;text-align:center;letter-spacing:.8px;padding:23px 10px}
+.nc79-overlay button:focus-visible,.nc79-avatar:focus-visible,.nc79-file:focus-visible{outline:3px solid #ffdf88;outline-offset:2px}
+@media(max-width:420px){.nc79-scroll{padding:12px 10px}.nc79-summary{padding:12px 10px;gap:11px}.nc79-avatar{width:82px;height:82px;min-width:82px;font-size:41px}.nc79-brand strong{font-size:11px}.nc79-brand>span{font-size:21px}.nc79-header{padding:8px}.nc79-heading{font-size:13px}.nc79-entry{min-height:59px}.nc79-entry-icon{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.nc79-entry,.nc79-progress span{transition:none}}
+
+/* 8.0: Every profile action opens an actual visible subpage, not a block below a long menu. */
+.nc79-scroll{min-height:0;overflow-y:auto!important;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.nc79-scroll.is-detail .nc79-summary,.nc79-scroll.is-detail #nc79-nav{display:none!important}
+.nc79-back{position:sticky;top:0;z-index:4;display:block;width:100%;min-height:50px;margin:0 0 12px;border-radius:11px;text-align:left;padding:12px 16px;background:#174b3b;color:#ffe7b1;border:1px solid #d9b871;font-size:14px;font-weight:850}
+.nc79-back[hidden]{display:none!important}
+.nc79-scroll.is-detail .nc79-details{margin:0;padding:15px;min-height:120px}
+.nc79-scroll.is-detail .nc79-foot{padding-top:12px}
+.nc79-details .nc79-task{min-width:0;overflow-wrap:anywhere}
+.nc79-details .nc79-task button{white-space:normal}

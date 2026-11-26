@@ -1,0 +1,38 @@
+/* NAPOLI CARTE 3D · top-right menu and right-side drawer */
+.nc76-header-actions{display:flex;align-items:center;gap:9px;margin-left:auto;min-width:0}
+#nc76-menu-open{width:47px;height:47px;min-width:47px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border-radius:12px;border:1.5px solid #f1d594;background:linear-gradient(135deg,#215846,#0a352d);color:#ffebc1;box-shadow:0 4px 14px #0006;cursor:pointer}
+#nc76-menu-open span{height:2.5px;width:21px;background:currentColor;border-radius:6px}
+#nc76-menu-open:focus-visible,.nc76-panel button:focus-visible{outline:3px solid #ffdf83;outline-offset:2px}
+#nc76-menu-open[aria-expanded="true"]{background:#ac7a34}
+#nc76-overlay[hidden],#nc76-home[hidden]{display:none!important}
+#nc76-overlay{position:fixed;inset:0;z-index:2147483622;display:flex;justify-content:flex-end;color:#fff2d8;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+.nc76-scrim{position:absolute;inset:0;background:rgba(0,12,11,.74);backdrop-filter:blur(3px)}
+.nc76-panel{position:relative;z-index:1;width:min(410px,94vw);height:100vh;height:100dvh;background:linear-gradient(158deg,#194b3e,#0a3129 52%,#071d1a);border-left:2px solid #c9a462;box-shadow:-16px 0 42px #000b;display:flex;flex-direction:column;overflow:hidden}
+.nc76-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 18px 15px;border-bottom:1px solid #bfa16966}
+.nc76-top small{font-size:10px;letter-spacing:1.6px;color:#ebc779;font-weight:800}
+.nc76-top h2{font-size:21px;line-height:1.15;color:#fff0c9;margin:5px 0 0;font-weight:850}
+.nc76-close{min-width:44px;min-height:44px;border:1px solid #dabf87;border-radius:11px;background:#29594a;color:#fff3d8;font-size:28px}
+.nc76-scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:10px 14px 25px}
+.nc76-scroll section{margin:16px 0 22px}
+.nc76-scroll h3{color:#ffe2a3;font-size:14px;letter-spacing:.3px;margin:0 3px 12px;padding-bottom:9px;border-bottom:1px solid #dcb77947}
+.nc76-entry,.nc76-setting{display:flex;align-items:center;gap:10px;width:100%;min-height:61px;margin:7px 0;padding:10px 12px;color:#f9ecd2;background:linear-gradient(145deg,#275746,#113b31);border:1px solid #dabf806e;border-radius:13px;text-align:left;font:inherit}
+.nc76-entry:active,.nc76-setting:active{background:#376c54}
+.nc76-icon{display:grid;place-items:center;font-size:23px;min-width:32px}
+.nc76-entry-text{flex:1;min-width:0}
+.nc76-entry-text strong{font-size:13px;font-weight:850;display:block}
+.nc76-entry-text small{display:block;font-size:10px;color:#d5dfcf;line-height:1.45;margin-top:3px}
+.nc76-chevron{font-size:26px;color:#edcf8f}
+.nc76-switch{position:relative;width:37px;height:22px;flex-shrink:0;border-radius:18px;border:1px solid #9b9d8c;background:#4e5955;transition:background .15s}
+.nc76-switch:after{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:100%;background:#e8eae5;transition:transform .15s}
+.nc76-setting[aria-pressed="true"] .nc76-switch{background:#2d9465;border-color:#8adfb0}
+.nc76-setting[aria-pressed="true"] .nc76-switch:after{transform:translateX(15px);background:white}
+.nc76-state{font-size:10px;width:24px;text-align:right;color:#efdcaa;font-weight:900}
+.nc76-home{display:block;width:100%;padding:14px 12px;margin:15px 0 4px;background:#513f25;border:1px solid #e9bf78;border-radius:12px;color:#ffecc2;font-weight:850;min-height:49px}
+.nc76-bottom{text-align:center;color:#afc0b5;padding:14px 12px max(13px,env(safe-area-inset-bottom));font-size:10px;letter-spacing:1px;background:#08231e;border-top:1px solid #c3a77b44}
+@media(max-width:560px){header{padding:12px 10px;gap:6px}header .brand{min-width:0;gap:6px}header .brand b{font-size:14px}header .brand small{font-size:8px}header .emblem{width:35px;height:35px;font-size:21px}.nc76-header-actions{gap:7px}.nc76-header-actions .online{font-size:9px;padding:5px 7px}#nc76-menu-open{width:45px;height:45px;min-width:45px}}
+@media(max-width:390px){.nc76-header-actions .online{display:none}.nc76-panel{width:min(410px,97vw)}.nc76-top{padding-top:16px}}
+@media(prefers-reduced-motion:reduce){.nc76-switch,.nc76-switch:after{transition:none}}
+
+/* Keep the menu reachable even on full-screen game layers (including Chiodo). */
+#nc76-menu-open{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:2147483510}
+.nc76-header-actions{padding-right:56px}

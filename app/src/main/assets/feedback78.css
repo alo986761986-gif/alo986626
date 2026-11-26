@@ -1,0 +1,14 @@
+.nc78-overlay{position:fixed;inset:0;z-index:2147483624;background:#061610eb;display:grid;place-items:center;padding:12px;color:#f8ecd4;font-family:system-ui,-apple-system,sans-serif}
+.nc78-sheet{width:min(540px,100%);max-height:94dvh;overflow-y:auto;border:2px solid #d6b36d;border-radius:17px;padding:20px;background:linear-gradient(145deg,#225543,#092a22);box-shadow:0 18px 55px #000b}
+.nc78-head{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid #c6ae7159;padding-bottom:11px}.nc78-head small{color:#f5d28c;font-size:10px;letter-spacing:1.4px}.nc78-head h2{font-size:21px;margin:6px 0 0}
+#nc78-close{background:#244b40;border:1px solid #d9b77c;color:#ffeac4;font-size:28px;border-radius:11px;min-height:44px;min-width:44px}
+.nc78-copy{font-size:13px;color:#dce5d8;line-height:1.55;margin:14px 0}
+#nc78-form{display:flex;flex-direction:column;gap:10px}
+#nc78-form label{font-size:12px;font-weight:800;color:#ffdfaa;margin-top:3px}
+#nc78-form select,#nc78-form textarea{background:#092c23;color:#fff2d5;border:1px solid #d8bf8b;border-radius:11px;padding:12px;font:inherit;font-size:14px;max-width:100%;min-height:44px}
+#nc78-form textarea{min-height:115px;resize:vertical;line-height:1.55}
+#nc78-form small{font-size:11px;color:#bdcfc3;line-height:1.5}
+#nc78-submit{min-height:49px;background:linear-gradient(145deg,#e9c27a,#b98731);color:#173729;border:1px solid #ffebb8;border-radius:11px;font-weight:900;font-size:14px}
+#nc78-submit:disabled{opacity:.67}
+#nc78-status{font-size:12px;line-height:1.5;color:#ffdfa7;margin:0;min-height:14px;overflow-wrap:anywhere}
+.nc78-overlay button:focus-visible,.nc78-overlay textarea:focus-visible,.nc78-overlay select:focus-visible{outline:3px solid #ffe5a1;outline-offset:2px}
