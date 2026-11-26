@@ -19,6 +19,7 @@ public final class GameNotificationService extends FirebaseMessagingService {
     public static final String FRIENDS = "friends";
     public static final String CHAT = "chat";
     public static final String BONUS = "daily_bonus";
+    public static final String INVITES = "game_invites";
     public static final String EXTRA_DESTINATION = "notification_destination";
 
     public static void createChannels(android.content.Context context) {
@@ -34,6 +35,9 @@ public final class GameNotificationService extends FirebaseMessagingService {
         nm.createNotificationChannel(friends);
         nm.createNotificationChannel(chat);
         nm.createNotificationChannel(bonus);
+        NotificationChannel gameInvites = new NotificationChannel(INVITES, "Inviti a giocare", NotificationManager.IMPORTANCE_HIGH);
+        gameInvites.setDescription("Richieste private per entrare o assistere a una partita");
+        nm.createNotificationChannel(gameInvites);
     }
 
     @Override public void onNewToken(String token) {
@@ -64,6 +68,11 @@ public final class GameNotificationService extends FirebaseMessagingService {
             channel = CHAT;
             title = "Nuovo messaggio";
             body = "Nuovo messaggio da "+safeName(data.get("senderNickname"));
+        } else if ("game_invite".equals(type)) {
+            if (data.get("inviteId") == null || !data.get("inviteId").matches("[0-9a-fA-F-]{36}")) return;
+            channel = INVITES;
+            title = "Invito a giocare";
+            body = safeName(data.get("senderNickname")) + " ti ha invitato a Napoli Carte 3D";
         } else if ("daily_bonus".equals(type)) {
             channel = BONUS;
             title = "Bonus giornaliero disponibile";
@@ -84,6 +93,7 @@ public final class GameNotificationService extends FirebaseMessagingService {
             .putExtra(EXTRA_DESTINATION, channel)
             .putExtra("notification_sender_uid",safeUid(data.get("senderUid")))
             .putExtra("notification_sender_name",safeName(data.get("senderNickname")))
+            .putExtra("notification_invite_id",INVITES.equals(channel)?data.get("inviteId"):"")
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent open = PendingIntent.getActivity(this, notificationId, intent,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
