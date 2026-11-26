@@ -1,0 +1,86 @@
+/* IL BANCO — Smorfia Napoletana · Original premium portrait UI */
+#nc91-banco{position:fixed;inset:0;z-index:2147483638;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c89c43 #063e32;color:#fff5d7;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:radial-gradient(ellipse at 43% 8%,#306cb1 0,#0e487e 24%,#0b4b56 48%,#042c28 90%);padding:env(safe-area-inset-top) 10px env(safe-area-inset-bottom);-webkit-overflow-scrolling:touch;touch-action:pan-y;box-sizing:border-box}
+#nc91-banco *{box-sizing:border-box}
+#nc91-banco .nc91-wrap{width:min(1100px,100%);margin:auto;padding:12px 0 35px;min-width:0}
+#nc91-banco button{font:inherit;cursor:pointer;touch-action:manipulation;min-height:42px}
+#nc91-banco button:focus-visible{outline:3px solid #f9dc79;outline-offset:3px}
+#nc91-banco button:disabled{opacity:.5;cursor:not-allowed}
+#nc91-banco .nc91-frame{position:relative;border:4px ridge #d8a444;border-radius:22px;box-shadow:inset 0 0 0 2px #fff1b1,0 13px 26px #001a20;overflow:hidden;background:linear-gradient(135deg,#092e44,#053e37)}
+#nc91-banco .nc91-head{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:9px 12px;background:linear-gradient(140deg,#082454,#004e6a);border:2px solid #dba73a;border-radius:18px;box-shadow:0 4px 9px #001725}
+#nc91-banco .nc91-head button{border:1px solid #f2d37c;color:#fff2c2;background:linear-gradient(#125b76,#063558);border-radius:12px;padding:7px 13px;font-weight:800}
+#nc91-banco .nc91-balance{font-variant-numeric:tabular-nums;border:1px solid #d7ab55;border-radius:99px;padding:7px 13px;color:#ffeaa8;background:#102e39;font-weight:900}
+#nc91-banco .nc91-hero{position:relative;isolation:isolate;min-height:230px;padding:14px 14px 38px;margin:13px 0 9px;text-align:center;border:4px ridge #e2bb67;border-radius:22px;overflow:hidden;box-shadow:0 9px 23px #001e3ec7;background:linear-gradient(0deg,#063659bf,#06457511 30%,#11366c88 100%),url("nc90-napoli-bay.svg") center 52%/cover}
+#nc91-banco .nc91-hero:after{content:"";pointer-events:none;position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#062a5678,transparent 35%,#003b496e)}
+#nc91-banco .nc91-crest{display:inline-flex;align-items:center;justify-content:center;min-width:43px;height:42px;border:3px solid #f9d98b;border-radius:50%;background:radial-gradient(circle at 30% 20%,#ee4d52,#8e0b25);font:900 26px Georgia,serif;box-shadow:0 2px 8px #0008}
+#nc91-banco h1{font:900 clamp(37px,7vw,77px) Georgia,'Times New Roman',serif;color:#ffe3a4;letter-spacing:1px;line-height:1.04;margin:5px 0 0;text-shadow:0 3px 1px #7a3b19,0 5px 5px #070c24,0 0 21px #071638;-webkit-text-stroke:.6px #d39a40}
+#nc91-banco .nc91-subtitle{display:inline-block;margin:6px 0 0;padding:5px 17px;border:2px solid #efcc79;border-radius:50% / 60%;background:linear-gradient(#fff1ba,#e5b86b);box-shadow:0 4px 0 #81531a;color:#75211b;font:italic 900 clamp(16px,3.2vw,26px) Georgia,serif;text-shadow:0 1px #fff}
+#nc91-banco .nc91-caption{margin:13px 0 0;color:#fff6d6;font-size:12px;font-weight:750;text-shadow:0 2px 5px #001}
+#nc91-banco .nc91-latest{position:relative;display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:20px;padding:11px 13px;margin:0 0 11px;border:2px solid #dfb756;border-radius:20px;background:linear-gradient(100deg,#073f35,#135c3c 43%,#063b32);box-shadow:inset 0 0 20px #001b14}
+#nc91-banco .nc91-ball{position:relative;display:grid;place-items:center;width:clamp(82px,18vw,120px);height:clamp(82px,18vw,120px);border:5px double #d99b2b;border-radius:50%;background:radial-gradient(circle at 30% 18%,#fffef7,#fff2c5 36%,#d5b164 78%,#ae772d);box-shadow:inset 0 0 6px #fff,0 8px 12px #001c22,0 0 0 3px #ffe39a;color:#84201c;font:900 clamp(45px,9vw,69px) Georgia,serif;font-variant-numeric:tabular-nums;text-shadow:0 2px #fff}
+#nc91-banco .nc91-ball.pop{animation:nc91-ball-pop .45s cubic-bezier(.16,.84,.42,1.15)}
+#nc91-banco .nc91-meaning{flex:1;min-width:170px;max-width:550px}
+#nc91-banco .nc91-meaning h2{color:#ffe3a5;font:900 clamp(21px,3vw,31px) Georgia,serif;margin:3px 0 5px;text-wrap:balance}
+#nc91-banco .nc91-meaning p{margin:3px 0;font-size:13px;color:#dbf2dd}
+#nc91-banco .nc91-meaning .nc91-desc{display:block;font:italic 17px Georgia,serif;color:#fff3bb}
+#nc91-banco .nc91-game-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+#nc91-banco .nc91-game-stats span{padding:5px 9px;border:1px solid #9ec89a;border-radius:10px;color:#e4fff1;background:#052c27;font-size:12px;font-variant-numeric:tabular-nums}
+#nc91-banco .nc91-body{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(240px,1fr);gap:12px;align-items:start}
+#nc91-banco .nc91-panel{min-width:0;padding:12px;border:3px ridge #e2b65c;border-radius:19px;background:linear-gradient(#073b34,#052f2b);box-shadow:0 6px 15px #001e19be}
+#nc91-banco .nc91-panel h2{font:900 clamp(17px,2.6vw,22px) Georgia,serif;color:#ffe3a7;text-shadow:0 2px #552b0e;margin:0 0 10px}
+#nc91-banco .nc91-numbers{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;padding:6px;border:2px ridge #daa954;border-radius:12px;background:#c08d39}
+#nc91-banco .nc91-number{border:1px solid #997138;border-radius:5px;min-width:0;min-height:36px;padding:2px 0;background:linear-gradient(#fff9df,#f0d59b);font:900 clamp(10px,1.7vw,16px) Georgia,serif;color:#182648;font-variant-numeric:tabular-nums;box-shadow:inset 0 1px #fff,0 1px 2px #0005}
+#nc91-banco .nc91-number.done{background:linear-gradient(#ee6672,#a70a20);border-color:#ffd18d;color:#fff;box-shadow:inset 0 1px #ffe1d6,0 1px 2px #0007;text-shadow:0 1px #5c0e11}
+#nc91-banco .nc91-number.latest{outline:3px solid #ffe955;outline-offset:-2px;box-shadow:0 0 11px #ffe23f;color:#fff}
+#nc91-banco .nc91-card-collection{display:grid;gap:8px}
+#nc91-banco .nc91-card{border:2px solid #deb56b;border-radius:13px;overflow:hidden;background:linear-gradient(#f5e0b7,#e8c58a);padding:7px;box-shadow:0 3px 9px #0009}
+#nc91-banco .nc91-card-label{display:flex;justify-content:space-between;color:#482709;font:900 13px Georgia,serif;margin:0 2px 6px}
+#nc91-banco .nc91-ticket{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+#nc91-banco .nc91-cell{display:grid;place-items:center;min-height:37px;padding:0;border-radius:6px;background:#fef4d9;border:1px solid #d5b47a;box-shadow:inset 0 1px #fff;color:#17294f;font:900 clamp(11px,2vw,16px) Georgia,serif;font-variant-numeric:tabular-nums}
+#nc91-banco button.nc91-cell.has-number{background:linear-gradient(#fffdf0,#f2dba9)}
+#nc91-banco button.nc91-cell.hit{background:radial-gradient(circle at 40% 25%,#fdc862,#db1428 65%,#850a1a);border-color:#ab6a3b;color:white;text-shadow:0 1px #4b0c19;box-shadow:inset 0 2px #ffe9a1,0 1px 3px #0005}
+#nc91-banco .nc91-cell.blank{opacity:.35;background:#b79c7f}
+#nc91-banco .nc91-cell:disabled{opacity:1}
+#nc91-banco .nc91-ssection{margin-top:11px}
+#nc91-banco .nc91-smorfia{display:grid;gap:6px;margin-bottom:8px;padding:11px;border-radius:15px;border:2px solid #ba8a43;background:linear-gradient(#fff2d3,#e9c58b);color:#552c16;text-align:center}
+#nc91-banco .nc91-smorfia strong{font:900 23px Georgia,serif;color:#8f1715}
+#nc91-banco .nc91-smorfia .nc91-smorfia-icon{font-size:45px;line-height:1.1}
+#nc91-banco .nc91-smorfia .nc91-smorfia-name{font:italic 900 21px Georgia,serif;color:#81211a}
+#nc91-banco .nc91-smorfia small{font-size:12px;color:#6b422e}
+#nc91-banco .nc91-history{display:flex;gap:6px;align-items:center;flex-wrap:wrap;max-height:84px;overflow:auto;padding:8px;border:1px solid #a9a779;border-radius:11px;background:#06281f;min-height:46px}
+#nc91-banco .nc91-history b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:2px solid #eebd58;background:linear-gradient(#fff4ce,#cf9c38);color:#6b2b10;font:900 13px Georgia,serif;flex-shrink:0}
+#nc91-banco .nc91-empty{color:#c9dece;font-size:12px}
+#nc91-banco .nc91-prizes{display:flex;gap:5px;flex-wrap:wrap}
+#nc91-banco .nc91-prize{padding:7px 9px;border-radius:99px;border:1px solid #a9b18a;background:#0f3b32;color:#d5e7d1;font-size:11px;font-weight:850}
+#nc91-banco .nc91-prize.earned{background:linear-gradient(#ffe9a4,#e3a33e);color:#532c11;border-color:#ffeca9;box-shadow:0 0 10px #ffe8a944}
+#nc91-banco .nc91-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:13px 0 9px}
+#nc91-banco .nc91-actions button{border:2px solid #f7cf77;border-radius:14px;color:#fff9dc;font-weight:900;text-shadow:0 2px 2px #001;min-height:52px;box-shadow:0 4px 0 #5e3b1e,0 8px 12px #001b22ac;background:linear-gradient(#0c75ac,#06375f);padding:8px 7px}
+#nc91-banco .nc91-actions button[data-action="draw"]{background:linear-gradient(#e94b60,#a80522)}
+#nc91-banco .nc91-actions button[data-action="auto"]{background:linear-gradient(#23a977,#075e45)}
+#nc91-banco .nc91-actions button[data-action="new"]{background:linear-gradient(#dbb05b,#936019)}
+#nc91-banco .nc91-actions button:active{transform:translateY(3px);box-shadow:0 1px 0 #5e3b1e}
+#nc91-banco .nc91-settings{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:9px 0 2px;padding:10px 12px;border-radius:13px;background:#052d31d9;border:1px solid #d8af60}
+#nc91-banco .nc91-settings label{font-size:12px;font-weight:800;display:flex;gap:8px;align-items:center}
+#nc91-banco .nc91-settings input{accent-color:#f1c569;width:20px;height:20px}
+#nc91-banco select{background:#fff3d0;color:#362b19;border:1px solid #c29b4b;border-radius:8px;padding:7px;font:800 13px system-ui}
+#nc91-banco .nc91-status{min-height:26px;font-size:13px;font-weight:700;color:#ffe6a1;margin:8px 0;line-height:1.5}
+#nc91-banco .nc91-footer{color:#c7ded4;font-size:11px;text-align:center;line-height:1.4}
+#nc91-banco .nc91-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@keyframes nc91-ball-pop{0%{transform:scale(.7) rotate(-16deg);opacity:.25}65%{transform:scale(1.16) rotate(7deg)}100%{transform:scale(1);opacity:1}}
+@media(max-width:720px){
+#nc91-banco{padding-left:5px;padding-right:5px}
+#nc91-banco .nc91-hero{min-height:190px}
+#nc91-banco .nc91-body{grid-template-columns:1fr}
+#nc91-banco .nc91-numbers{gap:2px;padding:3px}
+#nc91-banco .nc91-number{min-height:34px;font-size:13px}
+#nc91-banco .nc91-cell{min-height:39px;font-size:clamp(11px,3.2vw,16px)}
+#nc91-banco .nc91-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+#nc91-banco .nc91-actions button{min-height:54px}
+}
+@media(max-width:365px){
+#nc91-banco .nc91-number{min-height:30px;font-size:11px}
+#nc91-banco .nc91-cell{min-height:35px;font-size:11px}
+#nc91-banco .nc91-head{padding:7px}
+#nc91-banco .nc91-hero{min-height:165px}
+#nc91-banco .nc91-actions{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){#nc91-banco .nc91-ball.pop{animation:none}}
