@@ -1,0 +1,24 @@
+name: Napoli Carte 3D - interfaccia 9.5
+on:
+  push:
+    branches: [feature/nc95-remove-extra-setup-panels]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check 9.5 lobby and game rules
+        run: |
+          node --test server/test-lobby95.js server/test-expansion-session.js server/test-premium90.js server/test-club84.js server/test-banco91.js server/test-banco92-ui.js
+      - name: Verify source bundle (19 games)
+        run: |
+          node tools/prepare-expansion-index.cjs
+          bash server/restore_bass_audio.sh
+          node tools/verify-expansion-bundle.cjs /tmp/nc95-bundle-check.json
