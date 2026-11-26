@@ -4,6 +4,7 @@ if(w.NC81_BACK)return;
 // One back stack for Android 7-16 gestures, Samsung/Xiaomi/OPPO back keys and on-screen back.
 function back(){
  try{
+  if(w.NC_BANCO_ONLINE_CLOSE?.())return true;
   if(w.NC_BANCO_CLOSE?.())return true;
   if(w.NC79_PROFILE?.isOpen?.()){w.NC79_PROFILE.back();return true;}
   if(w.NC71_DAILY?.isOpen?.()){w.NC71_DAILY.close();return true;}
