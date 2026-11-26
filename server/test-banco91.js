@@ -1,8 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
-const vm=require('node:vm');
-const sandbox={module:{exports:{}},window:undefined};
-vm.runInNewContext(fs.readFileSync('app/src/main/assets/banco91-core.js','utf8'),sandbox,{filename:'banco91-core.js'});
+const sandbox={module:{exports:{}}};
+new Function('module','window',fs.readFileSync('app/src/main/assets/banco91-core.js','utf8'))(sandbox.module,undefined);
 const banco=sandbox.module.exports;
 const all=Array.from({length:90},(_,i)=>i+1);
 test('Smorfia is complete and canonical caffè=42, morto che parla=48',()=>{
