@@ -94,6 +94,13 @@
         if (!room) fail('Sala privata non disponibile o già iniziata.', 404);
         game = room.game; seats = room.seats;
       }
+      const selectedRoomId = typeof input.roomId==='string' && /^[a-f0-9]{48}$/.test(input.roomId) ? input.roomId : null;
+      if(!room && selectedRoomId && !input.private && !input.bot){
+        const listed=rooms.get(selectedRoomId);
+        if(!listed || listed.private || listed.local || listed.state || listed.members.length>=listed.seats)
+          fail('Il tavolo pubblico non è più disponibile.',404);
+        room=listed; game=room.game; seats=room.seats;
+      }
       const engine = engines[game];
       if (!engine || !engine.seats.includes(seats)) fail('Gioco o numero di partecipanti non valido.');
       const withBots = input.bot === true && !invite;
@@ -155,6 +162,11 @@
         vacantSeats: room.state ? room.members.filter(m => m.bot && m.replaced === true).length : 0
       };
     }
+    function invitationCodeForRoom(roomId) {
+      const room=rooms.get(String(roomId||''));
+      if(!room || !room.private || room.state || !room.code) fail('Sala privata non disponibile.',404);
+      return room.code;
+    }
     function publicRoom(roomId) {
       const room = rooms.get(String(roomId || ''));
       if (!room) fail('Tavolo non disponibile.', 404);
@@ -206,7 +218,7 @@
         try { tickRoom(room); } catch (error) { if (typeof options.onError === 'function') options.onError(error, room.game); }
       }
     }
-    return { catalog, join, state, move, fill, leave, tick, invitationContext, publicRoom, spectatorView, takeover, size: () => rooms.size };
+    return { catalog, join, state, move, fill, leave, tick, invitationContext, invitationCodeForRoom, publicRoom, spectatorView, takeover, size: () => rooms.size };
   }
   return { VERSION, TURN_MS, SEARCH_MS, catalog, createService };
 });
