@@ -36,6 +36,6 @@ test('No fake live player stats or unverified purchases introduced',()=>{
 });
 test('Android package 9.0.0 is configured',()=>{
  const gradle=fs.readFileSync('app/build.gradle','utf8');
- assert.match(gradle,/versionCode (?:90|91|92|93)\b/);
- assert.match(gradle,/versionName '9\.(?:0|1|2|3)\.0'/);
+ assert.match(gradle,/versionCode (?:90|91|92|93|94)\b/);
+ assert.match(gradle,/versionName '9\.(?:0|1|2|3|4)\.0'/);
 });
