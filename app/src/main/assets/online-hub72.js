@@ -103,3 +103,45 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 window.NC72_ONLINE_OPEN=open;window.NC72_ONLINE_CLOSE=close;
 window.NC72_ONLINE_SELECT=function(id){if(games.some(g=>g[0]===id)){selected=id;if(root){draw();presence();}}};
 })();
+
+/* NAPOLI CARTE 3D 9.5 - streamlined game selection.
+ * Hide presentation-only setup panels. Keep state, multiplayer and menus intact.
+ */
+(function(w,d){
+ 'use strict';
+ if(w.NC95_CLEAN_LOBBY)return;
+ w.NC95_CLEAN_LOBBY={version:'9.5.0'};
+ const style=d.createElement('style');
+ style.id='nc95-clean-lobby';
+ style.textContent=`
+ #root main.wrap>.setup,
+ #root main.wrap>.nc30-settings,
+ #root main.wrap>.nc30-achievements,
+ #root main.wrap>.nc30-banner,
+ #root main.wrap #nc-ultimate-options,
+ #nc72-launch{display:none!important}
+ #root main.wrap>.games{margin-bottom:24px!important}
+ #root main.wrap>.games button.game{cursor:pointer}
+ #root main.wrap>.games button.game:focus-visible{outline:3px solid #ffe3a0!important;outline-offset:3px}
+ @media(max-width:760px){#root main.wrap>.games{padding-bottom:22px!important}}
+ `;
+ d.head.append(style);
+ let opening=false;
+ d.addEventListener('click',function(e){
+  const tile=e.target.closest&&e.target.closest('#root main.wrap .games button.game');
+  if(!tile)return;
+  const match=/setGame\('([a-z_]+)'\)/.exec(tile.getAttribute('onclick')||'');
+  if(!match||opening)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(typeof w.setGame!=='function'||typeof w.setMode!=='function'||typeof w.joinGame!=='function')return;
+  opening=true;
+  try{
+   w.setGame(match[1]);
+   w.setMode('bot');
+   Promise.resolve(w.joinGame()).finally(function(){opening=false});
+  }catch(err){
+   opening=false;
+   if(typeof w.toast==='function')w.toast('Impossibile avviare il gioco');
+  }
+ },true);
+})(window,document);
