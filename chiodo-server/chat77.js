@@ -79,7 +79,7 @@ async function route(req,send,path){
    const args=[uid,peer];
    if(after){args.push(after);query+=' AND id>$'+args.length;}
    else if(before){args.push(before);query+=' AND id<$'+args.length;}
-   query+=' ORDER BY id '+(after?'ASC':'DESC')+' LIMIT 50';
+   query+=' ORDER BY nc_chat_messages.id '+(after?'ASC':'DESC')+' LIMIT 50';
    const result=await db.query(query,args);
    return send(200,{messages:after?result.rows:result.rows.reverse()});
   }
