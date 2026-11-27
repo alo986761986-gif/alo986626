@@ -43,6 +43,6 @@ test('System back and local-to-online navigation are supported',()=>{
 });
 test('Android 9.2.0 package configured',()=>{
  const build=fs.readFileSync('app/build.gradle','utf8');
- assert.match(build,/versionCode (?:92|93|94|95|96|97|98|99)\b/);
- assert.match(build,/versionName '9\.(?:2|3|4|5|6|7|8|9)\.0'/);
+ assert.match(build,/versionCode (?:92|93|94|95|96|97|98|99|100)\b/);
+ assert.match(build,/versionName '9\.(?:2|3|4|5|6|7|8|9|10)\.0'/);
 });
