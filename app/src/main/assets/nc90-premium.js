@@ -57,4 +57,17 @@ function start(){const root=d.getElementById('root');if(!root)return;
 }
 if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',start,{once:true});else start();
 w.NC90_PREMIUM.refresh=schedule;
+// Load the approved Cartoon Edition theme last. This stays presentation-only.
+function loadCartoonEdition(){
+ if(d.getElementById('nc96-cartoon-theme'))return;
+ const link=d.createElement('link');
+ link.id='nc96-cartoon-theme';
+ link.rel='stylesheet';
+ link.href='nc96-cartoon.css';
+ d.head.appendChild(link);
+ d.body.classList.add('nc96-cartoon');
+}
+if(d.readyState==='complete')loadCartoonEdition();
+else w.addEventListener('load',loadCartoonEdition,{once:true});
+
 })(window,document);

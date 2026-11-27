@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 270">
+<defs><pattern id="p" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M12 2 22 12 12 22 2 12Z" fill="none" stroke="#d6efff" stroke-width="2"/><circle cx="12" cy="12" r="2.8" fill="#ffe182"/></pattern><linearGradient id="g" x2="0" y2="1"><stop stop-color="#077cbd"/><stop offset=".52" stop-color="#174995"/><stop offset="1" stop-color="#10295e"/></linearGradient></defs>
+<rect x="4" y="4" width="172" height="262" rx="16" fill="#fff8e9" stroke="#422b24" stroke-width="7"/>
+<rect x="14" y="14" width="152" height="242" rx="12" fill="url(#g)" stroke="#f9d67d" stroke-width="6"/>
+<rect x="23" y="23" width="134" height="224" rx="8" fill="url(#p)" stroke="#fff2b8" stroke-width="2"/>
+<circle cx="90" cy="135" r="52" fill="#fbde89" stroke="#7b441b" stroke-width="8"/>
+<circle cx="90" cy="135" r="39" fill="#fff2c0" stroke="#ba7a30" stroke-width="3"/>
+<path d="M58 146q32-23 64 0M68 124q10-11 22 0M95 124q10-11 22 0" fill="none" stroke="#865019" stroke-width="6" stroke-linecap="round"/>
+<path d="M90 60v22M90 188v22M25 135h24M131 135h24" stroke="#fff4c8" stroke-width="5"/>
+</svg>

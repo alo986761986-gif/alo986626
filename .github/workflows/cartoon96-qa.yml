@@ -1,0 +1,35 @@
+name: NAPOLI CARTE 3D Cartoon Edition 9.6 QA
+on:
+  push:
+    branches: [feature/cartoon96-all-games-20261127]
+    paths:
+      - 'app/src/main/assets/**'
+      - 'app/build.gradle'
+      - 'tools/**'
+      - 'server/test-cartoon96.js'
+      - 'server/verify-expansion-ui.cjs'
+      - 'server/test-*.js'
+      - '.github/workflows/cartoon96-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cartoon-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: All 19 cartoon game assets and historical tests
+        run: |
+          set -euo pipefail
+          node --check app/src/main/assets/nc90-premium.js
+          node --test server/test-cartoon96.js server/test-lobby95.js server/test-expansion-session.js server/test-premium90.js server/test-club84.js server/test-banco91.js server/test-banco92-ui.js
+      - name: Verify signed 9.6 source bundle and catalog
+        run: |
+          set -euo pipefail
+          node tools/prepare-expansion-index.cjs
+          bash server/restore_bass_audio.sh
+          node tools/verify-expansion-bundle.cjs /tmp/cartoon96-bundle-report.json
