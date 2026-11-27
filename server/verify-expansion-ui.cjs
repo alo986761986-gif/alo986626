@@ -278,14 +278,33 @@ async function smokeCompactChiodoSeating() {
             for(let k=i+1;k<boxes.length;k++)
               if(overlap(boxes[i],boxes[k])>4)collisions.push('avatar '+i+' vs '+k);
           }
+          const portraits=seats.map(seat=>{
+            const img=seat.querySelector('.ch-avatar .ch69-personal-photo');
+            const svg=seat.querySelector('.ch-avatar svg');
+            const art=img||svg;
+            const avatar=seat.querySelector('.ch-avatar');
+            const css=art&&getComputedStyle(art);
+            const box=art&&art.getBoundingClientRect();
+            return {visible:!!art&&css.display!=='none'&&css.visibility==='visible'&&css.opacity!=='0'&&
+                  !!box&&box.width>=18&&box.height>=18,
+                  svg:!!svg,photo:!!img,avatar:avatar?rect(avatar):null};
+          });
+          const ring=area.querySelector('.nc59-clock');
+          const ringStyle=ring?getComputedStyle(ring):null;
           const result={mode,viewport:[innerWidth,innerHeight],display:getComputedStyle(area).display,
-            seats:boxes.length,collisions,center:middle,arena:parent,
+            seats:boxes.length,collisions,center:middle,arena:parent,portraits,
+            ringPresent:!!ring,ringVisible:!!ring&&ringStyle.display!=='none'&&
+              ringStyle.backgroundImage.includes('conic-gradient')&&rect(ring).width>=40,
             documentOverflow:document.documentElement.scrollWidth-innerWidth};
           if(mode==='online-style')root.id='chiodo121';
           return result;
         },mode);
         assert.equal(info.display,'grid','Chiodo 121 must use dedicated seating lanes');
         assert.equal(info.seats,4,'All four players must remain visible');
+        assert.ok(info.portraits.every(p=>p.visible),
+          'All player SVG or photo avatars MUST be visibly rendered: '+JSON.stringify(info.portraits));
+        assert.ok(info.ringPresent&&info.ringVisible,
+          'Green active-turn ring MUST be visible: '+JSON.stringify(info));
         assert.deepEqual(info.collisions,[],'Overlapping table elements: '+JSON.stringify(info));
         assert.ok(info.documentOverflow<=3,'Horizontal page overflow on compact screen');
         details.push(info);
@@ -295,7 +314,7 @@ async function smokeCompactChiodoSeating() {
       await context.close();
     }
   }
-  report.chiodo910={ok:true,layouts:details};
+  report.chiodo912={ok:true,layouts:details};
 }
 
 async function smokeOnline() {
@@ -355,7 +374,7 @@ async function smokeOnline() {
   }
   try { await smokeOnline(); console.log('PASS two independent online sessions'); } catch (error) { report.errors.push({stage:'online',message:error.message,stack:error.stack}); console.error('FAIL online',error.message); }
   try { await smokeChiodoCartoon(); console.log('PASS Chiodo 121 offline/online cartoon visual tests'); } catch (error) { report.errors.push({stage:'chiodo97',message:error.message,stack:error.stack}); console.error('FAIL Chiodo 121 cartoon',error.message); }
-  try { await smokeCompactChiodoSeating(); console.log('PASS Chiodo 121 seating lanes and centered cartoon loader on seven viewports, including Windows desktop'); } catch(error) { report.errors.push({stage:'chiodo910',message:error.message,stack:error.stack}); console.error('FAIL compact Chiodo 121',error.message); }
+  try { await smokeCompactChiodoSeating(); console.log('PASS Chiodo 121 portrait visibility, active green ring and non-overlapping seats on seven Windows/Android sizes'); } catch(error) { report.errors.push({stage:'chiodo910',message:error.message,stack:error.stack}); console.error('FAIL compact Chiodo 121',error.message); }
   try { await smokeLaunch98(); console.log('PASS 19-game launcher, loading bar and pair restrictions'); } catch(error) { report.errors.push({stage:'launch98',message:error.message,stack:error.stack}); console.error('FAIL launcher 9.8',error.message); }
 })().catch(error => { report.errors.push({stage:'setup',message:error.message,stack:error.stack}); console.error(error); })
   .finally(async () => {

@@ -669,3 +669,216 @@
    width:43px!important;height:70px!important;
  }
 }
+
+
+/* 9.12 final visible-portrait layout: same markup for offline and multiplayer.
+   Painted 3D felt stays only in the middle lane, never behind profile controls.
+   The upper and lower seats are genuine opaque, readable player panels. */
+#chiodo121.ch65 .ch-arena,
+#chiodo121-online.ch65 .ch-arena{
+ grid-template-rows:130px minmax(260px,1fr) 168px!important;
+ height:clamp(590px,75dvh,660px)!important;
+ min-height:590px!important;
+ gap:9px 8px!important;
+ padding:10px 9px!important;
+ overflow:visible!important;
+}
+#chiodo121.ch65 .ch-arena > .ch65-canvas,
+#chiodo121-online.ch65 .ch-arena > .ch65-canvas{
+ position:absolute!important;
+ top:23%!important;bottom:28%!important;
+ left:4%!important;right:4%!important;
+ inset-inline:4%!important;
+ width:92%!important;height:49%!important;
+ z-index:0!important;
+ object-fit:fill!important;
+ pointer-events:none!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-felt,
+#chiodo121-online.ch65 .ch-arena > .ch-felt{
+ position:absolute!important;
+ top:23%!important;bottom:28%!important;
+ left:4%!important;right:4%!important;
+ inset:23% 4% 28%!important;
+ z-index:0!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat,
+#chiodo121-online.ch65 .ch-arena > .ch-seat{
+ background:linear-gradient(155deg,#103f59f2,#072e43f5)!important;
+ border:2px solid #e4b96c!important;
+ border-radius:16px!important;
+ box-shadow:0 4px 0 #6d411e,0 8px 15px #031e3980!important;
+ padding:7px 8px!important;
+ gap:2px!important;
+ width:min(100%,190px)!important;
+ min-height:104px!important;
+ max-height:none!important;
+ z-index:15!important;
+ isolation:isolate!important;
+ overflow:visible!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="own"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="own"]{
+ width:min(100%,220px)!important;
+ min-height:155px!important;
+ align-self:end!important;
+ margin:0 auto!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="top"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="top"]{
+ min-height:112px!important;
+ align-self:start!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat .ch-avatar,
+#chiodo121-online.ch65 .ch-arena .ch-seat .ch-avatar{
+ display:grid!important;place-items:center!important;
+ overflow:hidden!important;position:relative!important;
+ width:58px!important;height:58px!important;min-height:58px!important;
+ border-radius:50%!important;
+ background:radial-gradient(circle at 25% 20%,#7ba8af,#163d56)!important;
+ border:3px solid #ffe4a0!important;
+ margin:2px auto!important;
+ box-shadow:inset 0 0 7px #092b51,0 3px 9px #041e3e99!important;
+ opacity:1!important;visibility:visible!important;
+}
+#chiodo121.ch65 .ch-arena .ch-avatar svg,
+#chiodo121-online.ch65 .ch-arena .ch-avatar svg,
+#chiodo121.ch65.ch65-rendered .ch-arena .ch-avatar svg,
+#chiodo121-online.ch65.ch65-rendered .ch-arena .ch-avatar svg{
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:100%!important;height:100%!important;
+ max-width:100%!important;max-height:100%!important;
+}
+#chiodo121.ch65 .ch-avatar .ch69-personal-photo,
+#chiodo121-online.ch65 .ch-avatar .ch69-personal-photo{
+ width:100%!important;height:100%!important;
+ display:block!important;visibility:visible!important;
+ object-fit:cover!important;
+}
+#chiodo121.ch65 .ch-seat .nc59-clock,
+#chiodo121-online.ch65 .ch-seat .nc59-clock{
+ display:grid!important;place-items:center!important;
+ position:relative!important;
+ width:72px!important;height:72px!important;
+ min-width:72px!important;min-height:72px!important;
+ border-radius:50%!important;
+ padding:6px!important;
+ margin:2px auto!important;
+ box-sizing:border-box!important;
+ background:conic-gradient(#2eff7b var(--nc59-progress,100%),#164835 0)!important;
+ box-shadow:0 0 0 2px #b0eabf,0 0 12px #15e76c66!important;
+ overflow:visible!important;
+}
+#chiodo121.ch65 .ch-seat .nc59-clock > .ch-avatar,
+#chiodo121-online.ch65 .ch-seat .nc59-clock > .ch-avatar{
+ width:56px!important;height:56px!important;min-height:56px!important;
+ margin:0!important;
+ border:2px solid #ffe4a0!important;
+}
+#chiodo121.ch65 .ch-seat .nc59-seconds,
+#chiodo121-online.ch65 .ch-seat .nc59-seconds{
+ position:absolute!important;right:-13px!important;bottom:0!important;
+ z-index:22!important;font-size:11px!important;
+ min-width:30px!important;line-height:17px!important;
+ padding:2px 5px!important;
+}
+#chiodo121.ch65 .ch-seat .ch65-seat-caption,
+#chiodo121-online.ch65 .ch-seat .ch65-seat-caption{
+ display:flex!important;flex-direction:column!important;
+ justify-content:center!important;align-items:center!important;
+ position:relative!important;gap:3px!important;
+ width:100%!important;max-width:100%!important;
+ z-index:16!important;
+}
+#chiodo121.ch65 .ch-seat .ch65-seat-caption > b,
+#chiodo121-online.ch65 .ch-seat .ch65-seat-caption > b{
+ display:block!important;
+ width:100%!important;
+ max-width:100%!important;
+ color:#fff3d2!important;
+ background:#082b44!important;
+ border:1px solid #bda264!important;
+ border-radius:7px!important;
+ text-align:center!important;
+ white-space:nowrap!important;
+ font-size:clamp(12px,1.2vw,15px)!important;
+ line-height:20px!important;
+ padding:1px 4px!important;
+}
+#chiodo121.ch65 .ch-seat .ch65-seat-caption > small,
+#chiodo121-online.ch65 .ch-seat .ch65-seat-caption > small{
+ display:block!important;text-align:center!important;
+ width:100%!important;max-width:100%!important;
+ color:#eaf9f2!important;
+ background:transparent!important;
+ font-size:11px!important;line-height:16px!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+}
+#chiodo121.ch65 .ch-seat > .ch69-edit,
+#chiodo121-online.ch65 .ch-seat > .ch69-edit{
+ display:inline-flex!important;align-self:center!important;
+ order:2!important;
+ margin:4px auto 2px!important;position:relative!important;
+ z-index:20!important;
+ min-height:32px!important;
+}
+#chiodo121.ch65 .ch-seat > .ch69-caption,
+#chiodo121-online.ch65 .ch-seat > .ch69-caption{
+ display:block!important;order:3!important;
+ position:relative!important;
+ margin:2px auto!important;
+ font-size:10px!important;line-height:14px!important;
+ color:#f0e9d5!important;
+ max-width:100%!important;
+ text-align:center!important;
+}
+#chiodo121.ch65 .ch-arena .ch-center,
+#chiodo121-online.ch65 .ch-arena .ch-center{
+ grid-column:2!important;grid-row:2!important;
+ align-self:center!important;
+ z-index:12!important;
+}
+#chiodo121.ch65 .ch-arena .ch-center .ch-meta,
+#chiodo121-online.ch65 .ch-arena .ch-center .ch-meta{
+ display:flex!important;justify-content:center!important;
+ font-size:12px!important;line-height:20px!important;
+ background:#0b456c!important;color:#fff2cd!important;
+ border:2px solid #e3c484!important;
+ border-radius:999px!important;
+ padding:4px 12px!important;
+ min-height:30px!important;
+ margin:4px auto!important;
+}
+@media(max-width:430px){
+ #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{
+   grid-template-columns:minmax(58px,1fr) minmax(116px,2fr) minmax(58px,1fr)!important;
+   grid-template-rows:120px minmax(215px,1fr) 158px!important;
+   min-height:550px!important;height:550px!important;
+   gap:5px 2px!important;padding:6px 3px!important;
+ }
+ #chiodo121.ch65 .ch-arena > .ch-seat,
+ #chiodo121-online.ch65 .ch-arena > .ch-seat{
+   padding:4px!important;min-height:100px!important;
+   border-radius:11px!important;
+ }
+ #chiodo121.ch65 .ch-arena > .ch-seat[data-position="own"],
+ #chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="own"]{
+   min-height:143px!important;
+ }
+ #chiodo121.ch65 .ch-arena .ch-seat .ch-avatar,
+ #chiodo121-online.ch65 .ch-arena .ch-seat .ch-avatar{
+   width:48px!important;height:48px!important;min-height:48px!important;
+ }
+ #chiodo121.ch65 .ch-seat .nc59-clock,
+ #chiodo121-online.ch65 .ch-seat .nc59-clock{
+   width:60px!important;height:60px!important;min-width:60px!important;min-height:60px!important;
+ }
+ #chiodo121.ch65 .ch-seat .nc59-clock > .ch-avatar,
+ #chiodo121-online.ch65 .ch-seat .nc59-clock > .ch-avatar{
+   width:46px!important;height:46px!important;min-height:46px!important;
+ }
+ #chiodo121.ch65 .ch-arena .ch-center .ch-meta,
+ #chiodo121-online.ch65 .ch-arena .ch-center .ch-meta{
+   font-size:10px!important;padding:3px 4px!important;
+ }
+}
