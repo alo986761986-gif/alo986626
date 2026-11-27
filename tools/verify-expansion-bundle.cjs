@@ -22,8 +22,8 @@ function checkBundle(root) {
   const assets = path.join(root, 'app/src/main/assets');
   const expectedIds = manifest.app.expansionIds.slice().sort();
   const gradle = fs.readFileSync(path.join(root, 'app/build.gradle'), 'utf8');
-  assert.match(gradle, /\bversionCode\s+100\b/, 'Android versionCode must be 101');
-  assert.match(gradle, /\bversionName\s+['"]9\.10\.0['"]/, 'Android versionName must be 9.11.0');
+  assert.match(gradle, /\bversionCode\s+101\b/, 'Android versionCode must be 101');
+  assert.match(gradle, /\bversionName\s+['"]9\.11\.0['"]/, 'Android versionName must be 9.11.0');
   assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'app/package.json'), 'utf8')).type, 'commonjs',
     'Application UMD modules need their own CommonJS package scope');
 
