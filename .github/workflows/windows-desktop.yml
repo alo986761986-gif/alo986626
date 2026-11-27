@@ -1,0 +1,96 @@
+name: Napoli Carte 3D Windows Edition
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - windows/edition-0_3-20261127
+    paths:
+      - 'windows-edition/**'
+      - '.github/workflows/windows-desktop.yml'
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Restore exact 19-game assets from signed Android 9.10 APK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_10_CHIODO_TAVOLO_ORDINATO_CARTOON_FIRMATO.apk'
+          $archive = Join-Path $env:RUNNER_TEMP 'napoli-9-10.apk'
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $z=[System.IO.Compression.ZipFile]::OpenRead($archive)
+          $base=[System.IO.Path]::GetFullPath('windows-edition/app/src/main/assets')
+          [System.IO.Directory]::CreateDirectory($base) | Out-Null
+          $sep=[System.IO.Path]::DirectorySeparatorChar
+          $prefix=$base.TrimEnd($sep)+$sep
+          $count=0
+          try {
+            foreach($entry in $z.Entries){
+              if(-not $entry.FullName.StartsWith('assets/')){continue}
+              $rel=$entry.FullName.Substring(7)
+              if(-not $rel -or $rel.EndsWith('/')){continue}
+              $target=[System.IO.Path]::GetFullPath((Join-Path $base $rel.Replace('/',$sep)))
+              if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe APK resource path'}
+              [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($target)) | Out-Null
+              $inputStream=$entry.Open()
+              $outputStream=[System.IO.File]::Create($target)
+              try{$inputStream.CopyTo($outputStream)}finally{$outputStream.Dispose();$inputStream.Dispose()}
+              $count++
+            }
+          } finally {$z.Dispose()}
+          if($count -lt 55){throw "Expected full Android assets, got $count"}
+          $index=(Get-FileHash -Algorithm SHA256 "$base/index.html").Hash.ToLowerInvariant()
+          if($index -ne '397f2f0574da6a6d6a69659cd2b6fb5edd372f8c611ce20d488ce0c4b3d78f7c'){throw "Approved HTML SHA256 mismatch: $index"}
+          $music=(Get-FileHash -Algorithm SHA256 "$base/music/alfonso-neri-bass-on-fire.mp3").Hash.ToLowerInvariant()
+          if($music -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226'){throw 'Original music SHA256 mismatch'}
+          New-Item -ItemType Directory -Force -Path windows-edition/app,windows-edition/tools | Out-Null
+          Copy-Item app/google-services.json windows-edition/app/google-services.json
+          Copy-Item tools/build93-manifest.json windows-edition/tools/build93-manifest.json
+          Write-Host "Verified $count Android 9.10 assets and original music"
+      - name: Check game catalogue, asset integrity and desktop source
+        working-directory: windows-edition
+        run: |
+          node desktop/check-assets.cjs
+          npm install --no-audit --no-fund
+          npm run unit
+      - name: Build x64 Setup EXE and Portable EXE
+        working-directory: windows-edition
+        run: npm run pack:win
+      - name: Verify installer, portable and packaged game files
+        shell: pwsh
+        run: |
+          $root = 'windows-edition/dist/windows'
+          $unpacked = Join-Path $root 'win-unpacked'
+          $required = @(
+            (Join-Path $unpacked 'NAPOLI CARTE 3D.exe'),
+            (Join-Path $unpacked 'resources/app.asar'),
+            (Join-Path $unpacked 'resources/game/index.html'),
+            (Join-Path $unpacked 'resources/game/music/alfonso-neri-bass-on-fire.mp3')
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) { throw "Missing packaged file: $file" }
+          }
+          $setup=@(Get-ChildItem $root -Filter '*SETUP*.exe')
+          $portable=@(Get-ChildItem $root -Filter '*PORTABLE*.exe')
+          if ($setup.Count -ne 1 -or $portable.Count -ne 1) { throw 'Expected exactly one Setup EXE and one Portable EXE' }
+          foreach ($file in @($setup[0],$portable[0])) {
+            $hash=(Get-FileHash -Algorithm SHA256 $file.FullName).Hash
+            Write-Host "$($file.Name): $hash"
+          }
+      - name: Upload installer and portable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NapoliCarte3D-Windows-0.3-${{ github.run_number }}
+          path: |
+            windows-edition/dist/windows/*SETUP*.exe
+            windows-edition/dist/windows/*PORTABLE*.exe
+          if-no-files-found: error
+          retention-days: 14
