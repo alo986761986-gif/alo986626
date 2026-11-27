@@ -1,8 +1,8 @@
-# NAPOLI CARTE 3D — WINDOWS EDITION 0.4
+# NAPOLI CARTE 3D — WINDOWS EDITION 0.5
 
 ## Stato reale (27 novembre 2026)
 
-Questo ZIP contiene il **port desktop Electron** e un compilatore Windows, non un installer `.exe` gia compilato. Riutilizza i **19 giochi** Android 9.11.0 e ne conserva le risorse: tavoli, regole, carte, animazioni, audio originale, menu e grafica. Non include i file Android completi per ragioni di dimensioni: il compilatore li scarica dal commit approvato `a0f632e9ad88bf71590b5e5a5312d92f7995ab1d` di `alo986761986-gif/alo986626`.
+Questo ZIP contiene il **port desktop Electron** e un compilatore Windows, non un installer `.exe` gia compilato. Riutilizza i **19 giochi** Android 9.12.0 e ne conserva le risorse: tavoli, regole, carte, animazioni, audio originale, menu e grafica. Non include i file Android completi per ragioni di dimensioni: il compilatore li scarica dal commit approvato `a0f632e9ad88bf71590b5e5a5312d92f7995ab1d` di `alo986761986-gif/alo986626`.
 
 ### Cosa e stato migliorato nella 0.3
 
@@ -25,8 +25,8 @@ Questo ZIP contiene il **port desktop Electron** e un compilatore Windows, non u
 
 1. Estrai lo ZIP sul tuo PC Windows 10 o Windows 11 a 64 bit, per esempio in `C:\NAPOLI_WINDOWS`.
 2. Apri la cartella `napoli-windows-edition` e fai doppio clic su **BUILD-WINDOWS.cmd**. La prima volta serve Internet.
-3. Lo script scarica Node.js 24 dal sito ufficiale, verifica SHA256, poi scarica dal repository GitHub il codice Android 9.11 del gioco, ripristina l'audio, installa Electron 45.5.0 e electron-builder 26.18.0, esegue i test e costruisce i due programmi.
-4. Se tutto riesce, trovi in **OUTPUT**: `NAPOLI_CARTE_3D_WINDOWS_SETUP_0.4.0_x64.exe` e `NAPOLI_CARTE_3D_WINDOWS_PORTABLE_0.4.0_x64.exe`.
+3. Lo script scarica Node.js 24 dal sito ufficiale, verifica SHA256, poi scarica dal repository GitHub il codice Android 9.12 del gioco, ripristina l'audio, installa Electron 45.5.0 e electron-builder 26.18.0, esegue i test e costruisce i due programmi.
+4. Se tutto riesce, trovi in **OUTPUT**: `NAPOLI_CARTE_3D_WINDOWS_SETUP_0.5.0_x64.exe` e `NAPOLI_CARTE_3D_WINDOWS_PORTABLE_0.5.0_x64.exe`.
 
 Il pacchetto **non ha una firma Authenticode Windows**; una distribuzione al pubblico richiede una firma valida e collaudo antivirus/SmartScreen. Non disabilitare antivirus o SmartScreen per aggirare avvisi.
 
@@ -64,4 +64,8 @@ Tecnologia desktop: Electron 45.5.0, electron-builder 26.18.0. Tutti gli URL rem
 
 
 ### Correzione tavolo Chiodo 121 in 0.4
-I giocatori sono collocati in righe e colonne separate dalle carte, su Windows e Android. Non ci sono piu personaggi 3D duplicati sopra il mazzo. Il tavolo verde 3D originale e mantenuto. Il compilatore usa le risorse dell'APK Android 9.11 firmato e i test del layout aggiornato.
+I giocatori sono collocati in righe e colonne separate dalle carte, su Windows e Android. Non ci sono piu personaggi 3D duplicati sopra il mazzo. Il tavolo verde 3D originale e mantenuto. Il compilatore usa le risorse dell'APK Android 9.12 firmato e i test del layout aggiornato.
+
+
+### Correzione 0.5
+Sono stati riattivati i ritratti SVG reali o le foto personali nei pannelli giocatori, collocati sopra e sotto il tavolo, migliorati i nomi e riposizionato l'anello verde con i secondi del turno. Restano i 19 giochi e le funzioni originali. Richiede verifica su Windows reale.

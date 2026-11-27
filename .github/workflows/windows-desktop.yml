@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - windows/chiodo911-release
+      - windows/chiodo912-visible-portraits
     paths:
       - 'windows-edition/**'
       - '.github/workflows/windows-desktop.yml'
@@ -18,12 +18,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Restore exact 19-game assets from signed Android 9.11 APK
+      - name: Restore exact 19-game assets from signed Android 9.12 APK
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $url = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_11_CHIODO_LAYOUT_LEGGIBILE_FIRMATO.apk'
-          $archive = Join-Path $env:RUNNER_TEMP 'napoli-9-11.apk'
+          $url = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_12_AVATAR_VISIBILI_TAVOLO_CORRETTO_FIRMATO.apk'
+          $archive = Join-Path $env:RUNNER_TEMP 'napoli-9-12.apk'
           Invoke-WebRequest -Uri $url -OutFile $archive
           Add-Type -AssemblyName System.IO.Compression.FileSystem
           $z=[System.IO.Compression.ZipFile]::OpenRead($archive)
@@ -54,7 +54,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path windows-edition/app,windows-edition/tools | Out-Null
           Copy-Item app/google-services.json windows-edition/app/google-services.json
           Copy-Item tools/build93-manifest.json windows-edition/tools/build93-manifest.json
-          Write-Host "Verified $count Android 9.11 assets and original music"
+          Write-Host "Verified $count Android 9.12 assets and original music"
       - name: Check game catalogue, asset integrity and desktop source
         working-directory: windows-edition
         run: |
@@ -88,7 +88,7 @@ jobs:
       - name: Upload installer and portable artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: NapoliCarte3D-Windows-0.4-${{ github.run_number }}
+          name: NapoliCarte3D-Windows-0.5-${{ github.run_number }}
           path: |
             windows-edition/dist/windows/*SETUP*.exe
             windows-edition/dist/windows/*PORTABLE*.exe
