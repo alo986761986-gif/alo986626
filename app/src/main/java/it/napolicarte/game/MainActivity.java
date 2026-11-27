@@ -33,6 +33,7 @@ public final class MainActivity extends Activity {
     private WebView web;
     private android.widget.ProgressBar pageProgress;
     private android.widget.TextView pageProgressLabel;
+    private android.widget.FrameLayout loadingOverlay;
     private PlayBillingBridge playBilling;
     private ValueCallback<Uri[]> pendingFiles;
     private Uri cameraUri;
@@ -603,11 +604,15 @@ public final class MainActivity extends Activity {
                     // The integrity-pinned web asset retains its legacy overlay for older builds.
                     // Do not expose the old web-only studio overlay for even one frame.
                     view.evaluateJavascript("(function(){var e=document.getElementById('nc-studio-boot');if(e)e.remove()})()",ignored->{
-                        if(view==web)view.setAlpha(1f);
+                        if(view==web){
+                            view.setAlpha(1f);
+                            if(loadingOverlay!=null)loadingOverlay.setVisibility(android.view.View.GONE);
+                        }
                     });
-                    view.postDelayed(()->{if(view==web&&view.getAlpha()<1f)view.setAlpha(1f);},1500);
-                    if(pageProgress!=null)pageProgress.setVisibility(android.view.View.GONE);
-                    if(pageProgressLabel!=null)pageProgressLabel.setVisibility(android.view.View.GONE);
+                    view.postDelayed(()->{
+                        if(view==web&&view.getAlpha()<1f)view.setAlpha(1f);
+                        if(loadingOverlay!=null)loadingOverlay.setVisibility(android.view.View.GONE);
+                    },1500);
                     deliverPushDestination();
                     view.postDelayed(()->deliverPushDestination(),900);
                 }
@@ -648,10 +653,8 @@ public final class MainActivity extends Activity {
                 if(pageProgress!=null){
                     pageProgress.setProgress(Math.max(0,Math.min(100,progress)));
                     if(pageProgressLabel!=null)pageProgressLabel.setText("Caricamento gioco "+progress+"%");
-                    if(progress>=100){
-                        pageProgress.setVisibility(android.view.View.GONE);
-                        if(pageProgressLabel!=null)pageProgressLabel.setVisibility(android.view.View.GONE);
-                    }
+                    // Keep the cartoon card centered until the local game page is ready.
+                    // Completion and hiding happen after onPageFinished removes the legacy boot overlay.
                 }
             }
             @Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){
@@ -683,23 +686,82 @@ public final class MainActivity extends Activity {
         safeRoot.addView(web,new android.widget.FrameLayout.LayoutParams(
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
             android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        // Centered cartoon loader: this is the real WebView percentage, not a fake timer.
+        final float density=getResources().getDisplayMetrics().density;
+        final int unit=(int)(4*density+0.5f);
+        loadingOverlay=new android.widget.FrameLayout(this);
+        loadingOverlay.setBackgroundColor(0xff082c59);
+        loadingOverlay.setClickable(true);
+        loadingOverlay.setFocusable(true);
+        android.widget.FrameLayout.LayoutParams overlayParams=new android.widget.FrameLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,android.view.ViewGroup.LayoutParams.MATCH_PARENT);
+        safeRoot.addView(loadingOverlay,overlayParams);
+
+        android.widget.LinearLayout loaderCard=new android.widget.LinearLayout(this);
+        loaderCard.setOrientation(android.widget.LinearLayout.VERTICAL);
+        loaderCard.setGravity(android.view.Gravity.CENTER);
+        loaderCard.setPadding(6*unit,5*unit,6*unit,5*unit);
+        android.graphics.drawable.GradientDrawable cartoonPanel=new android.graphics.drawable.GradientDrawable(
+            android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[]{0xff1985c6,0xff0c4d91});
+        cartoonPanel.setCornerRadius(6*unit);
+        cartoonPanel.setStroke((int)(3*density+0.5f),0xffffdf85);
+        loaderCard.setBackground(cartoonPanel);
+        loaderCard.setElevation(3*unit);
+        int cardWidth=Math.min((int)(320*density+0.5f),(int)(getResources().getDisplayMetrics().widthPixels*.88f));
+        android.widget.FrameLayout.LayoutParams cardParams=new android.widget.FrameLayout.LayoutParams(
+            cardWidth,android.view.ViewGroup.LayoutParams.WRAP_CONTENT,android.view.Gravity.CENTER);
+        loadingOverlay.addView(loaderCard,cardParams);
+
+        android.widget.TextView loadingSymbol=new android.widget.TextView(this);
+        loadingSymbol.setText("🃏");
+        loadingSymbol.setTextSize(43);
+        loadingSymbol.setGravity(android.view.Gravity.CENTER);
+        loaderCard.addView(loadingSymbol,new android.widget.LinearLayout.LayoutParams(-1,-2));
+
+        android.widget.TextView loadingTitle=new android.widget.TextView(this);
+        loadingTitle.setText("NAPOLI CARTE 3D");
+        loadingTitle.setTypeface(null,android.graphics.Typeface.BOLD);
+        loadingTitle.setTextSize(20);
+        loadingTitle.setTextColor(0xffffe7a5);
+        loadingTitle.setGravity(android.view.Gravity.CENTER);
+        loaderCard.addView(loadingTitle,new android.widget.LinearLayout.LayoutParams(-1,-2));
+
+        android.widget.TextView loadingHint=new android.widget.TextView(this);
+        loadingHint.setText("Prepariamo il tavolo!");
+        loadingHint.setTextSize(13);
+        loadingHint.setTextColor(0xfff4f7ff);
+        loadingHint.setGravity(android.view.Gravity.CENTER);
+        loadingHint.setPadding(0,unit,0,3*unit);
+        loaderCard.addView(loadingHint,new android.widget.LinearLayout.LayoutParams(-1,-2));
+
+        android.widget.FrameLayout trackFrame=new android.widget.FrameLayout(this);
+        android.graphics.drawable.GradientDrawable trackBackground=new android.graphics.drawable.GradientDrawable();
+        trackBackground.setColor(0xff07376e);
+        trackBackground.setCornerRadius(4*unit);
+        trackBackground.setStroke((int)(2*density+0.5f),0xffffe29b);
+        trackFrame.setBackground(trackBackground);
+        android.widget.LinearLayout.LayoutParams trackParams=new android.widget.LinearLayout.LayoutParams(
+            -1,(int)(22*density+0.5f));
+        trackParams.bottomMargin=2*unit;
+        loaderCard.addView(trackFrame,trackParams);
         pageProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
         pageProgress.setMax(100);
-        pageProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(0xffffcf76));
-        pageProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff255245));
-        android.widget.FrameLayout.LayoutParams progressParams=new android.widget.FrameLayout.LayoutParams(
-            android.view.ViewGroup.LayoutParams.MATCH_PARENT,(int)(6*getResources().getDisplayMetrics().density),android.view.Gravity.TOP);
-        safeRoot.addView(pageProgress,progressParams);
+        pageProgress.setProgress(0);
+        pageProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(0xffffcf56));
+        pageProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff08396d));
+        android.widget.FrameLayout.LayoutParams barParams=new android.widget.FrameLayout.LayoutParams(
+            -1,-1,android.view.Gravity.CENTER);
+        barParams.setMargins(unit,unit,unit,unit);
+        trackFrame.addView(pageProgress,barParams);
+
         pageProgressLabel=new android.widget.TextView(this);
         pageProgressLabel.setText("Caricamento gioco 0%");
+        pageProgressLabel.setTypeface(null,android.graphics.Typeface.BOLD);
         pageProgressLabel.setGravity(android.view.Gravity.CENTER);
-        pageProgressLabel.setTextSize(12);
-        pageProgressLabel.setTextColor(0xffffe1a9);
-        pageProgressLabel.setBackgroundColor(0xee0a2b23);
-        android.widget.FrameLayout.LayoutParams labelParams=new android.widget.FrameLayout.LayoutParams(
-            android.view.ViewGroup.LayoutParams.MATCH_PARENT,(int)(30*getResources().getDisplayMetrics().density),android.view.Gravity.TOP);
-        labelParams.topMargin=(int)(6*getResources().getDisplayMetrics().density);
-        safeRoot.addView(pageProgressLabel,labelParams);
+        pageProgressLabel.setTextSize(13);
+        pageProgressLabel.setTextColor(0xffffffff);
+        loaderCard.addView(pageProgressLabel,new android.widget.LinearLayout.LayoutParams(-1,-2));
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(safeRoot,(view,insets)->{
             androidx.core.graphics.Insets bars=insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.systemBars()|

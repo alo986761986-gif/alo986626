@@ -31,3 +31,69 @@
 @media(max-width:400px){.nc98-content{padding:10px}.nc98-dialog>header{padding:8px;gap:7px}.nc98-logo{width:42px;height:42px;font-size:25px}.nc98-options{gap:5px}.nc98-options button{padding:7px 3px;font-size:11px;min-height:62px}.nc98-options button small{font-size:9px}.nc98-actions{grid-template-columns:1.3fr .8fr}.nc98-dialog{max-height:96dvh}}
 @media(max-height:520px) and (orientation:landscape){.nc98-overlay{align-items:flex-start;padding:5px}.nc98-dialog{max-height:98dvh;width:min(680px,98%)}.nc98-content{padding:8px 13px}.nc98-content h4{margin:7px 0 5px}.nc98-options button{min-height:48px}.nc98-title h3{font-size:20px}.nc98-title p{margin:3px}.nc98-actions{margin-top:8px}}
 @media(prefers-reduced-motion:reduce){.nc98-track span{animation-duration:2.2s}.nc98-options *{transition:none!important}}
+
+
+/* Cartoon loader stays centered over the entire display while a game opens.
+   This is an indeterminate bar; it never displays an invented percentage. */
+#nc98-launcher.nc98-loading:before {
+  content:"";
+  position:fixed;inset:0;
+  z-index:2147483601;
+  background:linear-gradient(145deg,#041d4cee,#0b477aca);
+}
+#nc98-launcher.nc98-loading .nc98-progress {
+  position:fixed!important;
+  top:50%!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(88vw,360px)!important;
+  max-height:80dvh;
+  overflow:hidden;
+  z-index:2147483602!important;
+  text-align:center;
+  padding:24px 20px 20px!important;
+  border:4px solid #ffe7a5;
+  border-radius:27px;
+  background:linear-gradient(155deg,#1788cc,#065497 66%,#073b7c);
+  box-shadow:0 7px 0 #98632c,0 22px 52px #001739a8;
+}
+#nc98-launcher.nc98-loading .nc98-progress:before {
+  content:"🃏";
+  display:block;
+  font-size:48px;
+  line-height:1.2;
+  margin:0 auto 6px;
+  filter:drop-shadow(0 3px 0 #925e25);
+}
+#nc98-launcher.nc98-loading .nc98-progress:after {
+  content:"GAMES STUDIOS";
+  display:block;
+  color:#e7ecff;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:2px;
+  margin-top:12px;
+}
+#nc98-launcher.nc98-loading .nc98-progress-label {
+  color:#fff7df;
+  font-size:clamp(14px,4vw,17px);
+  line-height:1.35;
+  font-weight:900;
+  text-shadow:0 2px #0b3b79;
+  margin:0 auto 16px;
+}
+#nc98-launcher.nc98-loading .nc98-track {
+  height:23px;
+  border:3px solid #fff1c9;
+  border-radius:99px;
+  background:#063468;
+  box-shadow:inset 0 3px 4px #001f4a,0 4px 0 #90592e;
+}
+#nc98-launcher.nc98-loading .nc98-track span {
+  width:42%;
+  border-radius:99px;
+  background:linear-gradient(90deg,#ffa743,#fff2a1,#6ce3ad);
+  box-shadow:0 0 10px #ffdb8b;
+}

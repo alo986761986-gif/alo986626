@@ -56,11 +56,11 @@ function render(){
  overlay.querySelectorAll('[data-seats]').forEach(b=>b.onclick=()=>{if(!b.disabled){players=Number(b.dataset.seats);render();}});
  overlay.querySelector('#nc98-start').onclick=start;overlay.querySelector('#nc98-start').focus();
 }
-function reportError(error){if(!overlay)return;const b=overlay.querySelector('#nc98-error');if(b){b.hidden=false;b.textContent=String(error?.message||error||'Il gioco non è disponibile.');}launching=false;overlay.querySelector('#nc98-progress').hidden=true;overlay.querySelectorAll('button').forEach(b=>b.disabled=false);}
+function reportError(error){if(!overlay)return;const b=overlay.querySelector('#nc98-error');if(b){b.hidden=false;b.textContent=String(error?.message||error||'Il gioco non è disponibile.');}launching=false;overlay.classList.remove('nc98-loading');overlay.querySelector('#nc98-progress').hidden=true;overlay.querySelectorAll('button').forEach(b=>b.disabled=false);}
 async function start(){
  if(launching||!overlay)return;launching=true;const mine=++request;
  const selected=chosen,kind=opponent,rule=getFormat(),n=players;
- const progress=overlay.querySelector('#nc98-progress');progress.hidden=false;
+ const progress=overlay.querySelector('#nc98-progress');progress.hidden=false;overlay.classList.add('nc98-loading');
  overlay.querySelectorAll('button').forEach(b=>b.disabled=true);
  setStage('Preparazione delle risorse e del tavolo…');
  try {
