@@ -137,6 +137,7 @@
     "store52.js",
     "studio.jpg",
     "touch62.js",
+    "touch-audience85.js",
     "turn59.js",
     "voice51.js",
     "voice64.js",
@@ -179,7 +180,8 @@
     "server/test-chiodo-cartoon97.js",
     "server/test-nc98-launch.js",
     "server/test-startup-compact99.js",
-    "server/test-google-hd913.js"
+    "server/test-google-hd913.js",
+    "server/test-audience85.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",
