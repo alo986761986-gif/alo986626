@@ -2,12 +2,12 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 try {
   $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-  $work = Join-Path $env:TEMP 'NC3D2'
+  $work = Join-Path $env:TEMP 'NC3D3'
   $nodeDir = Join-Path $work 'node'
   $projectDir = Join-Path $work 'p'
   $output = Join-Path $root 'OUTPUT'
   New-Item -ItemType Directory -Force -Path $work,$output | Out-Null
-  Write-Host 'NAPOLI CARTE 3D - WINDOWS EDITION 0.2' -ForegroundColor Yellow
+  Write-Host 'NAPOLI CARTE 3D - WINDOWS EDITION 0.3' -ForegroundColor Yellow
   Write-Host 'Controllo Node.js 24 ufficiale e impronta SHA256...'
   $nodeExe = Join-Path $nodeDir 'node.exe'
   if (-not (Test-Path $nodeExe)) {
