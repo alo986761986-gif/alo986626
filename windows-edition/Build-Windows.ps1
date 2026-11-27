@@ -33,67 +33,52 @@ try {
   }
   $env:PATH = "$nodeDir;$env:PATH"
   & $nodeExe --version
-  Write-Host 'Download dei sorgenti Android 9.10 da commit GitHub verificato...'
-  $revision = 'a0f632e9ad88bf71590b5e5a5312d92f7995ab1d'
-  $archive = Join-Path $work 'source.zip'
-  Invoke-WebRequest -Uri "https://github.com/alo986761986-gif/alo986626/archive/$revision.zip" -OutFile $archive -UseBasicParsing
+  Write-Host 'Download del pacchetto Android 9.10 firmato e verifica risorse...' -ForegroundColor Yellow
+  $apkUrl = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_10_CHIODO_TAVOLO_ORDINATO_CARTOON_FIRMATO.apk'
+  $apkFile = Join-Path $work 'napoli-9-10.apk'
+  Invoke-WebRequest -Uri $apkUrl -OutFile $apkFile
+  if ((Get-Item $apkFile).Length -lt 10000000) { throw 'APK Android incompleto' }
   if (Test-Path $projectDir) { Remove-Item $projectDir -Recurse -Force }
   New-Item -ItemType Directory -Force -Path $projectDir | Out-Null
-  Write-Host 'Estrazione selettiva: solo giochi, audio e configurazioni (evita percorsi lunghi)...'
+  $revision = 'a0f632e9ad88bf71590b5e5a5312d92f7995ab1d'
+  foreach ($pair in @(@('app/google-services.json','app/google-services.json'),@('tools/build93-manifest.json','tools/build93-manifest.json'))) {
+    $target = Join-Path $projectDir $pair[1]
+    New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
+    Invoke-WebRequest -Uri ("https://raw.githubusercontent.com/alo986761986-gif/alo986626/"+$revision+"/"+$pair[0]) -OutFile $target
+  }
   Add-Type -AssemblyName System.IO.Compression.FileSystem
-  $zip = [System.IO.Compression.ZipFile]::OpenRead($archive)
-  $copied = 0
+  $assetsDir = Join-Path $projectDir 'app\src\main\assets'
+  [System.IO.Directory]::CreateDirectory($assetsDir) | Out-Null
+  $sep=[System.IO.Path]::DirectorySeparatorChar
+  $assetsPrefix=[System.IO.Path]::GetFullPath($assetsDir).TrimEnd($sep)+$sep
+  $zip=[System.IO.Compression.ZipFile]::OpenRead($apkFile)
+  $copied=0
   try {
-    $destRoot = [System.IO.Path]::GetFullPath($projectDir).TrimEnd('\') + '\'
-    foreach ($entry in $zip.Entries) {
-      $fullName = $entry.FullName.Replace('\','/')
-      $slash = $fullName.IndexOf('/')
-      if ($slash -lt 0) { continue }
-      $relative = $fullName.Substring($slash + 1)
-      if (-not $relative -or $relative.EndsWith('/')) { continue }
-      $include = $relative.StartsWith('app/src/main/assets/') -or
-                 $relative.StartsWith('server/bass_audio_parts/') -or
-                 $relative -eq 'app/google-services.json' -or
-                 $relative -eq 'tools/prepare-expansion-index.cjs' -or
-                 $relative -eq 'tools/build93-manifest.json'
-      if (-not $include) { continue }
-      $target = [System.IO.Path]::GetFullPath((Join-Path $projectDir $relative.Replace('/','\')))
-      if (-not $target.StartsWith($destRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Archivio non sicuro: percorso fuori cartella' }
-      $parent = [System.IO.Path]::GetDirectoryName($target)
-      [System.IO.Directory]::CreateDirectory($parent) | Out-Null
-      $stream = $entry.Open()
-      $outputStream = [System.IO.File]::Create($target)
-      try { $stream.CopyTo($outputStream) } finally { $outputStream.Dispose(); $stream.Dispose() }
+    foreach($entry in $zip.Entries) {
+      if (-not $entry.FullName.StartsWith('assets/')) { continue }
+      $rel=$entry.FullName.Substring(7)
+      if (-not $rel -or $rel.EndsWith('/')) { continue }
+      $target=[System.IO.Path]::GetFullPath((Join-Path $assetsDir $rel.Replace('/',$sep)))
+      if (-not $target.StartsWith($assetsPrefix,[StringComparison]::OrdinalIgnoreCase)) { throw 'Percorso APK non sicuro' }
+      [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($target)) | Out-Null
+      $inputStream=$entry.Open();$outputStream=[System.IO.File]::Create($target)
+      try { $inputStream.CopyTo($outputStream) } finally { $outputStream.Dispose();$inputStream.Dispose() }
       $copied++
     }
   } finally { $zip.Dispose() }
-  if ($copied -lt 60) { throw ('Sorgenti incompleti: solo ' + $copied + ' file estratti') }
+  if ($copied -lt 55) { throw ('APK incompleto: '+$copied+' risorse') }
+  $indexHash=(Get-FileHash -Algorithm SHA256 (Join-Path $assetsDir 'index.html')).Hash.ToLowerInvariant()
+  $musicFile=Join-Path $assetsDir 'music\alfonso-neri-bass-on-fire.mp3'
+  $musicHash=(Get-FileHash -Algorithm SHA256 $musicFile).Hash.ToLowerInvariant()
+  if ($indexHash -ne '397f2f0574da6a6d6a69659cd2b6fb5edd372f8c611ce20d488ce0c4b3d78f7c') { throw 'Indice 19 giochi non approvato' }
+  if ($musicHash -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226') { throw 'Audio originale corrotto' }
   Copy-Item -LiteralPath (Join-Path $root 'desktop') -Destination $projectDir -Recurse -Force
   Copy-Item -LiteralPath (Join-Path $root 'package.json') -Destination $projectDir -Force
   Push-Location $projectDir
   try {
-    Write-Host 'Ricostruzione e controllo della musica originale...' -ForegroundColor Yellow
-    $partsDir = Join-Path $projectDir 'server\bass_audio_parts'
-    $parts = @(Get-ChildItem -LiteralPath $partsDir -Filter 'part-*.b64' | Sort-Object Name)
-    if ($parts.Count -ne 20) { throw ('Attese 20 parti audio, trovate ' + $parts.Count) }
-    $musicDir = Join-Path $projectDir 'app\src\main\assets\music'
-    New-Item -ItemType Directory -Force -Path $musicDir | Out-Null
-    $musicFile = Join-Path $musicDir 'alfonso-neri-bass-on-fire.mp3'
-    $base64 = New-Object System.Text.StringBuilder
-    foreach ($i in 0..19) {
-      $part = Join-Path $partsDir ('part-{0:D2}.b64' -f $i)
-      if (-not (Test-Path $part)) { throw ('Parte audio mancante: ' + $part) }
-      [void]$base64.Append([System.IO.File]::ReadAllText($part).Trim())
-    }
-    [System.IO.File]::WriteAllBytes($musicFile,[Convert]::FromBase64String($base64.ToString()))
-    $musicHash = (Get-FileHash -Algorithm SHA256 $musicFile).Hash.ToLowerInvariant()
-    if ($musicHash -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226') { throw 'Musica corrotta: SHA256 non corrisponde' }
-    if ((Get-Item $musicFile).Length -ne 11464051) { throw 'Musica corrotta: dimensione diversa' }
-    Write-Host 'Verifica del catalogo e di tutte le risorse dei 19 giochi...'
-    & $nodeExe tools/prepare-expansion-index.cjs
-    if ($LASTEXITCODE -ne 0) { throw 'Preparazione dei giochi fallita' }
+    Write-Host ('Verifica '+$copied+' risorse del gioco...')
     & $nodeExe desktop/check-assets.cjs
-    if ($LASTEXITCODE -ne 0) { throw 'Asset incompleti' }
+    if ($LASTEXITCODE -ne 0) { throw 'Catalogo 19 giochi o risorse non verificati' }
     Write-Host 'Installazione delle dipendenze Electron...'
     & (Join-Path $nodeDir 'npm.cmd') install --no-audit --no-fund
     if ($LASTEXITCODE -ne 0) { throw 'Installazione Electron fallita' }
