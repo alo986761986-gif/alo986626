@@ -1,0 +1,7 @@
+{
+  "sourceVersion": "9.10.0",
+  "gameCount": 19,
+  "classicIds": ["scopa", "scopone", "briscola", "sette", "asso", "ruba"],
+  "separateGames": ["chiodo", "banco"],
+  "expansionIds": ["tressette", "traversone", "tressette_morto", "briscola_chiamata", "bestia", "trentuno", "cirulla", "cucu", "asino", "dubito", "mercante"]
+}

@@ -1,0 +1,73 @@
+{
+  "name": "napoli-carte-3d-windows",
+  "private": true,
+  "version": "0.2.0",
+  "description": "NAPOLI CARTE 3D Windows Edition 0.2 - 19-game Electron port with secure desktop authentication",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "check": "npm run unit && node desktop/check-assets.cjs",
+    "pack:win": "npm run check && electron-builder --win nsis portable --x64",
+    "pack:win:dir": "npm run check && electron-builder --win dir --x64",
+    "unit": "node --test desktop/tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "it.napolicarte.windows",
+    "productName": "NAPOLI CARTE 3D",
+    "directories": {
+      "output": "dist/windows"
+    },
+    "files": [
+      "desktop/**/*",
+      "package.json",
+      "!desktop/tests/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "app/src/main/assets",
+        "to": "game",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "app/google-services.json",
+        "to": "config/google-services.json"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "desktop/assets/napoli.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NAPOLI CARTE 3D",
+      "artifactName": "NAPOLI_CARTE_3D_WINDOWS_SETUP_${version}_${arch}.${ext}"
+    },
+    "asar": true,
+    "portable": {
+      "artifactName": "NAPOLI_CARTE_3D_WINDOWS_PORTABLE_${version}_${arch}.${ext}"
+    }
+  }
+}

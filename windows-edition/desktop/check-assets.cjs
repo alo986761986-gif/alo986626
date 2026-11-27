@@ -1,0 +1,21 @@
+'use strict';
+// This is a release gate. Never ship a partial Windows port as "19 complete games".
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'..');
+const manifestPath=path.join(root,'tools/build93-manifest.json');
+const source=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+const expected=require('./game-catalog.json');
+const assetDir=path.join(root,'app/src/main/assets');
+const ids=type=>JSON.stringify(source.app[type])===JSON.stringify(expected[type]);
+if(source.app.gameCount!==expected.gameCount||!['classicIds','separateGames','expansionIds'].every(ids))throw Error('Catalogo Android differente dai 19 giochi approvati');
+const missing=source.requiredAssets.filter(name=>!fs.existsSync(path.join(assetDir,name)));
+if(missing.length)throw Error('Asset mancanti: '+missing.join(', '));
+const entry=path.join(assetDir,'index.html');
+const sha=crypto.createHash('sha256').update(fs.readFileSync(entry)).digest('hex');
+const accepted='397f2f0574da6a6d6a69659cd2b6fb5edd372f8c611ce20d488ce0c4b3d78f7c';
+if(sha!==accepted)throw Error('index.html non corrisponde alla revisione Android 9.10 approvata');
+const music=path.join(assetDir,'music/alfonso-neri-bass-on-fire.mp3');
+const audioHash=crypto.createHash('sha256').update(fs.readFileSync(music)).digest('hex');
+if(audioHash!=='fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226')throw Error('Brano audio non originale');
+for(const extra of ['desktop/main.cjs','desktop/preload.cjs','desktop/google-auth.cjs','desktop/assets/napoli.ico','app/google-services.json'])if(!fs.existsSync(path.join(root,extra)))throw Error('File Windows mancante: '+extra);
+console.log('OK: '+source.requiredAssets.length+' asset, '+source.app.gameCount+' giochi, indice SHA-256 e brano audio verificati');

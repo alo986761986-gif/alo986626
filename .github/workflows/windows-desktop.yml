@@ -1,0 +1,50 @@
+name: Napoli Carte 3D Windows Edition
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - nc82-render-android-build
+    paths:
+      - 'desktop/**'
+      - 'package.json'
+      - '.github/workflows/windows-desktop.yml'
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Restore original music and validate checksum
+        shell: pwsh
+        run: |
+          $parts = @(Get-ChildItem server/bass_audio_parts/part-*.b64 | Sort-Object Name)
+          if ($parts.Count -ne 20) { throw "Expected 20 audio parts, got $($parts.Count)" }
+          $raw = ($parts | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName).Trim() }) -join ''
+          New-Item -ItemType Directory -Force -Path app/src/main/assets/music | Out-Null
+          $file = 'app/src/main/assets/music/alfonso-neri-bass-on-fire.mp3'
+          [System.IO.File]::WriteAllBytes($file, [Convert]::FromBase64String($raw))
+          $sha = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
+          if ($sha -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226') { throw 'Audio SHA256 mismatch' }
+      - name: Verify 19 games and original HTML asset
+        run: |
+          node tools/prepare-expansion-index.cjs
+          node desktop/check-assets.cjs
+      - name: Install Electron and builder
+        run: npm install --no-audit --no-fund
+      - name: Unit and integration checks
+        run: npm run unit
+      - name: Build Windows NSIS installer and portable EXE
+        run: npm run pack:win
+      - name: Upload Windows builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: NapoliCarte3D-Windows-EXE-${{ github.run_number }}
+          path: |
+            dist/windows/*SETUP*.exe
+            dist/windows/*PORTABLE*.exe
+          if-no-files-found: error
+          retention-days: 14
