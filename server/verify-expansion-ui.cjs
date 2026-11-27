@@ -63,6 +63,23 @@ async function load(context) {
   await page.waitForFunction(() => !!(window.NC_EXPANSION && window.NC74_MUSIC && window.NC81_BACK));
   await page.locator('#nc-studio-boot').waitFor({ state:'detached', timeout:10000 });
   assert.equal(await page.locator('.ncx-entry').count(), 11, 'all 11 new launcher tiles');
+  await page.waitForFunction(() => {
+    const sheet=document.getElementById('nc96-cartoon-theme');
+    return !!sheet && !!sheet.sheet && sheet.sheet.cssRules.length>50;
+  },null,{timeout:12000});
+  const cartoon=await page.evaluate(()=>{
+    const button=document.querySelector('#root button.game');
+    return {
+      body:document.body.classList.contains('nc96-cartoon'),
+      theme:document.getElementById('nc96-cartoon-theme')?.href||'',
+      border:button?parseFloat(getComputedStyle(button).borderTopWidth):0,
+      background:getComputedStyle(document.body).backgroundImage
+    };
+  });
+  assert.ok(cartoon.body && cartoon.theme.includes('nc96-cartoon.css'),'Cartoon theme is loaded');
+  assert.ok(cartoon.border>=3,'Cartoon game tiles have bold borders');
+  assert.ok(cartoon.background.includes('nc96-cartoon-golfo.svg'),'Original Napoli drawing loaded');
+
   return page;
 }
 async function shot(page, name) {
@@ -96,6 +113,9 @@ async function exitGame(page) {
 async function smokeCPU(page, game, viewport) {
   await page.locator('.ncx-entry[onclick*="\'' + game + '\'"]').click();
   await page.locator('#ncx-start').waitFor();
+  const overlayCartoon=await page.locator('#ncx-screen').evaluate(el=>getComputedStyle(el).backgroundImage);
+  assert.ok(overlayCartoon.includes('nc96-cartoon-golfo.svg'), 'Cartoon panorama present in '+game);
+
   assert.equal(await page.evaluate(() => NC74_MUSIC.isInGame()), false, 'configuration is not an active game');
   const title = await page.locator('.ncx-head h1').textContent();
   await page.locator('#ncx-config-rules').click();
