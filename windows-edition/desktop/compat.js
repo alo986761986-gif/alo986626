@@ -51,14 +51,33 @@ w.NCPlayNative={
  buy:()=>invoke('NC_PLAY_EVENT',['error','Google Play Billing non supporta acquisti Windows.']),
  sync:()=>{},query:()=>{}
 };
+// Electron custom protocol cannot use the Android-only CORS allowlist.
+const expansionPaths=new Set(['/expansion/catalog','/expansion/state','/expansion/join',
+ '/expansion/move','/expansion/fill','/expansion/leave','/lobby/status']);
+function headerValue(headers,key){
+ if(!headers)return '';
+ if(typeof headers.get==='function')return headers.get(key)||'';
+ const target=key.toLowerCase();
+ for(const name of Object.keys(headers))if(name.toLowerCase()===target)return String(headers[name]);
+ return '';
+}
+function asJsonResponse(promise){
+ return promise.then(r=>new Response(r.body||JSON.stringify({error:r.error||'Rete non disponibile'}),
+  {status:r.status||503,headers:{'content-type':'application/json'}}));
+}
 const realFetch=w.fetch.bind(w);
 w.fetch=function(input,init){
  try{
   const raw=typeof input==='string'?input:input?.url||'';
   const u=new URL(raw,w.location.href);
+  const method=(init?.method||'GET').toUpperCase();
   if(u.origin==='https://napoli-carte-3d-global.onrender.com'&&u.pathname.startsWith('/api/')){
-   const method=(init?.method||'GET').toUpperCase();
-   return desktop.classic({url:u.toString(),method,body:typeof init?.body==='string'?init.body:''}).then(r=>new Response(r.body,{status:r.status||503,headers:{'content-type':'application/json'}}));
+   return asJsonResponse(desktop.classic({url:u.toString(),method,body:typeof init?.body==='string'?init.body:''}));
+  }
+  if(u.origin==='https://napoli-chiodo-121.onrender.com' && expansionPaths.has(u.pathname)){
+   const authorization=headerValue(init?.headers,'authorization');
+   const token=authorization.startsWith('Bearer ')?authorization.slice(7):'';
+   return asJsonResponse(desktop.remote({url:u.toString(),method,body:typeof init?.body==='string'?init.body:'',token}));
   }
  }catch(e){return Promise.reject(e);}
  return realFetch(input,init);
