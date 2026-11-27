@@ -7,6 +7,7 @@ function make(){
   chiodo:async args=>(calls.push(['chiodo',args]),{status:200,body:'{"ok":true}'}),
   social:async args=>(calls.push(['social',args]),{status:200,body:'{"friends":[]}'}),
   classic:async args=>(calls.push(['classic',args]),{status:200,body:'{"ok":true}'}),
+  remote:async args=>(calls.push(['remote',args]),{status:200,body:'{"ok":true}'}),
   external:()=>{},logout:()=>{},reset:async()=>{}
  };
  const w={NCDesktop:desktop,location:{href:'napoli://game/index.html'},fetch:async()=>({status:204}),SpeechSynthesisUtterance:class{}};
@@ -34,4 +35,17 @@ test('Google Play and rewarded ads never fabricate credits',()=>{
  const {w}=make();let awarded=false;
  w.NC_AD_EVENT=()=>{awarded=true;};w.NCRewardNative.show();
  assert.equal(awarded,true);assert.equal(typeof w.NCPlayNative.buy,'function');
+});
+
+test('expansion online games use desktop multiplayer transport',async()=>{
+ const {w,calls}=make(),token='b'.repeat(48);
+ const r=await w.fetch('https://napoli-chiodo-121.onrender.com/expansion/state',{headers:{Authorization:'Bearer '+token}});
+ assert.equal(r.status,200);assert.equal(calls[0][0],'remote');assert.equal(calls[0][1].token,token);
+ const m=await w.fetch('https://napoli-chiodo-121.onrender.com/expansion/move',
+  {method:'POST',headers:{authorization:'Bearer '+token},body:'{"action":"draw"}'});
+ assert.equal(m.status,200);assert.equal(calls[1][1].method,'POST');
+});
+test('lobby status uses restricted bridge',async()=>{
+ const {w,calls}=make();const r=await w.fetch('https://napoli-chiodo-121.onrender.com/lobby/status');
+ assert.equal(r.status,200);assert.equal(calls[0][0],'remote');
 });
