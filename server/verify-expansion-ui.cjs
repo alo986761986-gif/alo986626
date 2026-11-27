@@ -235,6 +235,8 @@ async function smokeOnline() {
   const [a,b] = await Promise.all([load(contextA), load(contextB)]);
   for (const [page, nickname] of [[a,'Anna QA'],[b,'Bruno QA']]) {
     await page.locator('.ncx-entry[onclick*="\'tressette\'"]').click();
+    await page.locator('#nc98-launcher').waitFor({timeout:8000});
+    await page.locator('#nc98-start').click();
     await page.locator('#ncx-mode-online').click();
     await page.locator('#ncx-seats').selectOption('2');
     await page.locator('#ncx-name').fill(nickname);
