@@ -228,6 +228,76 @@ async function smokeChiodoCartoon() {
     report.chiodoCartoon={ok:true,offline:true,multiplayer:true};
   } finally { await ctx.close(); }
 }
+
+async function smokeCompactChiodoSeating() {
+  const details=[];
+  for(const viewport of [{width:320,height:568},{width:360,height:640},{width:390,height:844},{width:430,height:932},{width:800,height:360}]) {
+    const context=await browser.newContext({viewport,reducedMotion:'reduce'});
+    await prepare(context);
+    const page=await load(context);
+    try {
+      await page.locator('#chiodo-entry').click();
+      await page.locator('#nc98-launcher').waitFor();
+      // Verify the cartoon loading window is centered, not positioned at the top.
+      const centered=await page.evaluate(()=>{
+        const host=document.querySelector('#nc98-launcher'),card=host.querySelector('#nc98-progress');
+        card.hidden=false;host.classList.add('nc98-loading');
+        const b=card.getBoundingClientRect(),x=innerWidth/2,y=innerHeight/2;
+        const result={x:b.x+b.width/2,y:b.y+b.height/2,viewportX:x,viewportY:y,
+          mode:getComputedStyle(card).position,width:b.width,height:b.height};
+        card.hidden=true;host.classList.remove('nc98-loading');
+        return result;
+      });
+      assert.equal(centered.mode,'fixed','Cartoon loader must cover the viewport independently of launcher layout');
+      assert.ok(Math.abs(centered.x-centered.viewportX)<=2&&Math.abs(centered.y-centered.viewportY)<=2,
+        'Cartoon loading panel must be centered: '+JSON.stringify(centered));
+      await page.locator('#nc98-start').click();
+      await page.locator('#chiodo121 .ch-lobby').waitFor({timeout:9000});
+      if(await page.locator('.ch-rules [data-rule="close"]').count())
+        await page.locator('.ch-rules [data-rule="close"]').click();
+      await page.locator('#chiodo121 [data-n="4"]').click();
+      await page.locator('#chiodo121.ch65 .ch-arena .ch-center').waitFor({timeout:9000});
+      for(const mode of ['offline','online-style']){
+        // The Chiodo offline and network engines share NC_CHIODO_TABLE and the exact
+        // same arena markup. Temporarily switch its root selector to exercise both
+        // scoped styles without initiating an external multiplayer session.
+        const info=await page.evaluate(mode=>{
+          const root=document.getElementById('chiodo121');
+          if(mode==='online-style')root.id='chiodo121-online';
+          const area=root.querySelector('.ch-arena');
+          const seats=Array.from(area.querySelectorAll('.ch-seat[data-seat]'));
+          const center=area.querySelector('.ch-center');
+          const rect=(node)=>{const r=node.getBoundingClientRect();
+            return {x:r.left,y:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height};};
+          const boxes=seats.map(rect),middle=rect(center),parent=rect(area);
+          const overlap=(a,b)=>Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x))
+              *Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y));
+          const collisions=[];
+          for(let i=0;i<boxes.length;i++){
+            if(overlap(boxes[i],middle)>4)collisions.push('avatar '+i+' vs deck');
+            for(let k=i+1;k<boxes.length;k++)
+              if(overlap(boxes[i],boxes[k])>4)collisions.push('avatar '+i+' vs '+k);
+          }
+          const result={mode,viewport:[innerWidth,innerHeight],display:getComputedStyle(area).display,
+            seats:boxes.length,collisions,center:middle,arena:parent,
+            documentOverflow:document.documentElement.scrollWidth-innerWidth};
+          if(mode==='online-style')root.id='chiodo121';
+          return result;
+        },mode);
+        assert.equal(info.display,'grid','Chiodo 121 must use dedicated seating lanes');
+        assert.equal(info.seats,4,'All four players must remain visible');
+        assert.deepEqual(info.collisions,[],'Overlapping table elements: '+JSON.stringify(info));
+        assert.ok(info.documentOverflow<=3,'Horizontal page overflow on compact screen');
+        details.push(info);
+      }
+      await shot(page,'chiodo910-four-players-'+viewport.width+'x'+viewport.height);
+    } finally {
+      await context.close();
+    }
+  }
+  report.chiodo910={ok:true,layouts:details};
+}
+
 async function smokeOnline() {
   const contextA = await browser.newContext({ viewport:{width:360,height:640}, reducedMotion:'reduce' });
   const contextB = await browser.newContext({ viewport:{width:360,height:640}, reducedMotion:'reduce' });
@@ -285,6 +355,7 @@ async function smokeOnline() {
   }
   try { await smokeOnline(); console.log('PASS two independent online sessions'); } catch (error) { report.errors.push({stage:'online',message:error.message,stack:error.stack}); console.error('FAIL online',error.message); }
   try { await smokeChiodoCartoon(); console.log('PASS Chiodo 121 offline/online cartoon visual tests'); } catch (error) { report.errors.push({stage:'chiodo97',message:error.message,stack:error.stack}); console.error('FAIL Chiodo 121 cartoon',error.message); }
+  try { await smokeCompactChiodoSeating(); console.log('PASS Chiodo 121 seating lanes and centered cartoon loader on five viewports'); } catch(error) { report.errors.push({stage:'chiodo910',message:error.message,stack:error.stack}); console.error('FAIL compact Chiodo 121',error.message); }
   try { await smokeLaunch98(); console.log('PASS 19-game launcher, loading bar and pair restrictions'); } catch(error) { report.errors.push({stage:'launch98',message:error.message,stack:error.stack}); console.error('FAIL launcher 9.8',error.message); }
 })().catch(error => { report.errors.push({stage:'setup',message:error.message,stack:error.stack}); console.error(error); })
   .finally(async () => {
