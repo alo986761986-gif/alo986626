@@ -31,6 +31,14 @@ public final class MainActivity extends Activity {
     private static final int PHOTO_PICK_REQUEST = 2215;
     private static final String BASE_URL = "https://appassets.androidplatform.net/assets/";
     private WebView web;
+    private static volatile java.lang.ref.WeakReference<MainActivity> visibleScreen=new java.lang.ref.WeakReference<>(null);
+    public static void notifyIncomingChat(String senderUid){
+      MainActivity activity=visibleScreen.get();
+      if(activity==null)return;
+      activity.runOnUiThread(()->{if(activity.web!=null)
+        activity.web.evaluateJavascript("window.NC77_CHAT&&window.NC77_CHAT.onIncomingPush&&window.NC77_CHAT.onIncomingPush("+org.json.JSONObject.quote(senderUid==null?"":senderUid)+")",null);
+      });
+    }
     private android.widget.ProgressBar pageProgress;
     private android.widget.TextView pageProgressLabel;
     private android.widget.FrameLayout loadingOverlay;
@@ -826,8 +834,8 @@ public final class MainActivity extends Activity {
         }catch(RuntimeException ex){showExitPrompt();}
     }
     @Override public void onBackPressed(){handleGameBack();}
-    @Override public void onPause(){rewardForeground=false;rewardHandler.removeCallbacks(rewardPoll);if(web!=null){web.evaluateJavascript("window.NC74_MUSIC?.systemPause?.();window.NC_CHIODO_DISABLE_VOICE&&NC_CHIODO_DISABLE_VOICE();window.NC23_DISABLE_VOICE&&NC23_DISABLE_VOICE()",null);web.onPause();}super.onPause();}
-    @Override public void onResume(){super.onResume();if(web!=null){web.onResume();web.evaluateJavascript("window.NC74_MUSIC?.systemResume?.()",null);}rewardForeground=true;rewardHandler.removeCallbacks(rewardPoll);rewardHandler.post(rewardPoll);if(playBilling!=null)playBilling.resume();syncPushToken(this,null);deliverPushDestination();}
+    @Override public void onPause(){if(visibleScreen.get()==this)visibleScreen=new java.lang.ref.WeakReference<>(null);rewardForeground=false;rewardHandler.removeCallbacks(rewardPoll);if(web!=null){web.evaluateJavascript("window.NC74_MUSIC?.systemPause?.();window.NC_CHIODO_DISABLE_VOICE&&NC_CHIODO_DISABLE_VOICE();window.NC23_DISABLE_VOICE&&NC23_DISABLE_VOICE()",null);web.onPause();}super.onPause();}
+    @Override public void onResume(){super.onResume();visibleScreen=new java.lang.ref.WeakReference<>(this);if(web!=null){web.onResume();web.evaluateJavascript("window.NC74_MUSIC?.systemResume?.();window.NC77_CHAT?.refresh?.()",null);}rewardForeground=true;rewardHandler.removeCallbacks(rewardPoll);rewardHandler.post(rewardPoll);if(playBilling!=null)playBilling.resume();syncPushToken(this,null);deliverPushDestination();}
     @Override protected void onDestroy(){
         if(Build.VERSION.SDK_INT>=33&&modernBackCallback!=null){Back33.unregister(this,modernBackCallback);modernBackCallback=null;}
         rewardForeground=false;rewardHandler.removeCallbacksAndMessages(null);

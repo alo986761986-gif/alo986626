@@ -25,3 +25,8 @@
 #nc77-mic[aria-pressed=true]{background:#a43532;color:white}
 .nc77-overlay button:focus-visible{outline:3px solid #ffe28f;outline-offset:2px}
 @media(max-width:480px){.nc77-overlay{padding:0}.nc77-sheet{height:100dvh;width:100%;border:0;border-radius:0}.nc77-body{padding:10px}.nc77-input-line{gap:4px}.nc77-input-line button{min-width:39px}}
+
+/* NC9.12 - live unread indicator on the existing three-line menu */
+#nc76-menu-open{position:relative}
+.nc77-menu-unread{position:absolute;right:-5px;top:-6px;min-width:19px;height:19px;border-radius:11px;padding:0 4px;background:#f8ce73;color:#0c2944;border:1px solid #614a22;box-shadow:0 2px 5px #0005;font-weight:900;font-size:11px;display:inline-flex;align-items:center;justify-content:center;pointer-events:none}
+.nc77-menu-unread[hidden]{display:none}

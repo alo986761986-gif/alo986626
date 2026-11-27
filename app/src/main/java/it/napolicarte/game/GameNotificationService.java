@@ -68,6 +68,7 @@ public final class GameNotificationService extends FirebaseMessagingService {
             channel = CHAT;
             title = "Nuovo messaggio";
             body = "Nuovo messaggio da "+safeName(data.get("senderNickname"));
+            MainActivity.notifyIncomingChat(safeUid(data.get("senderUid")));
         } else if ("game_invite".equals(type)) {
             if (data.get("inviteId") == null || !data.get("inviteId").matches("[0-9a-fA-F-]{36}")) return;
             channel = INVITES;

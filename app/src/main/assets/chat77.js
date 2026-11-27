@@ -2,6 +2,8 @@
 'use strict';
 if(w.NC77_CHAT)return;
 let layer=null,view='threads',peer='',peerName='',messages=[],lastId='',busy=false,reading=false,timer=0,recorder=null,mic=null,recordStart=0,recordTimeout=0,recordCancel=false,playingUrls=new Set(),lastFocused=null;
+let inboxTimer=0,inboxBusy=false,inboxPromise=null,lastInboxHash='',lastUnread=-1,chatGeneration=0,blockedUntil=0;
+const ACTIVE_POLL_MS=2200, INBOX_POLL_MS=7000;
 const $=selector=>layer?.querySelector(selector);
 const element=(tag,cls,text)=>{const e=d.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const call=(op,args={})=>w.NC70_SOCIAL?.call?.(op,args)??Promise.reject(Error('Servizio chat non disponibile. Aggiorna l’app.'));
@@ -23,9 +25,52 @@ function resetView(){const target=$('#nc77-body');if(target)target.replaceChildr
 function close(){
  if(!layer)return false;
  clearInterval(timer);timer=0;stopMic(true);closeAudioUrls();
- layer.remove();layer=null;peer='';view='threads';messages=[];lastId='';busy=false;reading=false;
+ layer.remove();layer=null;peer='';view='threads';messages=[];lastId='';busy=false;reading=false;chatGeneration++;
+ refreshInbox().catch(()=>{});
  if(lastFocused?.isConnected)lastFocused.focus();
  return true;
+}
+function unreadCount(rows){return (rows||[]).reduce((total,row)=>total+Math.max(0,Math.min(999,Number(row.unread)||0)),0);}
+function updateBadge(count){
+ const n=Math.min(99,Math.max(0,count));if(n===lastUnread)return;
+ lastUnread=n;
+ const toggle=d.getElementById('nc76-menu-open');if(!toggle)return;
+ let mark=d.getElementById('nc77-unread-badge');
+ if(!mark){mark=element('span','nc77-menu-unread');mark.id='nc77-unread-badge';mark.setAttribute('aria-hidden','true');toggle.append(mark);}
+ mark.textContent=n>99?'99+':String(n);mark.hidden=n===0;
+ const original=toggle.getAttribute('data-chat-label')||toggle.getAttribute('aria-label')||'Apri menu';
+ toggle.setAttribute('data-chat-label',original);
+ toggle.setAttribute('aria-label',original+(n?' · '+n+' messaggi da leggere':''));
+}
+function renderThreads(rows){
+ const root=$('#nc77-body');if(!root||!layer||view!=='threads')return;
+ const signature=JSON.stringify(rows.map(x=>[x.uid,x.nickname,x.last_kind,x.last_text,x.unread]));
+ if(signature===lastInboxHash)return;
+ lastInboxHash=signature;
+ const previousScroll=root.scrollTop;
+ root.replaceChildren();
+ if(!rows.length)root.append(element('p','nc77-hint','Non hai ancora amici accettati. Cerca un nickname da ☰ → Amici e invia una richiesta.'));
+ for(const row of rows){
+  const stamp=row.last_kind==='voice'?'🎙️ Messaggio vocale':row.last_text||'Inizia una conversazione';
+  root.append(entry(row.uid,row.nickname,stamp,row.unread));
+ }
+ root.scrollTop=previousScroll;
+}
+async function refreshInbox(){
+ if(inboxPromise)return inboxPromise;
+ if(d.hidden||Date.now()<blockedUntil)return;
+ if(w.NCDesktop?.identity&&!w.NCDesktop.identity()?.uid)return;
+ inboxBusy=true;
+ inboxPromise=(async()=>{try{
+  const r=await call('chatThreads');
+  const rows=Array.isArray(r.threads)?r.threads:[];
+  updateBadge(unreadCount(rows));
+  if(layer&&view==='threads')renderThreads(rows);
+ }catch(e){
+  if(/accedi|401|non autenticat|sessione|firebase/i.test(e.message||''))blockedUntil=Date.now()+30000;
+  if(layer&&view==='threads')status(e.message||'Chat temporaneamente non disponibile');
+ }finally{inboxBusy=false;inboxPromise=null;}})();
+ return inboxPromise;
 }
 function spinner(){resetView();const p=element('p','nc77-hint','Caricamento…');$('#nc77-body').append(p);}
 function entry(uid,name,subtitle,unread){
@@ -38,17 +83,10 @@ function entry(uid,name,subtitle,unread){
 }
 async function threads(){
  if(!layer)return;
- stopMic(true);view='threads';peer='';messages=[];lastId='';setHeader('Chat privata',false);spinner();
+ chatGeneration++;
+ stopMic(true);view='threads';peer='';messages=[];lastId='';lastInboxHash='';setHeader('Chat privata',false);spinner();
  $('#nc77-editor').hidden=true;status('');
- try{
-  const r=await call('chatThreads'),root=$('#nc77-body');if(!root||view!=='threads')return;
-  root.replaceChildren();
-  if(!(r.threads||[]).length)root.append(element('p','nc77-hint','Non hai ancora amici accettati. Cerca un nickname da ☰ → Amici e invia una richiesta.'));
-  for(const row of r.threads||[]){
-   const stamp=row.last_kind==='voice'?'🎙️ Messaggio vocale':row.last_text||'Inizia una conversazione';
-   root.append(entry(row.uid,row.nickname,stamp,row.unread));
-  }
- }catch(e){status(e.message);resetView();}
+ await refreshInbox();
 }
 function addMessage(m){
  if(!layer||view!=='conversation'||messages.some(x=>x.id===m.id))return;
@@ -81,12 +119,13 @@ function addMessage(m){
 async function openPeer(uid,name){
  if(!uid)return;
  stopMic(true);closeAudioUrls();
+ const epoch=++chatGeneration;
  peer=uid;peerName=name||'Amico';view='conversation';messages=[];lastId='';
  setHeader(peerName,true);spinner();$('#nc77-editor').hidden=false;
  status('');
  try{
   const r=await call('chatMessages',{peer});
-  if(!layer||view!=='conversation'||peer!==uid)return;
+  if(!layer||view!=='conversation'||peer!==uid||epoch!==chatGeneration)return;
   resetView();
   for(const m of r.messages||[])addMessage(m);
   await call('chatRead',{peer}).catch(()=>{});
@@ -102,7 +141,7 @@ async function tick(){
    for(const m of r.messages||[])addMessage(m);
    if((r.messages||[]).some(m=>m.sender===peer))call('chatRead',{peer}).catch(()=>{});
   }else if(view==='threads'){
-   // Refresh the inbox only after user opens it to avoid disruptive redraw while selecting.
+   await refreshInbox();
   }
  }catch(e){if(layer&&view==='conversation')status(e.message);}finally{reading=false;}
 }
@@ -171,11 +210,25 @@ function open(uid,name){
   $('#nc77-send').onclick=sendMessage;
   $('#nc77-text').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendMessage();}});
   layer.addEventListener('click',e=>{if(e.target===layer)close()});
-  timer=setInterval(tick,6000);
+  timer=setInterval(tick,ACTIVE_POLL_MS);
  }
  if(uid)openPeer(uid,name);else threads();
  return true;
 }
-d.addEventListener('visibilitychange',()=>{if(d.hidden)stopMic(true)});
-w.NC77_CHAT={open,openPeer,close,isOpen:()=>!!layer};
+function wake(){
+ if(d.hidden)return;
+ if(layer){if(view==='conversation')tick().catch(()=>{});else refreshInbox().catch(()=>{});}
+ else refreshInbox().catch(()=>{});
+}
+function incomingPush(senderUid){
+ if(d.hidden)return;
+ if(layer&&view==='conversation'&&(!senderUid||senderUid===peer))tick().catch(()=>{});
+ else refreshInbox().catch(()=>{});
+}
+d.addEventListener('visibilitychange',()=>{if(d.hidden)stopMic(true);else wake()});
+w.addEventListener('focus',wake);
+w.addEventListener('online',wake);
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',wake,{once:true});else setTimeout(wake,150);
+inboxTimer=setInterval(()=>{if(!layer)refreshInbox().catch(()=>{});},INBOX_POLL_MS);
+w.NC77_CHAT={open,openPeer,close,isOpen:()=>!!layer,refresh:wake,onIncomingPush:incomingPush};
 })(window,document);
