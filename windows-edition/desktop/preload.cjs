@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('NCDesktop',Object.freeze({
  bootDone:()=>ipcRenderer.invoke('napoli:boot-done'),
  login:(mode,email,password)=>ipcRenderer.invoke('napoli:login',mode,email,password),
  googleAvailable:()=>ipcRenderer.invoke('napoli:google-available'),
+ googleConfigure:clientId=>ipcRenderer.invoke('napoli:google-configure',clientId),
  googleLogin:()=>ipcRenderer.invoke('napoli:google-login'),
  guest:()=>ipcRenderer.invoke('napoli:guest'),
  logout:()=>ipcRenderer.invoke('napoli:logout'),
