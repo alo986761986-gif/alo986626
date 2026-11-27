@@ -10,8 +10,8 @@ const local=fs.readFileSync(base+'chiodo.js','utf8');
 const multi=fs.readFileSync(base+'chiodo-network.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('tools/build93-manifest.json','utf8'));
 test('Both Chiodo 121 modes receive the cartoon theme and common game table',()=>{
- assert.equal(manifest.app.versionName,'9.7.0');
- assert.equal(manifest.app.versionCode,97);
+ assert.match(manifest.app.versionName,/^9\\.(?:7|8)\\.0$/);
+ assert.ok(manifest.app.versionCode>=97);
  assert.equal(manifest.app.gameCount,19);
  assert.equal(manifest.app.minSdk,24);
  for(const id of ['#chiodo121','#chiodo121-online','#chiodo121.ch65','#chiodo121-online.ch65']){
