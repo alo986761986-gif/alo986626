@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 320" role="img" aria-label="Chiodo 121 Napoli Cartoon">
+<defs><linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#56c7ff"/><stop offset="1" stop-color="#217ed3"/></linearGradient><linearGradient id="gold" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#fff6b0"/><stop offset=".52" stop-color="#ffd05c"/><stop offset="1" stop-color="#ee9c32"/></linearGradient><filter id="shadow"><feDropShadow dx="0" dy="7" stdDeviation="4" flood-opacity=".25"/></filter></defs>
+<g filter="url(#shadow)">
+<path d="M272 20 463 82 457 218q-72 89-185 94Q157 307 83 218L78 82Z" fill="#fff6cf" stroke="#79471c" stroke-width="10" stroke-linejoin="round"/>
+<path d="M271 32 450 91l-5 122q-70 83-174 89-106-8-174-89L92 91Z" fill="url(#sky)" stroke="#fff3ba" stroke-width="6"/>
+<path d="M109 200q85-15 164 0t158-7v20q-70 74-158 81-94-7-164-81Z" fill="#138f74"/>
+<circle cx="360" cy="95" r="31" fill="#fff1a0" stroke="#f2ac50" stroke-width="5"/>
+<path d="M123 189 220 102l37 24 32-26 65 89Z" fill="#7d8dd3" stroke="#1b5f9b" stroke-width="7" stroke-linejoin="round"/>
+<path d="M193 140l27-31 36 25 33-27 28 32" fill="none" stroke="#c8e3f7" stroke-width="9" stroke-linecap="round"/>
+<path d="M118 211q30-25 54-4t49 0 51 0 53-3 57 2 50 1" fill="none" stroke="#b2f4e6" stroke-width="7" stroke-linecap="round"/>
+<path d="M178 83 270 53 363 83 344 118H194Z" fill="url(#gold)" stroke="#714520" stroke-width="9" stroke-linejoin="round"/>
+<circle cx="270" cy="137" r="79" fill="url(#gold)" stroke="#79451e" stroke-width="10"/>
+<circle cx="270" cy="137" r="65" fill="#fff4c6" stroke="#e4a34a" stroke-width="5"/>
+<text x="270" y="145" text-anchor="middle" font-family="Arial,system-ui,sans-serif" font-size="64" font-weight="1000" fill="#164a88" stroke="#fffaf0" stroke-width="3" paint-order="stroke">121</text>
+<path d="M153 225Q271 242 389 225v29Q271 276 153 254Z" fill="#f2a43b" stroke="#794a23" stroke-width="7"/>
+<text x="270" y="251" text-anchor="middle" font-family="Arial,system-ui,sans-serif" font-size="28" font-weight="1000" letter-spacing="3" fill="#fff8e3" stroke="#a86322" stroke-width="2" paint-order="stroke">CHIODO</text>
+</g></svg>
