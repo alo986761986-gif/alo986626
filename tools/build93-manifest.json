@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "app": {
     "packageName": "it.napolicarte.game",
-    "versionCode": 98,
-    "versionName": "9.8.0",
+    "versionCode": 99,
+    "versionName": "9.9.0",
     "minSdk": 24,
     "targetSdk": 36,
     "gameCount": 19,
@@ -32,12 +32,12 @@
       "dubito",
       "mercante"
     ],
-    "apkFile": "NAPOLI_CARTE_3D_9_8_MODALITA_CARICAMENTO_CHIODO_FIRMATO.apk"
+    "apkFile": "NAPOLI_CARTE_3D_9_9_BOOT_CARTOON_CHIODO_4POLLICI_FIRMATO.apk"
   },
   "previousRelease": {
-    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_7_CHIODO_CARTOON_FIRMATO.apk",
-    "file": "NAPOLI_CARTE_3D_9_7_CHIODO_CARTOON_FIRMATO.apk",
-    "versionCode": 97
+    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_8_MODALITA_CARICAMENTO_CHIODO_FIRMATO.apk",
+    "file": "NAPOLI_CARTE_3D_9_8_MODALITA_CARICAMENTO_CHIODO_FIRMATO.apk",
+    "versionCode": 98
   },
   "toolchain": {
     "jdk": {
