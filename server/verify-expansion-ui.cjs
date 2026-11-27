@@ -73,12 +73,19 @@ async function load(context) {
       body:document.body.classList.contains('nc96-cartoon'),
       theme:document.getElementById('nc96-cartoon-theme')?.href||'',
       border:button?parseFloat(getComputedStyle(button).borderTopWidth):0,
-      background:getComputedStyle(document.body).backgroundImage
+      background:getComputedStyle(document.body).backgroundImage,
+      tileBackground:button?getComputedStyle(button).backgroundImage:'',
+      themeOnBody:document.getElementById('nc96-cartoon-theme')?.parentElement===document.body,
+      buttonText:button?getComputedStyle(button).color:''
     };
   });
   assert.ok(cartoon.body && cartoon.theme.includes('nc96-cartoon.css'),'Cartoon theme is loaded');
   assert.ok(cartoon.border>=3,'Cartoon game tiles have bold borders');
   assert.ok(cartoon.background.includes('nc96-cartoon-golfo.svg'),'Original Napoli drawing loaded');
+  assert.ok(cartoon.themeOnBody,'Cartoon style must cascade after the original premium inline body CSS');
+  assert.ok(cartoon.tileBackground.includes('rgb(255, 249, 229)'),'Cartoon cream-and-gold tile must be visually applied: '+cartoon.tileBackground);
+  assert.equal(cartoon.buttonText,'rgb(32, 60, 93)','Cartoon game button ink is actually visible');
+
 
   return page;
 }
