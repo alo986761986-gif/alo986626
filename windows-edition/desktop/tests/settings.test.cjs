@@ -16,7 +16,7 @@ test('static file traversal blocked',()=>{
  assert.throws(()=>x.fileIn('/tmp/game','../secret'),/Percorso non valido/);
  assert.throws(()=>x.fileIn('/tmp/game','%2e%2e%2fsecret'),/Percorso non valido/);
  assert.throws(()=>x.fileIn('/tmp/game','a\\b'),/Percorso non valido/);
- assert.equal(x.fileIn('/tmp/game','index.html'),'/tmp/game/index.html');
+ assert.equal(x.fileIn('/tmp/game','index.html'),path.resolve('/tmp/game','index.html'));
 });
 test('all nineteen approved game identifiers are pinned to the Windows package',()=>{
  const catalog=require('../game-catalog.json');
