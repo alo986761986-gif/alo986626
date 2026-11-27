@@ -70,6 +70,7 @@ async function start(){
   let launched=false;
   if(classicIds.includes(selected)){
    if(typeof w.setGame!=='function'||typeof w.setSeats!=='function'||typeof w.setFormat!=='function'||typeof w.setMode!=='function'||typeof w.joinGame!=='function')throw Error('Il motore del gioco non è disponibile.');
+   if(kind==='online'&&w.NC3D_OFFLINE&&!w.NC3D_SERVER_URL)throw Error('Il server mondiale per questo gioco non è configurato. Puoi giocare contro bot.');
    w.setGame(selected);w.setSeats(n);
    w.setFormat(rule);w.setMode(kind==='online'?'online':'bot');
    setStage(kind==='online'?'Apertura della ricerca online…':'Creazione della partita contro bot…');
