@@ -168,8 +168,8 @@ async function smokeChiodoCartoon() {
       background:getComputedStyle(el).backgroundImage,
       badge:getComputedStyle(el.querySelector('.ch-lobby'),'::before').backgroundImage
     }));
-    assert.match(lobby.background,/nc96-cartoon-golfo\\.svg/);
-    assert.match(lobby.badge,/nc97-chiodo-emblem\\.svg/);
+    assert.ok(lobby.background.includes('nc96-cartoon-golfo.svg'),'Offline cartoon panorama loaded');
+    assert.ok(lobby.badge.includes('nc97-chiodo-emblem.svg'),'Chiodo emblem loaded');
     await shot(page,'chiodo97-offline-cartoon-lobby');
     await page.locator('#chiodo121 [data-n="2"]').click();
     await page.locator('#chiodo121.ch65 .ch-arena').waitFor({timeout:8000});
@@ -181,7 +181,7 @@ async function smokeChiodoCartoon() {
     await page.locator('#chiodo-online-entry').click();
     await page.locator('#chiodo121-online #co-name').waitFor({timeout:8000});
     const online=await page.locator('#chiodo121-online').evaluate(el=>getComputedStyle(el).backgroundImage);
-    assert.match(online,/nc96-cartoon-golfo\\.svg/);
+    assert.ok(online.includes('nc96-cartoon-golfo.svg'),'Multiplayer cartoon panorama loaded');
     await shot(page,'chiodo97-online-cartoon-lobby');
     await page.locator('#chiodo121-online #co-close').click();
     await page.locator('#chiodo121-online').waitFor({state:'detached'});
