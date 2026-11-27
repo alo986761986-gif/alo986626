@@ -15,7 +15,7 @@ const catalog=[
  ['trentuno','Trentuno','31'],['cucu','Cucù','🐦'],['cirulla','Cirulla','✨'],['asino','Asino','🐴'],['dubito','Dubito','🎭'],
  ['tressette_morto','Tressette col Morto','👤'],['mercante','Mercante in Fiera','🎪']
 ];
-let overlay=null,chosen='',opponent='cpu',format='all',players=2,launching=false,focused=null,request=0;
+let overlay=null,chosen='',opponent='cpu',format='all',players=2,launching=false,focused=null,request=0,dispatching=false;
 const names=new Map(catalog.map(v=>[v[0],v]));
 function el(tag,cls,text){const e=d.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function gameData(id){return names.get(id)||null;}
@@ -83,7 +83,7 @@ async function start(){
   }else if(selected==='chiodo121'){
    setStage('Caricamento del tavolo Chiodo 121…');
    const b=d.getElementById(kind==='online'?'chiodo-online-entry':'chiodo-entry');if(!b)throw Error('Chiodo 121 non è disponibile.');
-   b.click();launched=!!d.getElementById(kind==='online'?'chiodo121-online':'chiodo121');
+   dispatching=true;try{b.click();}finally{dispatching=false;}launched=!!d.getElementById(kind==='online'?'chiodo121-online':'chiodo121');
    if(launched&&kind==='cpu'){
     const fmt=d.getElementById('ch-format');if(fmt){fmt.value=rule;fmt.dispatchEvent(new Event('change',{bubbles:true}));}
     const chosenSeats=d.querySelector('#chiodo121 [data-n="'+n+'"]');
@@ -98,7 +98,7 @@ async function start(){
   }else if(selected==='banco'){
    setStage('Apertura delle cartelle della Tombola…');
    if(kind==='online'){const fn=w.NC_BANCO_ONLINE_OPEN;if(typeof fn==='function'){fn();launched=!!d.getElementById('nc92-online');}}
-   else{const b=d.querySelector('#root .games .nc91-launch');if(b){b.click();launched=!!d.getElementById('nc91-banco');}}
+   else{const b=d.querySelector('#root .games .nc91-launch');if(b){dispatching=true;try{b.click();}finally{dispatching=false;}launched=!!d.getElementById('nc91-banco');}}
   }
   if(!launched)throw Error('Impossibile aprire il tavolo. Riprova dalla schermata dei giochi.');
   if(request===mine)close();
@@ -124,6 +124,7 @@ function tileId(tile){
 // Classic tiles are intercepted by NC95_CLEAN_LOBBY, which calls this API.
 // Other tiles use this delegated listener even after the lobby rerenders.
 d.addEventListener('click',e=>{
+ if(dispatching)return;
  const tile=e.target.closest?.('#root .games button.game');if(!tile)return;
  const id=tileId(tile);if(!id||classicIds.includes(id))return;
  e.preventDefault();e.stopImmediatePropagation();
