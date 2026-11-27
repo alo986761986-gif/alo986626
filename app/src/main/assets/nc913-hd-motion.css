@@ -1,0 +1,63 @@
+/* Napoli Carte 3D 9.13 - HD/Full HD motion system (presentation only). */
+:root{--nc913-ease:cubic-bezier(.22,1,.36,1);--nc913-gold:#ffe7ad;--nc913-surface:#082e62}
+body.nc90{image-rendering:auto;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+body.nc90 .playing-card,body.nc90 .ch-deck,body.nc90 .ch-avatar,body.nc90 .nc90-portrait{
+ backface-visibility:hidden;transform-style:preserve-3d;
+}
+body.nc90 .playing-card svg,body.nc90 .ch-avatar svg,body.nc90 .nc84-cardfan svg{
+ width:100%;height:100%;shape-rendering:geometricPrecision;
+}
+body.nc90 .nc90-sidebar,body.nc90 .nc90-profilebar,body.nc90 .intro,
+body.nc90 .ch-head,body.nc90 .ch-score,body.nc90 .ch-arena,
+body.nc90 .nc72-page,body.nc90 .nc79-sheet{
+ -webkit-font-smoothing:antialiased;
+}
+@keyframes nc913-reveal{0%{opacity:0;transform:translate3d(0,14px,0) scale(.975);filter:blur(5px)}
+ 60%{filter:blur(0)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}}
+@keyframes nc913-card-appear{0%{opacity:0;transform:translate3d(0,-18px,0) rotateY(25deg) scale(.92)}
+ 65%{opacity:1;transform:translate3d(0,2px,0) rotateY(-3deg) scale(1.015)}
+ 100%{opacity:1;transform:none}}
+@keyframes nc913-shimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes nc913-turn-light{0%,100%{filter:drop-shadow(0 0 2px #40e89066)}
+ 50%{filter:drop-shadow(0 0 9px #68ffac99)}}
+body.nc90 .nc913-reveal{animation:nc913-reveal .42s var(--nc913-ease) both}
+body.nc90 .nc913-card-enter{animation:nc913-card-appear .47s var(--nc913-ease) both;
+ animation-delay:var(--nc913-delay,0ms)}
+body.nc90 .ch-seat.active .nc59-clock{animation:nc913-turn-light 2.3s ease-in-out infinite}
+body.nc90 #root button.game,body.nc90 .nc90-sidebar button,body.nc90 .ch-btn,
+body.nc90 .ch-hand button[data-card],body.nc90 .nc98-game{
+ transition:box-shadow .22s var(--nc913-ease),filter .22s var(--nc913-ease),
+ background-color .22s ease,border-color .22s ease;
+}
+@media(hover:hover) and (pointer:fine){
+ body.nc90 #root button.game:hover,body.nc90 .nc90-sidebar button:hover,
+ body.nc90 .ch-hand button[data-card]:hover{filter:brightness(1.10)}
+}
+body.nc90 .ch65 .ch-center .playing-card,body.nc90 .ch65 .ch-hand .playing-card{
+ box-shadow:0 2px 0 #ebd7ac,0 6px 14px #001a3e75!important;
+ border-radius:clamp(6px,.7vw,11px)!important;
+}
+body.nc90 .ch65 .ch-arena .ch-center{filter:drop-shadow(0 4px 6px #00192555)}
+@media(min-width:1200px){
+ body.nc90-in-lobby #root>main.wrap{max-width:1440px!important}
+ body.nc90-in-lobby #root .games{gap:clamp(12px,1.3vw,22px)!important}
+ body.nc90 .ch65.ch-premium>*{max-width:min(96vw,1120px)!important}
+ body.nc90 .ch65 .ch-arena{max-width:min(94vw,1060px)!important}
+ body.nc90 .ch65 .ch-head{max-width:1120px!important}
+ body.nc90 .ch65 .ch-score{max-width:1120px!important}
+ body.nc90 .ch65 .ch-hand{max-width:1120px!important}
+}
+@media(min-width:1800px){
+ body.nc90 .ch65.ch-premium{font-size:clamp(15px,.9vw,18px)!important}
+ body.nc90 .ch65 .ch-arena{max-width:1200px!important}
+ body.nc90 .ch65 .ch-seat .ch65-seat-caption>b{font-size:15px!important}
+}
+@media(max-width:430px){
+ body.nc90 #root .games{gap:8px!important}
+ body.nc90 .ch65 .ch-seat{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.nc90 .nc913-reveal,body.nc90 .nc913-card-enter,body.nc90 .ch-seat.active .nc59-clock{
+ animation:none!important;filter:none!important}
+ body.nc90 #root button.game,body.nc90 .ch-hand button[data-card]{transition:none!important}
+}
