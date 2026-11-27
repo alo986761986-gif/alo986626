@@ -183,6 +183,10 @@ async function smokeChiodoCartoon() {
     const online=await page.locator('#chiodo121-online').evaluate(el=>getComputedStyle(el).backgroundImage);
     assert.ok(online.includes('nc96-cartoon-golfo.svg'),'Multiplayer cartoon panorama loaded');
     await shot(page,'chiodo97-online-cartoon-lobby');
+    // The game can keep its first-visit illustrated rules open over the online lobby.
+    // Close the real modal before testing the visible Back button.
+    if(await page.locator('.ch-rules [data-rule="close"]').count())
+      await page.locator('.ch-rules [data-rule="close"]').click();
     await page.locator('#chiodo121-online #co-close').click();
     await page.locator('#chiodo121-online').waitFor({state:'detached'});
     report.chiodoCartoon={ok:true,offline:true,multiplayer:true};
