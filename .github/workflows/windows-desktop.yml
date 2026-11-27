@@ -3,14 +3,14 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - nc82-render-android-build
+      - windows/edition-0_3-20261127
     paths:
-      - 'desktop/**'
-      - 'package.json'
+      - 'windows-edition/**'
       - '.github/workflows/windows-desktop.yml'
 jobs:
   build-windows:
     runs-on: windows-2022
+    timeout-minutes: 45
     permissions:
       contents: read
     steps:
@@ -18,33 +18,61 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Restore original music and validate checksum
+      - name: Restore approved Android 9.10 HTML and original music
         shell: pwsh
         run: |
+          node tools/prepare-expansion-index.cjs
           $parts = @(Get-ChildItem server/bass_audio_parts/part-*.b64 | Sort-Object Name)
-          if ($parts.Count -ne 20) { throw "Expected 20 audio parts, got $($parts.Count)" }
+          if ($parts.Count -ne 20) { throw "Expected 20 music parts, got $($parts.Count)" }
           $raw = ($parts | ForEach-Object { [System.IO.File]::ReadAllText($_.FullName).Trim() }) -join ''
           New-Item -ItemType Directory -Force -Path app/src/main/assets/music | Out-Null
-          $file = 'app/src/main/assets/music/alfonso-neri-bass-on-fire.mp3'
-          [System.IO.File]::WriteAllBytes($file, [Convert]::FromBase64String($raw))
-          $sha = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
-          if ($sha -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226') { throw 'Audio SHA256 mismatch' }
-      - name: Verify 19 games and original HTML asset
+          $music = 'app/src/main/assets/music/alfonso-neri-bass-on-fire.mp3'
+          [System.IO.File]::WriteAllBytes($music,[Convert]::FromBase64String($raw))
+          $actual=(Get-FileHash -Algorithm SHA256 $music).Hash.ToLowerInvariant()
+          if ($actual -ne 'fa8d6915ed5cbbef467a345eae1cfeecf46e6fd84cba5fd07580d41715865226') { throw 'Original music SHA256 mismatch' }
+      - name: Copy reviewed 19-game assets into desktop package
+        shell: pwsh
         run: |
-          node tools/prepare-expansion-index.cjs
+          New-Item -ItemType Directory -Force -Path windows-edition/app/src/main,windows-edition/app,windows-edition/tools | Out-Null
+          Copy-Item -Path app/src/main/assets -Destination windows-edition/app/src/main -Recurse -Force
+          Copy-Item -LiteralPath app/google-services.json -Destination windows-edition/app/google-services.json -Force
+          Copy-Item -LiteralPath tools/build93-manifest.json -Destination windows-edition/tools/build93-manifest.json -Force
+      - name: Check game catalogue, asset integrity and desktop source
+        working-directory: windows-edition
+        run: |
           node desktop/check-assets.cjs
-      - name: Install Electron and builder
-        run: npm install --no-audit --no-fund
-      - name: Unit and integration checks
-        run: npm run unit
-      - name: Build Windows NSIS installer and portable EXE
+          npm install --no-audit --no-fund
+          npm run unit
+      - name: Build x64 Setup EXE and Portable EXE
+        working-directory: windows-edition
         run: npm run pack:win
-      - name: Upload Windows builds
+      - name: Verify installer, portable and packaged game files
+        shell: pwsh
+        run: |
+          $root = 'windows-edition/dist/windows'
+          $unpacked = Join-Path $root 'win-unpacked'
+          $required = @(
+            (Join-Path $unpacked 'NAPOLI CARTE 3D.exe'),
+            (Join-Path $unpacked 'resources/app.asar'),
+            (Join-Path $unpacked 'resources/game/index.html'),
+            (Join-Path $unpacked 'resources/game/music/alfonso-neri-bass-on-fire.mp3')
+          )
+          foreach ($file in $required) {
+            if (-not (Test-Path $file)) { throw "Missing packaged file: $file" }
+          }
+          $setup=@(Get-ChildItem $root -Filter '*SETUP*.exe')
+          $portable=@(Get-ChildItem $root -Filter '*PORTABLE*.exe')
+          if ($setup.Count -ne 1 -or $portable.Count -ne 1) { throw 'Expected exactly one Setup EXE and one Portable EXE' }
+          foreach ($file in @($setup[0],$portable[0])) {
+            $hash=(Get-FileHash -Algorithm SHA256 $file.FullName).Hash
+            Write-Host "$($file.Name): $hash"
+          }
+      - name: Upload installer and portable artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: NapoliCarte3D-Windows-EXE-${{ github.run_number }}
+          name: NapoliCarte3D-Windows-0.3-${{ github.run_number }}
           path: |
-            dist/windows/*SETUP*.exe
-            dist/windows/*PORTABLE*.exe
+            windows-edition/dist/windows/*SETUP*.exe
+            windows-edition/dist/windows/*PORTABLE*.exe
           if-no-files-found: error
           retention-days: 14
