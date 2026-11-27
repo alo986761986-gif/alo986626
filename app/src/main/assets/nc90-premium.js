@@ -79,6 +79,14 @@ function loadCartoonEdition(){
  if(!d.getElementById('nc98-chiodo-layout-style')){
   const layout=d.createElement('link');layout.id='nc98-chiodo-layout-style';layout.rel='stylesheet';layout.href='nc98-chiodo-layout.css';d.head.appendChild(layout);
  }
+ if(!d.getElementById('nc913-hd-theme')){
+  const hd=d.createElement('link');hd.id='nc913-hd-theme';hd.rel='stylesheet';
+  hd.href='nc913-hd-motion.css';d.head.appendChild(hd);
+ }
+ if(!d.getElementById('nc913-motion-script')){
+  const motion=d.createElement('script');motion.id='nc913-motion-script';motion.src='nc913-hd-motion.js';
+  motion.defer=true;d.head.appendChild(motion);
+ }
  if(!d.getElementById('nc98-game-launcher-script')){
   const script=d.createElement('script');script.id='nc98-game-launcher-script';script.src='nc98-launcher.js';d.head.appendChild(script);
  }
