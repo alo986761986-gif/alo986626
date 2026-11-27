@@ -231,7 +231,7 @@ async function smokeChiodoCartoon() {
 
 async function smokeCompactChiodoSeating() {
   const details=[];
-  for(const viewport of [{width:320,height:568},{width:360,height:640},{width:390,height:844},{width:430,height:932},{width:800,height:360}]) {
+  for(const viewport of [{width:320,height:568},{width:360,height:640},{width:390,height:844},{width:430,height:932},{width:800,height:360},{width:1366,height:768},{width:1920,height:1080}]) {
     const context=await browser.newContext({viewport,reducedMotion:'reduce'});
     await prepare(context);
     const page=await load(context);
@@ -355,7 +355,7 @@ async function smokeOnline() {
   }
   try { await smokeOnline(); console.log('PASS two independent online sessions'); } catch (error) { report.errors.push({stage:'online',message:error.message,stack:error.stack}); console.error('FAIL online',error.message); }
   try { await smokeChiodoCartoon(); console.log('PASS Chiodo 121 offline/online cartoon visual tests'); } catch (error) { report.errors.push({stage:'chiodo97',message:error.message,stack:error.stack}); console.error('FAIL Chiodo 121 cartoon',error.message); }
-  try { await smokeCompactChiodoSeating(); console.log('PASS Chiodo 121 seating lanes and centered cartoon loader on five viewports'); } catch(error) { report.errors.push({stage:'chiodo910',message:error.message,stack:error.stack}); console.error('FAIL compact Chiodo 121',error.message); }
+  try { await smokeCompactChiodoSeating(); console.log('PASS Chiodo 121 seating lanes and centered cartoon loader on seven viewports, including Windows desktop'); } catch(error) { report.errors.push({stage:'chiodo910',message:error.message,stack:error.stack}); console.error('FAIL compact Chiodo 121',error.message); }
   try { await smokeLaunch98(); console.log('PASS 19-game launcher, loading bar and pair restrictions'); } catch(error) { report.errors.push({stage:'launch98',message:error.message,stack:error.stack}); console.error('FAIL launcher 9.8',error.message); }
 })().catch(error => { report.errors.push({stage:'setup',message:error.message,stack:error.stack}); console.error(error); })
   .finally(async () => {
