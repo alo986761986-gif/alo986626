@@ -8,7 +8,7 @@ const hub=fs.readFileSync(base+'online-hub72.js','utf8');
 const premium=fs.readFileSync(base+'nc90-premium.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('tools/build93-manifest.json','utf8'));
 test('All nineteen playable games are mapped to the shared launcher',()=>{
- assert.equal(manifest.app.gameCount,19);assert.ok(manifest.app.versionCode>=98);assert.match(manifest.app.versionName,/^9\.(?:8|9|10)\.0$/);
+ assert.equal(manifest.app.gameCount,19);assert.ok(manifest.app.versionCode>=98);assert.match(manifest.app.versionName,/^9\.(?:8|9|10|11)\.0$/);
  const catalog=['scopa','scopone','briscola','sette','asso','ruba','chiodo121','banco','tressette','traversone','briscola_chiamata','bestia','trentuno','cucu','cirulla','asino','dubito','tressette_morto','mercante'];
  for(const id of catalog)assert.ok(gateway.includes("'"+id+"'"),'missing game '+id);
  assert.match(gateway,/const pairIds=new Set/);

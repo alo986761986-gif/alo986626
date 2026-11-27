@@ -239,16 +239,10 @@
     draw(rec,'ring',model(0,.036,0,1.669,.28,rz*.881),mix(brass,felt,.48),2,.8);
     // Imprint on the near edge, leaving the active piles unobstructed.
     draw(rec,'plane',model(0,.039,rz*.53,.52,1,Math.min(.27,rz*.22)),brass,6,.57);
+    // Chiodo 9.11: no second set of 3D busts over the played cards.
+    // Each 3D avatar is still rendered in the dedicated player portrait circle below.
+    // Keep the original green felt and wooden 3D table unchanged.
     const n=s.n||s.players.length, me=s.seat||0;
-    const positions=n===2?[[50,78],[50,23]]:n===3?[[50,78],[24,30],[76,30]]:[[50,78],[23,48],[50,23],[77,48]];
-    s.players.forEach((p,i)=>{
-      if(p.eliminated||p.name==='Posto libero')return;
-      const j=(i-me+n)%n, pos=positions[j], x=(pos[0]/50-1)*halfX,z=(pos[1]/50-1)*halfY/.65;
-      const scale=Math.min(.56,halfY*.35), angle=Math.atan2(-x,-z), move=moved&&actor===i?gesture:0;
-      draw(rec,'disc',model(x,.044,z*.83,scale*.55,.002,scale*.38),[0,0,0],7,.5);
-      // Seated companions remain small; the same model is rendered clearly in the portrait frames below.
-      bust(rec,model(x,.10,z,scale,scale,scale,angle),i===me?Number(prefs.avatar)||0:i,move,false,s.status==='finished'&&s.winners?.[0]===i?gesture:0);
-    });
     // A single WebGL context also paints each avatar inside its existing UI circle.
     // The green turn ring, seconds, names and audio buttons remain normal DOM controls.
     const arenaRect=rec.arena.getBoundingClientRect();

@@ -136,27 +136,21 @@
     if(label)label.innerHTML='<span>LA TUA MANO</span><b>'+buttons.length+' '+(buttons.length===1?'CARTA':'CARTE')+'</b>'+(!layout.fan&&buttons.length>4?'<small>Scorri per vederle tutte</small>':'');
   }
   function compactArena(root,arena) {
-    const height=arena.getBoundingClientRect().height;
-    const compact=height<310;
-    root.dataset.compact=compact?'1':'0';
-    const top=root.querySelector('.ch-seat[data-position="top"]');
-    const own=root.querySelector('.ch-seat[data-position="own"]');
-    if(top)top.style.top=compact?'37px':'17%';
-    if(own)own.style.top=compact?(height-37)+'px':'84%';
+    // Chiodo 9.11: the shared responsive grid owns all six seat positions.
+    // Never reapply old percentage/inline positions over desktop or mobile CSS.
+    root.dataset.compact='0';
+    root.querySelectorAll('.ch-seat[data-position]').forEach(seat=>{
+      seat.style.removeProperty('left');
+      seat.style.removeProperty('top');
+    });
   }
   function fitArena(root) {
     const arena=root.querySelector('.ch-arena');if(!arena)return;
-    const landscape=g.matchMedia && g.matchMedia('(max-height:520px) and (orientation:landscape)').matches;
-    if(landscape){arena.style.height='';compactArena(root,arena);handStyle(root);return;}
-    const viewport=g.visualViewport?.height || g.innerHeight;
-    const children=Array.from(root.children).filter(n=>n!==arena&&!n.classList.contains('ch-settings')&&!n.classList.contains('ch-live')&&!n.classList.contains('ch65-flight'));
-    let occupied=0;
-    for(const child of children){const cs=getComputedStyle(child);if(cs.display==='none'||cs.position==='absolute'||cs.position==='fixed')continue;occupied+=child.getBoundingClientRect().height+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);}
-    const rs=getComputedStyle(root);
-    occupied+=(parseFloat(rs.paddingTop)||0)+(parseFloat(rs.paddingBottom)||0);
-    const available=viewport-occupied-8;
-    arena.style.height=clamp(available,250,root.clientWidth>700?480:430)+'px';
-    compactArena(root,arena);handStyle(root);
+    // CSS grid reserves independent rows for portraits, 3D felt and played cards.
+    // No 250px/viewport auto-shrink: vertical scrolling is safer on 4-inch phones.
+    arena.style.removeProperty('height');
+    compactArena(root,arena);
+    handStyle(root);
   }
   function decorateControls(root) {
     const controls=root.querySelector('.ch-controls');if(!controls)return;
