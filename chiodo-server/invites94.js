@@ -167,9 +167,9 @@ async function route(req,send,path){
    if(duplicate.rowCount)throw err(409,'Invito già inviato');
    const id=crypto.randomUUID();
    await p.query(`INSERT INTO nc94_invites(id,sender,recipient,room_id,game,audience,kind,expires_at)
- VALUES($1,$2,$3,$4,$5,$6,$7,now()+interval '60 seconds')`,[id,uid,to,c.roomId,c.game,audience,kind]);
+ VALUES($1,$2,$3,$4,$5,$6,$7,now()+interval '10 minutes')`,[id,uid,to,c.roomId,c.game,audience,kind]);
    Promise.resolve().then(()=>push.notify(to,'game_invite',{senderUid:uid,senderNickname:account.rows[0].nickname,game:c.game,inviteId:id})).catch(()=>{});
-   return send(200,{ok:true,id,expiresInSeconds:60,recipientNickname:target.nickname});
+   return send(200,{ok:true,id,expiresInSeconds:600,recipientNickname:target.nickname});
   }
   if(path==='/invites94/respond'&&req.method==='POST'){
    const a=await body(req);

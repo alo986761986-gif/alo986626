@@ -93,8 +93,19 @@ async function route(req,send,path){
    const recent=await db.query("SELECT COUNT(*)::integer AS n FROM nc_chat_messages WHERE sender=$1 AND created_at>now()-interval '60 seconds'",[uid]);
    if(recent.rows[0].n>=25)fail(429,'Troppi messaggi. Riprova tra un minuto');
    let body=null,voice=null;
-   if(payload.kind==='text')body=textMessage(payload.text);
-   else{
+   if(payload.kind==='text'){
+    if(payload.invite!==undefined){
+     const inv=payload.invite;
+     if(!inv||typeof inv!=='object'||Array.isArray(inv)||inv.game!=='chiodo121')fail(400,'Invito non valido');
+     const sessionToken=String(inv.sessionToken||'');
+     if(!/^[a-f0-9]{48}$/.test(sessionToken))fail(400,'Sessione stanza non valida');
+     const verified=require('./http.js').verifyPrivateInvite(sessionToken,inv.code);
+     body=textMessage('🃏 NAPOLI CARTE 3D · Invito a Chiodo 121!\n'+
+      'NC3D-INVITE:chiodo121:'+verified.code+':'+verified.seats+':'+verified.format+'\n'+
+      'Apri il gioco, scegli Chiodo 121 Online e inserisci il codice stanza.');
+    }else body=textMessage(payload.text);
+   }else{
+    if(payload.invite!==undefined)fail(400,'Invito disponibile solo per messaggi di testo');
     const count=await db.query("SELECT COUNT(*)::integer AS n FROM nc_chat_messages WHERE sender=$1 AND kind='voice' AND created_at>now()-interval '10 minutes'",[uid]);
     if(count.rows[0].n>=12)fail(429,'Troppi vocali. Riprova tra qualche minuto');
     voice=parseAudio(payload.base64,payload.mime,payload.duration);
@@ -102,6 +113,13 @@ async function route(req,send,path){
    const result=await db.query(
     'INSERT INTO nc_chat_messages(sender,recipient,kind,body,audio,audio_mime,duration) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING '+fields,
     [uid,peer,payload.kind,body,voice?.bytes||null,voice?.mime||null,voice?.seconds||null]);
+   if(payload.invite!==undefined){
+    const sender=await db.query('SELECT nickname FROM nc_social_users WHERE uid=$1',[uid]);
+    const pushSent=await require('./push82.js').notify(peer,'chat_message',{
+     senderUid:uid,senderNickname:sender.rows[0]?.nickname||'Invito Chiodo 121'
+    });
+    return send(200,{message:result.rows[0],inviteSaved:true,pushSent:!!pushSent});
+   }
    // A push failure must not cause the client to retry an already saved chat message.
    Promise.resolve().then(async()=>{
     const sender=await db.query('SELECT nickname FROM nc_social_users WHERE uid=$1',[uid]);

@@ -23,6 +23,8 @@ async function setup(){
   const db=social.db();
   await db.query("CREATE TABLE IF NOT EXISTS nc_push_devices (token text PRIMARY KEY,uid text NOT NULL REFERENCES nc_social_users(uid) ON DELETE CASCADE,updated_at timestamptz NOT NULL DEFAULT now())");
   await db.query("CREATE INDEX IF NOT EXISTS nc_push_devices_uid ON nc_push_devices(uid)");
+  await db.query("CREATE TABLE IF NOT EXISTS nc_push_pending_devices (token text PRIMARY KEY,uid text NOT NULL,updated_at timestamptz NOT NULL DEFAULT now())");
+  await db.query("CREATE INDEX IF NOT EXISTS nc_push_pending_devices_uid ON nc_push_pending_devices(uid)");
   await db.query("CREATE TABLE IF NOT EXISTS nc_push_daily_sent (uid text NOT NULL REFERENCES nc_social_users(uid) ON DELETE CASCADE,day date NOT NULL,PRIMARY KEY(uid,day))");
  })();
  try{await initialized;}catch(e){initialized=null;throw e;}
@@ -35,7 +37,7 @@ async function route(req,send,path){
   const uid=await social.firebase(req);
   await setup();
   if(path==='/push/status'){
-   const deviceCount=await social.db().query('SELECT COUNT(*)::integer AS total FROM nc_push_devices WHERE uid=$1',[uid]);
+   const deviceCount=await social.db().query('SELECT COUNT(DISTINCT token)::integer AS total FROM (SELECT token FROM nc_push_devices WHERE uid=$1 UNION SELECT token FROM nc_push_pending_devices WHERE uid=$1) devices',[uid]);
    return send(200,{ok:true,devices:deviceCount.rows[0].total,deliveryConfigured:!!process.env.FIREBASE_SERVICE_ACCOUNT_JSON});
   }
   let raw='';
@@ -45,10 +47,16 @@ async function route(req,send,path){
   const db=social.db();
   if(path==='/push/unregister'){
    await db.query('DELETE FROM nc_push_devices WHERE uid=$1 AND token=$2',[uid,token]);
+   await db.query('DELETE FROM nc_push_pending_devices WHERE uid=$1 AND token=$2',[uid,token]);
   }else{
    const u=await db.query('SELECT uid FROM nc_social_users WHERE uid=$1',[uid]);
-   if(!u.rowCount)return send(409,{error:'Configura prima il nickname'});
+   if(!u.rowCount){
+    await db.query("INSERT INTO nc_push_pending_devices(token,uid) VALUES($1,$2) ON CONFLICT(token) DO UPDATE SET uid=EXCLUDED.uid,updated_at=now()",[token,uid]);
+    await db.query('DELETE FROM nc_push_devices WHERE token=$1 AND uid<>$2',[token,uid]);
+    return send(200,{ok:true,pendingProfile:true});
+   }
    await db.query("INSERT INTO nc_push_devices(token,uid) VALUES($1,$2) ON CONFLICT(token) DO UPDATE SET uid=EXCLUDED.uid,updated_at=now()",[token,uid]);
+   await db.query('DELETE FROM nc_push_pending_devices WHERE token=$1',[token]);
   }
   return send(200,{ok:true});
  }catch(e){console.error('push registration:',e.message);return send(e.status||503,{error:e.status===401?e.message:'Notifiche temporaneamente non disponibili'});}
@@ -58,11 +66,11 @@ async function notify(uid,type,details={}){
  try{
   await setup();
   const db=social.db();
-  const rows=(await db.query('SELECT token FROM nc_push_devices WHERE uid=$1 ORDER BY updated_at DESC LIMIT 500',[uid])).rows;
+  const rows=(await db.query('SELECT DISTINCT ON (token) token FROM (SELECT token,updated_at FROM nc_push_devices WHERE uid=$1 UNION ALL SELECT token,updated_at FROM nc_push_pending_devices WHERE uid=$1) devices ORDER BY token,updated_at DESC LIMIT 500',[uid])).rows;
   if(!rows.length)return false;
   const tokens=rows.map(x=>x.token);
   // Target UID ensures old-device tokens cannot display data for a different account.
-  const data={type,recipientUid:String(uid)};
+  const data={type:type==='game_invite'?'chat_message':type,recipientUid:String(uid)};
   if((type==='chat_message'||type==='friend_request')&&details.senderUid)data.senderUid=String(details.senderUid).slice(0,128);
   if(details.senderNickname)data.senderNickname=String(details.senderNickname).slice(0,24);
   if(type==='game_invite'){
@@ -77,7 +85,10 @@ async function notify(uid,type,details={}){
   out.responses.forEach((r,i)=>{
    if(!r.success&&['messaging/registration-token-not-registered','messaging/invalid-registration-token'].includes(r.error?.code))expired.push(tokens[i]);
   });
-  if(expired.length)await db.query('DELETE FROM nc_push_devices WHERE token = ANY($1::text[])',[expired]);
+  if(expired.length){
+    await db.query('DELETE FROM nc_push_devices WHERE token = ANY($1::text[])',[expired]);
+    await db.query('DELETE FROM nc_push_pending_devices WHERE token = ANY($1::text[])',[expired]);
+  }
   return out.successCount>0;
  }catch(e){console.error('FCM delivery:',e.message);return false;}
 }

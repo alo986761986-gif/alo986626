@@ -109,8 +109,72 @@ function profile(t,changes){
  if(r.game){const target=r.game.players[seat];target.avatarId=p.avatarId;target.photoMode=p.photoMode;target.photo=p.photo;}
  r.revision++;return state(t);
 }
-function state(t){const {room:r,seat}=auth(t);tick(r);const g=r.game;return {id:r.id,seat,revision:r.revision,status:g?(g.ended?'finished':'playing'):'waiting',players:g?g.players.map((p,i)=>({...viewMember(p,i===seat),score:p.score,count:p.hand.length,team:g.format==='pairs'?i%2:null,eliminated:g.format!=='pairs'&&p.score>=121})):r.members.map((p,i)=>viewMember(p,i===seat)),n:r.n,format:r.format||'individual',matchFinished:!!g?.matchFinished,draw:!!g?.isDraw,resultText:g?.resultText||'',teamScores:g?.teamScores||null,realCount:r.members.filter(p=>!p.bot).length,botCount:r.members.filter(p=>p.bot).length,matchDeadline:g?0:r.matchDeadline,hand:g?g.players[seat].hand:[],top:g?g.discard.at(-1):null,suit:g?.suit,turn:g?.turn,penalty:g?.penalty,deckCount:g?.deck.length,message:g?.message,event:g?.event,voiceEvents:g?.voiceEvents||[],drawnPlayable:!!g?.drawnPlayable,turnDeadline:g?.turnDeadline||0,serverNow:Date.now(),pending:g?.pending?{actor:g.pending.i,calls:g.pending.calls,called:r.called,remainingMs:Math.max(0,r.deadline-Date.now())}:null,winners:g?.winners};}
-function join(n,name,format='individual'){if(![2,3,4].includes(n))throw Error('Numero giocatori non valido');if(!['individual','pairs'].includes(format)||format==='pairs'&&n!==4)throw Error('Modalita non valida');if(sessions.size>=2000)throw Error('Server pieno');name=String(name||'Giocatore').trim().slice(0,32)||'Giocatore';const now=Date.now();for(const room of rooms.values())if(!room.game&&room.matchDeadline<=now)tick(room,now);let r=[...rooms.values()].find(r=>r.n===n&&(r.format||'individual')===format&&!r.game&&r.members.length<n);if(!r){r={id:id(),n,format,members:[],game:null,revision:0,deadline:0,called:[],updated:Date.now(),matchDeadline:now+MATCH_WAIT,botDue:0};rooms.set(r.id,r);}const t=id(),seat=r.members.length;r.members.push({name,t,bot:false,avatarId:0,photo:null,photoMode:'avatar'});sessions.set(t,{room:r,seat});r.updated=Date.now();r.revision++;if(r.members.length===n)startRoom(r);return {token:t,state:state(t)};}
+function state(t){const {room:r,seat}=auth(t);tick(r);const g=r.game;return {id:r.id,seat,revision:r.revision,status:g?(g.ended?'finished':'playing'):'waiting',players:g?g.players.map((p,i)=>({...viewMember(p,i===seat),score:p.score,count:p.hand.length,team:g.format==='pairs'?i%2:null,eliminated:g.format!=='pairs'&&p.score>=121})):r.members.map((p,i)=>viewMember(p,i===seat)),n:r.n,format:r.format||'individual',private:!!r.private,code:r.private?r.code:null,dropInAudience:r.dropInAudience||'closed',matchFinished:!!g?.matchFinished,draw:!!g?.isDraw,resultText:g?.resultText||'',teamScores:g?.teamScores||null,realCount:r.members.filter(p=>!p.bot).length,botCount:r.members.filter(p=>p.bot).length,matchDeadline:g?0:r.matchDeadline,hand:g?g.players[seat].hand:[],top:g?g.discard.at(-1):null,suit:g?.suit,turn:g?.turn,penalty:g?.penalty,deckCount:g?.deck.length,message:g?.message,event:g?.event,voiceEvents:g?.voiceEvents||[],drawnPlayable:!!g?.drawnPlayable,turnDeadline:g?.turnDeadline||0,serverNow:Date.now(),pending:g?.pending?{actor:g.pending.i,calls:g.pending.calls,called:r.called,remainingMs:Math.max(0,r.deadline-Date.now())}:null,winners:g?.winners};}
+const PRIVATE_CODE_ALPHABET='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function makePrivateCode(){
+ for(let tries=0;tries<50;tries++){
+  let code='';for(let j=0;j<6;j++)code+=PRIVATE_CODE_ALPHABET[crypto.randomInt(PRIVATE_CODE_ALPHABET.length)];
+  if(![...rooms.values()].some(r=>r.private&&r.code===code))return code;
+ }
+ throw Error('Codice stanza non disponibile');
+}
+function attachPrivateGuest(r,name,now){
+ if(!r.game||r.game.ended||r.dropInAudience==='closed')throw Error('La partita privata non accetta nuovi giocatori');
+ const seat=r.members.findIndex((m,j)=>m.bot&&r.game.players[j]?.bot);
+ if(seat<0)throw Error('La stanza privata è completa');
+ const token=id();
+ r.members[seat]={name,t:token,bot:false,avatarId:0,photo:null,photoMode:'avatar',lastSeen:now};
+ Object.assign(r.game.players[seat],{name,bot:false,avatarId:0,photo:null,photoMode:'avatar'});
+ sessions.set(token,{room:r,seat});
+ if(r.game.turn===seat){r.game.turnDeadline=now+60000;r.botDue=0;}
+ r.updated=now;r.revision++;
+ return {token,state:state(token),replacedBot:true};
+}
+function join(n,name,options='individual'){
+ const opts=typeof options==='string'?{format:options}:options&&typeof options==='object'&&!Array.isArray(options)?options:{};
+ const format=String(opts.format||'individual'),invite=String(opts.invite||'').trim().toUpperCase();
+ if(![2,3,4].includes(n))throw Error('Numero giocatori non valido');
+ if(!['individual','pairs'].includes(format)||(format==='pairs'&&n!==4))throw Error('Modalità non valida');
+ if(sessions.size>=2000||rooms.size>=500)throw Error('Server pieno');
+ if(invite&&!/^[A-HJ-NP-Z2-9]{6}$/.test(invite))throw Error('Codice stanza privata non valido');
+ name=String(name||'Giocatore').trim().slice(0,32)||'Giocatore';
+ const now=Date.now();
+ for(const room of rooms.values())if(!room.game&&room.matchDeadline&&room.matchDeadline<=now)tick(room,now);
+ let r;
+ if(invite){
+  r=[...rooms.values()].find(room=>room.private&&room.code===invite);
+  if(!r)throw Error('Stanza privata scaduta o inesistente');
+  if(r.n!==n||r.format!==format)throw Error('Questa stanza richiede '+r.n+' giocatori in modalità '+r.format);
+  if(r.game)return attachPrivateGuest(r,name,now);
+  if(r.members.length>=r.n)throw Error('Stanza privata completa');
+ }else if(opts.private===true){
+  r={id:id(),n,format,private:true,code:makePrivateCode(),dropInAudience:opts.dropInAudience==='closed'?'closed':'friends',
+    members:[],game:null,revision:0,deadline:0,called:[],updated:now,matchDeadline:opts.fillPrivateBots===true?now+MATCH_WAIT:0,botDue:0};
+  rooms.set(r.id,r);
+ }else{
+  r=[...rooms.values()].find(room=>!room.private&&room.n===n&&(room.format||'individual')===format&&!room.game&&room.members.length<n);
+  if(!r){
+   r={id:id(),n,format,private:false,code:null,dropInAudience:'all',members:[],game:null,revision:0,
+      deadline:0,called:[],updated:now,matchDeadline:now+MATCH_WAIT,botDue:0};
+   rooms.set(r.id,r);
+  }
+ }
+ const t=id(),seat=r.members.length;
+ r.members.push({name,t,bot:false,avatarId:0,photo:null,photoMode:'avatar',lastSeen:now});
+ sessions.set(t,{room:r,seat});r.updated=now;r.revision++;
+ if(r.members.length===n)startRoom(r);
+ return {token:t,state:state(t)};
+}
+function verifyPrivateInvite(sessionToken,roomCode){
+ const code=String(roomCode||'').trim().toUpperCase();
+ if(!/^[A-HJ-NP-Z2-9]{6}$/.test(code))throw Object.assign(new Error('Codice stanza non valido'),{status:400});
+ const {room:r,seat}=auth(String(sessionToken||'')),member=r.members[seat];
+ if(!r.private||r.code!==code||!member||member.bot||member.t!==sessionToken)
+  throw Object.assign(new Error('Non sei autorizzato a invitare in questa stanza'),{status:403});
+ if(r.game&&(r.game.ended||r.dropInAudience==='closed'||!r.members.some(m=>m.bot)))
+  throw Object.assign(new Error('Stanza privata non disponibile per nuovi inviti'),{status:409});
+ return {game:'chiodo121',code:r.code,roomId:r.id,seats:r.n,format:r.format,hostName:member.name};
+}
 function leave(t){const {room:r,seat}=auth(t);sessions.delete(t);
  if(!r.game){r.members.splice(seat,1);r.members.forEach((p,i)=>{const session=sessions.get(p.t);if(session)session.seat=i;});if(!r.members.length)dropRoom(r);else r.revision++;return {ok:true};}
  if(!r.members.some((p,i)=>i!==seat&&!p.bot)){dropRoom(r);return {ok:true};}
@@ -118,8 +182,9 @@ function leave(t){const {room:r,seat}=auth(t);sessions.delete(t);
 }
 function move(t,m){const {room:r,seat}=auth(t);tick(r);const g=r.game;if(!g)throw Error('Sala in attesa');if(m.revision!==r.revision)throw Error('Stato aggiornato: riprova');if(m.type==='call'){if(!g.pending||g.pending.i!==seat||!g.pending.calls.includes(m.call))throw Error('Dichiarazione non valida');if(!r.called.includes(m.call)){r.called.push(m.call);g.event={id:id(),seat,text:m.call+'!',voice:true};}if(g.pending.calls.every(c=>r.called.includes(c))){g.resolve(r.called);r.called=[];r.deadline=0;}}else if(m.type==='contest'){if(!g.pending||g.pending.i===seat||!g.active.includes(seat)||!g.pending.calls.includes(m.call)||r.called.includes(m.call)||Date.now()<r.deadline-1500)throw Error('Attendi la fine della dichiarazione');g.event={id:id(),seat,text:'CONTESTO '+m.call+'!',voice:true};g.resolve(r.called);r.called=[];r.deadline=0;}else if(m.type==='play'){const calls=g.play(seat,m.card,m.suit);if(calls.length){r.called=[];r.deadline=Date.now()+5000;}}else if(m.type==='draw')g.take(seat);else if(m.type==='next'){if(!g.ended||g.matchFinished||g.format!=='pairs'&&(g.winners.length<2||!g.winners.includes(seat)))throw Error('Nuova mano non consentita');g.round();}else throw Error('Mossa sconosciuta');r.revision++;r.updated=Date.now();return state(t);}
 const allowed=new Set(['https://appassets.androidplatform.net',...(process.env.ALLOWED_ORIGINS||'').split(',').filter(Boolean)]);
-const server=http.createServer(async(req,res)=>{const origin=req.headers.origin;if(origin&&allowed.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');}res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');const send=(status,data)=>{res.statusCode=status;res.end(JSON.stringify(data));};if(origin&&!allowed.has(origin))return send(403,{error:'Origine non autorizzata'});if(req.method==='OPTIONS')return send(204,{});try{const path=new URL(req.url,'http://localhost').pathname,t=(req.headers.authorization||'').replace(/^Bearer /,'');if(path==='/health'&&req.method==='GET')return send(200,{ok:true,game:'chiodo121',revision:'6.3',realtime:true,turnTimeout:60,botMatchmaking:true,matchWaitSeconds:30});if(path==='/admob/health')return await require('./admob-ssv.js').health(send);if(path==='/admob/rewards')return await require('./admob-ssv.js').rewards(req,send);if(path==='/admob/ssv')return await require('./admob-ssv.js').callback(req,send);if(path==='/play/health')return await require('./play-billing.js').status(req,send);if(path==='/play/credits')return await require('./play-billing.js').credits(req,send);if(path==='/play/verify'){if(req.method!=='POST')return send(405,{error:'Metodo non valido'});let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>8192)return send(413,{error:'Richiesta troppo grande'});}let payload;try{payload=JSON.parse(raw);}catch(e){return send(400,{error:'JSON non valido'});}return await require('./play-billing.js').verify(req,send,payload);}if(path.startsWith('/banco92/'))return await require('./banco92.js').route(req,send,path);if(path.startsWith('/expansion/'))return await require('./expansion.js').route(req,send,path);if(path.startsWith('/market/'))return await require('./market83.js').route(req,send,path);if(path.startsWith('/push/'))return await require('./push82.js').route(req,send,path);if(path.startsWith('/daily/'))return await require('./daily71.js').route(req,send,path);if(path.startsWith('/invites94/'))return await require('./invites94.js').route(req,send,path);if(path.startsWith('/audience/'))return await require('./audience85.js').route(req,send,path);if(path.startsWith('/social/'))return await require('./social70.js').route(req,send,path);if(path.startsWith('/chat/'))return await require('./chat77.js').route(req,send,path);if(path.startsWith('/feedback/'))return await require('./feedback78.js').route(req,send,path);if(path.startsWith('/profile79/'))return await require('./profile79.js').route(req,send,path);if(path==='/chiodo/state'&&req.method==='GET')return send(200,state(t));if(path==='/chiodo/profile'&&req.method==='POST'){let body='';for await(const c of req){body+=c;if(body.length>104000)return send(413,{error:'Foto troppo grande'});}return send(200,profile(t,JSON.parse(body||'{}')));}if(req.method!=='POST'||!['/chiodo/join','/chiodo/move','/chiodo/realtime','/chiodo/leave'].includes(path))return send(404,{error:'Endpoint sconosciuto'});let b='';for await(const chunk of req){b+=chunk;if(b.length>8192)return send(413,{error:'Richiesta troppo grande'});}const p=JSON.parse(b);return send(200,path.endsWith('/join')?join(p.n,p.name,p.format):path.endsWith('/realtime')?realtime(t,p):path.endsWith('/leave')?leave(t):move(t,p));}catch(e){return send(400,{error:e.message});}});
-setInterval(()=>{const now=Date.now();for(const r of rooms.values()){if(now-r.updated>(r.game?30*60000:60*1000)){dropRoom(r);continue;}tick(r,now);}},250).unref();
+const server=http.createServer(async(req,res)=>{const origin=req.headers.origin;if(origin&&allowed.has(origin)){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Content-Type, Authorization');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');}res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');const send=(status,data)=>{res.statusCode=status;res.end(JSON.stringify(data));};if(origin&&!allowed.has(origin))return send(403,{error:'Origine non autorizzata'});if(req.method==='OPTIONS')return send(204,{});try{const path=new URL(req.url,'http://localhost').pathname,t=(req.headers.authorization||'').replace(/^Bearer /,'');if(path==='/chiodo/capabilities'&&req.method==='GET')return send(200,{ok:true,features:{privateRooms:true,privateInvites:true},allowedPlayers:[2,3,4],roomCodeLength:6,supportedFormats:['individual','pairs']});if(path==='/health'&&req.method==='GET')return send(200,{ok:true,game:'chiodo121',revision:'6.3',realtime:true,turnTimeout:60,botMatchmaking:true,matchWaitSeconds:30});if(path==='/admob/health')return await require('./admob-ssv.js').health(send);if(path==='/admob/rewards')return await require('./admob-ssv.js').rewards(req,send);if(path==='/admob/ssv')return await require('./admob-ssv.js').callback(req,send);if(path==='/play/health')return await require('./play-billing.js').status(req,send);if(path==='/play/credits')return await require('./play-billing.js').credits(req,send);if(path==='/play/verify'){if(req.method!=='POST')return send(405,{error:'Metodo non valido'});let raw='';for await(const chunk of req){raw+=chunk;if(raw.length>8192)return send(413,{error:'Richiesta troppo grande'});}let payload;try{payload=JSON.parse(raw);}catch(e){return send(400,{error:'JSON non valido'});}return await require('./play-billing.js').verify(req,send,payload);}if(path.startsWith('/banco92/'))return await require('./banco92.js').route(req,send,path);if(path.startsWith('/expansion/'))return await require('./expansion.js').route(req,send,path);if(path.startsWith('/market/'))return await require('./market83.js').route(req,send,path);if(path.startsWith('/push/'))return await require('./push82.js').route(req,send,path);if(path.startsWith('/daily/'))return await require('./daily71.js').route(req,send,path);if(path.startsWith('/invites94/'))return await require('./invites94.js').route(req,send,path);if(path.startsWith('/audience/'))return await require('./audience85.js').route(req,send,path);if(path.startsWith('/social/'))return await require('./social70.js').route(req,send,path);if(path.startsWith('/chat/'))return await require('./chat77.js').route(req,send,path);if(path.startsWith('/feedback/'))return await require('./feedback78.js').route(req,send,path);if(path.startsWith('/profile79/'))return await require('./profile79.js').route(req,send,path);if(path==='/chiodo/state'&&req.method==='GET')return send(200,state(t));if(path==='/chiodo/profile'&&req.method==='POST'){let body='';for await(const c of req){body+=c;if(body.length>104000)return send(413,{error:'Foto troppo grande'});}return send(200,profile(t,JSON.parse(body||'{}')));}if(req.method!=='POST'||!['/chiodo/join','/chiodo/move','/chiodo/realtime','/chiodo/leave'].includes(path))return send(404,{error:'Endpoint sconosciuto'});let b='';for await(const chunk of req){b+=chunk;if(b.length>8192)return send(413,{error:'Richiesta troppo grande'});}const p=JSON.parse(b);return send(200,path.endsWith('/join')?join(p.n,p.name,p):path.endsWith('/realtime')?realtime(t,p):path.endsWith('/leave')?leave(t):move(t,p));}catch(e){return send(400,{error:e.message});}});
+const PRIVATE_WAIT_IDLE_MS=30*60*1000;
+setInterval(()=>{const now=Date.now();for(const r of rooms.values()){if(now-r.updated>(r.game?30*60000:r.private?PRIVATE_WAIT_IDLE_MS:60*1000)){dropRoom(r);continue;}tick(r,now);}},250).unref();
 if(require.main===module){server.listen(Number(process.env.PORT)||8080,'0.0.0.0');require('./push82.js').startDailySchedule();}
-module.exports={Game,tick,join,state,move,leave,auth,profile,validPhoto,MATCH_WAIT};
+module.exports={Game,tick,join,state,move,leave,auth,profile,validPhoto,verifyPrivateInvite,MATCH_WAIT};
 

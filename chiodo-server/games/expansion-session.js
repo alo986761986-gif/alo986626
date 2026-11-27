@@ -215,7 +215,7 @@
     }
     function tick() {
       for (const room of rooms.values()) {
-        if (now() - room.updated > (room.state ? 1800000 : 180000)) { remove(room); continue; }
+        if (now() - room.updated > (room.state ? 1800000 : room.private ? 1800000 : 180000)) { remove(room); continue; }
         try { tickRoom(room); } catch (error) { if (typeof options.onError === 'function') options.onError(error, room.game); }
       }
     }
