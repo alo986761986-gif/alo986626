@@ -31,6 +31,8 @@ public final class MainActivity extends Activity {
     private static final int PHOTO_PICK_REQUEST = 2215;
     private static final String BASE_URL = "https://appassets.androidplatform.net/assets/";
     private WebView web;
+    private android.widget.ProgressBar pageProgress;
+    private android.widget.TextView pageProgressLabel;
     private PlayBillingBridge playBilling;
     private ValueCallback<Uri[]> pendingFiles;
     private Uri cameraUri;
@@ -564,6 +566,7 @@ public final class MainActivity extends Activity {
             return;
         }
         web.setBackgroundColor(Color.rgb(4,21,17));
+        web.setAlpha(0f); // Reveal only after duplicate HTML boot is removed.
         WebSettings settings=web.getSettings();
         settings.setJavaScriptEnabled(true);
         web.addJavascriptInterface(new ChiodoTransport(),"NCChiodoNative");
@@ -596,6 +599,15 @@ public final class MainActivity extends Activity {
             @Override public void onPageFinished(WebView view,String url){
                 super.onPageFinished(view,url);
                 if(url.startsWith(BASE_URL)){
+                    // The studio intro already ran natively before the account screen.
+                    // The integrity-pinned web asset retains its legacy overlay for older builds.
+                    // Do not expose the old web-only studio overlay for even one frame.
+                    view.evaluateJavascript("(function(){var e=document.getElementById('nc-studio-boot');if(e)e.remove()})()",ignored->{
+                        if(view==web)view.setAlpha(1f);
+                    });
+                    view.postDelayed(()->{if(view==web&&view.getAlpha()<1f)view.setAlpha(1f);},1500);
+                    if(pageProgress!=null)pageProgress.setVisibility(android.view.View.GONE);
+                    if(pageProgressLabel!=null)pageProgressLabel.setVisibility(android.view.View.GONE);
                     deliverPushDestination();
                     view.postDelayed(()->deliverPushDestination(),900);
                 }
@@ -630,6 +642,18 @@ public final class MainActivity extends Activity {
 
         });
         web.setWebChromeClient(new WebChromeClient(){
+            @Override public void onProgressChanged(WebView view,int progress){
+                super.onProgressChanged(view,progress);
+                // Avoid a fake percentage: this is the actual WebView page load progress.
+                if(pageProgress!=null){
+                    pageProgress.setProgress(Math.max(0,Math.min(100,progress)));
+                    if(pageProgressLabel!=null)pageProgressLabel.setText("Caricamento gioco "+progress+"%");
+                    if(progress>=100){
+                        pageProgress.setVisibility(android.view.View.GONE);
+                        if(pageProgressLabel!=null)pageProgressLabel.setVisibility(android.view.View.GONE);
+                    }
+                }
+            }
             @Override public boolean onShowFileChooser(WebView v,ValueCallback<Uri[]> callback,FileChooserParams params){
                 return choosePhoto(callback,params);
             }
@@ -659,6 +683,23 @@ public final class MainActivity extends Activity {
         safeRoot.addView(web,new android.widget.FrameLayout.LayoutParams(
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
             android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+        pageProgress=new android.widget.ProgressBar(this,null,android.R.attr.progressBarStyleHorizontal);
+        pageProgress.setMax(100);
+        pageProgress.setProgressTintList(android.content.res.ColorStateList.valueOf(0xffffcf76));
+        pageProgress.setProgressBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff255245));
+        android.widget.FrameLayout.LayoutParams progressParams=new android.widget.FrameLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,(int)(6*getResources().getDisplayMetrics().density),android.view.Gravity.TOP);
+        safeRoot.addView(pageProgress,progressParams);
+        pageProgressLabel=new android.widget.TextView(this);
+        pageProgressLabel.setText("Caricamento gioco 0%");
+        pageProgressLabel.setGravity(android.view.Gravity.CENTER);
+        pageProgressLabel.setTextSize(12);
+        pageProgressLabel.setTextColor(0xffffe1a9);
+        pageProgressLabel.setBackgroundColor(0xee0a2b23);
+        android.widget.FrameLayout.LayoutParams labelParams=new android.widget.FrameLayout.LayoutParams(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,(int)(30*getResources().getDisplayMetrics().density),android.view.Gravity.TOP);
+        labelParams.topMargin=(int)(6*getResources().getDisplayMetrics().density);
+        safeRoot.addView(pageProgressLabel,labelParams);
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(safeRoot,(view,insets)->{
             androidx.core.graphics.Insets bars=insets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.systemBars()|
