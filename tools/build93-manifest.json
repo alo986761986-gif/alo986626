@@ -116,6 +116,10 @@
     "nc90-napoli-bay.svg",
     "nc90-premium.css",
     "nc90-premium.js",
+    "nc96-avatar.svg",
+    "nc96-cardback.svg",
+    "nc96-cartoon-golfo.svg",
+    "nc96-cartoon.css",
     "online-hub72.js",
     "premium50.js",
     "profile79.css",
@@ -165,7 +169,8 @@
     "chiodo-server/test-social-daily-routes.js",
     "server/test-chiodo-pairs91.js",
     "server/test-invites94.js",
-    "server/test-lobby95.js"
+    "server/test-lobby95.js",
+    "server/test-cartoon96.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",
