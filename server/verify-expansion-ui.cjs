@@ -112,6 +112,8 @@ async function exitGame(page) {
 }
 async function smokeCPU(page, game, viewport) {
   await page.locator('.ncx-entry[onclick*="\'' + game + '\'"]').click();
+  await page.locator('#nc98-launcher').waitFor({timeout:8000});
+  await page.locator('#nc98-start').click();
   await page.locator('#ncx-start').waitFor();
   const overlayCartoon=await page.locator('#ncx-screen').evaluate(el=>getComputedStyle(el).backgroundImage);
   assert.ok(overlayCartoon.includes('nc96-cartoon-golfo.svg'), 'Cartoon panorama present in '+game);
