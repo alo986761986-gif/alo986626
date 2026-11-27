@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "app": {
     "packageName": "it.napolicarte.game",
-    "versionCode": 96,
-    "versionName": "9.6.0",
+    "versionCode": 97,
+    "versionName": "9.7.0",
     "minSdk": 24,
     "targetSdk": 36,
     "gameCount": 19,
@@ -32,12 +32,12 @@
       "dubito",
       "mercante"
     ],
-    "apkFile": "NAPOLI_CARTE_3D_9_6_CARTOON_FIRMATO.apk"
+    "apkFile": "NAPOLI_CARTE_3D_9_7_CHIODO_CARTOON_FIRMATO.apk"
   },
   "previousRelease": {
-    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_5_INTERFACCIA_PULITA_FIRMATO.apk",
-    "file": "NAPOLI_CARTE_3D_9_5_INTERFACCIA_PULITA_FIRMATO.apk",
-    "versionCode": 95
+    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_6_CARTOON_FIRMATO.apk",
+    "file": "NAPOLI_CARTE_3D_9_6_CARTOON_FIRMATO.apk",
+    "versionCode": 96
   },
   "toolchain": {
     "jdk": {
@@ -120,6 +120,8 @@
     "nc96-cardback.svg",
     "nc96-cartoon-golfo.svg",
     "nc96-cartoon.css",
+    "nc97-chiodo-cartoon.css",
+    "nc97-chiodo-emblem.svg",
     "online-hub72.js",
     "premium50.js",
     "profile79.css",
@@ -170,7 +172,8 @@
     "server/test-chiodo-pairs91.js",
     "server/test-invites94.js",
     "server/test-lobby95.js",
-    "server/test-cartoon96.js"
+    "server/test-cartoon96.js",
+    "server/test-chiodo-cartoon97.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",

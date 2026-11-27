@@ -1,0 +1,366 @@
+/* NAPOLI CARTE 3D / CHIODO 121 CARTOON CLUB 9.7
+   Same presentation for offline CPU and authenticated worldwide multiplayer.
+   No changes to card ranks, turn logic, server calls, data or microphone controls. */
+:root{--ch97-gold:#ffd66e;--ch97-cream:#fff7dd;--ch97-navy:#093972;--ch97-blue:#1474c4;--ch97-forest:#0f995e;--ch97-teal:#23bf8a;--ch97-ink:#16365a;--ch97-dark-wood:#704017;--ch97-shadow:0 5px 0 #946023,0 10px 15px #0124518f}
+#chiodo121,#chiodo121-online{
+  color:var(--ch97-cream)!important;
+  font-family:system-ui,-apple-system,"Arial Rounded MT Bold","Segoe UI",sans-serif!important;
+  background:linear-gradient(180deg,#0d56a5cf,#062758ed 76%),url("nc96-cartoon-golfo.svg") center top/cover fixed no-repeat!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))!important;
+}
+#chiodo121 *,#chiodo121-online *{box-sizing:border-box}
+#chiodo121 button,#chiodo121-online button{touch-action:manipulation;min-height:44px}
+#chiodo121 button:focus-visible,#chiodo121-online button:focus-visible,.ch-rules button:focus-visible{outline:3px solid #ffefad!important;outline-offset:3px!important}
+#chiodo121 .ch-lobby,#chiodo121-online:not(.ch65) {
+  text-align:center;
+}
+#chiodo121 .ch-lobby{
+  position:relative;
+  width:min(96%,520px);
+  max-width:520px;
+  margin:clamp(12px,4vh,38px) auto 26px;
+  border:4px solid #ffe2a1!important;
+  border-radius:30px!important;
+  background:linear-gradient(165deg,#1a87c9f3 0,#0a5babf7 45%,#0a367cec)!important;
+  box-shadow:inset 0 2px #ffffff5e,0 8px 0 #043a75,0 18px 28px #011b47a6!important;
+  padding:24px 17px!important;
+}
+#chiodo121 .ch-lobby::before{
+  content:"";
+  display:block;
+  width:clamp(130px,45vw,198px);
+  aspect-ratio:540/320;
+  margin:0 auto 5px;
+  background:url("nc97-chiodo-emblem.svg") center/contain no-repeat;
+  filter:drop-shadow(0 4px 1px #00285b86);
+}
+#chiodo121 .ch-lobby h1,#chiodo121-online:not(.ch65)>h1{
+  margin:8px 0 2px!important;
+  font-size:clamp(26px,6vw,43px)!important;
+  font-weight:1000!important;
+  line-height:1.1!important;
+  letter-spacing:-.04em!important;
+  color:#ffefbb!important;
+  text-shadow:0 3px 0 #70451f,1px 5px 0 #083b77!important;
+}
+#chiodo121 .ch-lobby p,#chiodo121-online:not(.ch65)>p{line-height:1.5;color:#ecf8f8}
+#chiodo121 .ch-lobby>p:last-child{background:#073978c4;border:2px dashed #fff2c35b;padding:11px;border-radius:17px;font-size:12px;line-height:1.5}
+#chiodo121 .ch-lobby label{display:block;text-align:left;font-size:12px;color:#ffe9a8;letter-spacing:.3px;font-weight:950;margin:12px 0 5px}
+#chiodo121 .ch-lobby select,#chiodo121-online #co-name{
+  width:100%;
+  min-height:48px;
+  color:#173c64!important;
+  background:#fff8e6!important;
+  border:3px solid #ffc766!important;
+  border-radius:17px!important;
+  padding:10px 13px!important;
+  font-size:16px!important;
+  font-weight:800;
+  box-shadow:inset 0 2px 2px #1044881c;
+}
+#chiodo121 .ch-lobby .ch-btn,#chiodo121-online:not(.ch65)>.ch-btn,
+#chiodo121-online:not(.ch65)>button,#chiodo121-online:not(.ch65) .co-format-options button{
+  color:#58340e!important;
+  background:linear-gradient(#fff4ae,#ffcb61 65%,#f09e31)!important;
+  border:3px solid #fff5cb!important;
+  border-radius:17px!important;
+  font-size:13px!important;
+  font-weight:1000!important;
+  box-shadow:0 4px 0 #9e6327,0 8px 12px #012a6288!important;
+  padding:9px 12px!important;
+  margin:4px 3px!important;
+  min-width:52px;
+}
+#chiodo121-online:not(.ch65)>button#co-close,#chiodo121 .ch-lobby button#ch-back{
+  color:#fff6dc!important;
+  background:linear-gradient(#2c8dd6,#0657a4)!important;
+  box-shadow:0 4px 0 #063975,0 8px 12px #022a6099!important;
+}
+#chiodo121-online:not(.ch65){
+  border:0!important;
+  background:linear-gradient(180deg,#0755a3d6,#03275beb),url("nc96-cartoon-golfo.svg") center/cover fixed!important;
+}
+#chiodo121-online:not(.ch65)>h1::before{
+  content:"";
+  display:block;
+  height:clamp(120px,25vw,178px);
+  margin:0 auto 2px;
+  background:url("nc97-chiodo-emblem.svg") center/contain no-repeat;
+  filter:drop-shadow(0 5px 1px #10335c8a)
+}
+#chiodo121-online:not(.ch65) .co-format-options{max-width:520px;margin:12px auto!important;gap:8px}
+#chiodo121-online:not(.ch65) [data-format][aria-pressed="true"],
+#chiodo121-online:not(.ch65) [data-n][aria-pressed="true"]{
+  background:linear-gradient(#48dcab,#079a68)!important;
+  border-color:#dcffda!important;
+  box-shadow:0 4px 0 #046443!important;
+  color:#fffef0!important
+}
+#chiodo121-online:not(.ch65) #co-error{
+  margin:13px auto;
+  max-width:550px;
+  background:#063876ab;
+  border-radius:18px;
+  line-height:1.6
+}
+/* Shared table and status UI in CPU and multiplayer. */
+#chiodo121.ch65,#chiodo121-online.ch65{
+  --ch-felt-light:#42ce8a;--ch-felt-dark:#0e8755;--ch-wood:#d9903b;
+  background:linear-gradient(#0b4c9dda,#072658eb),url("nc96-cartoon-golfo.svg") center/cover fixed!important;
+  color:#fff9e8!important;
+}
+#chiodo121.ch65 .ch-head,#chiodo121-online.ch65 .ch-head{
+  width:100%;max-width:810px;min-height:56px;
+  background:linear-gradient(165deg,#1a83c6,#084c9e)!important;
+  border:3px solid #ffe3a1!important;
+  border-radius:19px!important;
+  padding:7px 9px!important;
+  box-shadow:0 4px 0 #053367,0 8px 14px #011a4377!important;
+}
+#chiodo121.ch65 .ch-head strong,#chiodo121-online.ch65 .ch-head strong{
+  color:#fff1b3!important;
+  font-size:clamp(17px,4vw,26px)!important;
+  font-weight:1000!important;
+  letter-spacing:.9px!important;
+  text-shadow:0 2px 0 #71461f,0 3px 0 #063568!important;
+}
+#chiodo121.ch65 .ch-head small,#chiodo121-online.ch65 .ch-head small{color:#ddfaff!important;font-weight:800!important;font-size:10px}
+#chiodo121.ch65 .ch-head .ch-btn,#chiodo121-online.ch65 .ch-head .ch-btn{
+  background:linear-gradient(#ffe69b,#f6a936)!important;
+  border:2px solid #fff8da!important;
+  box-shadow:0 3px 0 #915520!important;
+  color:#5f371b!important;
+  min-height:43px;
+  padding:7px 10px!important;
+  border-radius:13px!important;
+  font-weight:950!important;
+}
+#chiodo121.ch65 .ch-score,#chiodo121-online.ch65 .ch-score{
+  max-width:810px!important;
+  background:linear-gradient(170deg,#1b73b7f0,#0b4589f2)!important;
+  border:3px solid #ffdb89!important;
+  border-radius:17px!important;
+  padding:6px!important;
+  box-shadow:0 4px 0 #063a76,0 7px 12px #00265075!important;
+  gap:5px!important;
+}
+#chiodo121.ch65 .ch-score-item,#chiodo121-online.ch65 .ch-score-item{
+  background:linear-gradient(#fff9e8,#f9deb0)!important;
+  border:2px solid #f2b95a!important;
+  border-radius:13px!important;
+  padding:6px 5px!important;
+  color:#173864!important;
+  text-align:center!important;
+  min-width:0;
+}
+#chiodo121.ch65 .ch-score-item strong,#chiodo121-online.ch65 .ch-score-item strong{
+  color:#16458a!important;font-size:clamp(15px,3.6vw,22px)!important;
+  font-weight:1000!important
+}
+#chiodo121.ch65 .ch-score-item small,#chiodo121-online.ch65 .ch-score-item small{color:#674e37!important;font-weight:750}
+#chiodo121.ch65 .ch-score-track,#chiodo121-online.ch65 .ch-score-track{height:7px!important;border-radius:100px!important;background:#abcde0!important}
+#chiodo121.ch65 .ch-score-track i,#chiodo121-online.ch65 .ch-score-track i{background:linear-gradient(90deg,#12b27a,#ffcf5b,#f16c55)!important;border-radius:100px!important}
+#chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{
+  overflow:visible!important;
+  border-radius:48px;
+  background:radial-gradient(ellipse at center,#a0f3d319 0,#04397511 65%,transparent 80%);
+  isolation:isolate;
+}
+#chiodo121.ch65 .ch-arena::before,#chiodo121-online.ch65 .ch-arena::before{
+  content:"";position:absolute;
+  inset:9% 1% 9%;
+  border:3px dashed #ffdfa452;
+  border-radius:49%;
+  opacity:.7;
+  pointer-events:none;
+  z-index:-1;
+}
+#chiodo121.ch65 .ch-felt,#chiodo121-online.ch65 .ch-felt{
+  background:radial-gradient(ellipse at 50% 24%,#52dc9d,#19a66c 60%,#0b7655)!important;
+  border:10px solid #d78b39!important;
+  border-radius:46%!important;
+  box-shadow:inset 0 0 0 3px #fff1bd,inset 0 0 25px #003c3661,0 8px 0 #955d25,0 14px 18px #00244e88!important
+}
+#chiodo121.ch65 .ch-felt::before,#chiodo121-online.ch65 .ch-felt::before{color:#fff0b6a8!important;text-shadow:0 2px 0 #095b51;font-size:clamp(10px,3vw,17px)!important}
+#chiodo121.ch65 .ch-seat,#chiodo121-online.ch65 .ch-seat{
+  color:#fff9e3!important;
+  font-weight:900!important;
+  text-shadow:0 1px 2px #052a5f!important
+}
+#chiodo121.ch65 .ch-seat b,#chiodo121-online.ch65 .ch-seat b{
+  background:linear-gradient(150deg,#0d67b5,#09427a)!important;
+  border:1px solid #ffdf9d!important;
+  border-radius:11px!important;
+  color:#fff9dd!important;
+  box-shadow:0 2px 0 #07335e!important;
+  font-size:11px!important;
+  padding:3px 6px!important;
+  max-width:100%!important
+}
+#chiodo121.ch65 .ch-avatar,#chiodo121-online.ch65 .ch-avatar{
+  width:53px;height:53px;
+  background:radial-gradient(circle at 25% 20%,#85dcfb,#1a76b7)!important;
+  border:4px solid #ffe4a2!important;
+  border-radius:50%!important;
+  box-shadow:0 3px 0 #885227,0 7px 10px #002a4e70!important;
+  overflow:hidden!important;
+}
+#chiodo121.ch65 .ch-seat.active .ch-avatar,#chiodo121-online.ch65 .ch-seat.active .ch-avatar{
+  border:5px solid #76ff9f!important;
+  box-shadow:0 0 0 4px #17b96b,0 0 16px 4px #59ff9a9e,0 4px 0 #0b693a!important;
+}
+#chiodo121.ch65 .ch-seat.active b,#chiodo121-online.ch65 .ch-seat.active b{background:#086642!important;color:#fff9d7!important}
+#chiodo121.ch65 .ch-seat.out,#chiodo121-online.ch65 .ch-seat.out{opacity:.45;filter:grayscale(.3)}
+#chiodo121.ch65 .ch-backs .ch-backcard,#chiodo121-online.ch65 .ch-backs .ch-backcard,
+#chiodo121.ch65 .ch-deck,#chiodo121-online.ch65 .ch-deck,
+#chiodo121.ch65 .ch65-flight-back,#chiodo121-online.ch65 .ch65-flight-back{
+  background:#0c5fb5 url("nc96-cardback.svg") center/100% 100% no-repeat!important;
+  color:transparent!important;
+  border:2px solid #ffefc3!important;
+  border-radius:7px!important;
+  box-shadow:0 3px 0 #c08a46,0 5px 8px #021f4380!important
+}
+#chiodo121.ch65 .ch-center,#chiodo121-online.ch65 .ch-center{gap:5px!important}
+#chiodo121.ch65 .ch-meta,#chiodo121-online.ch65 .ch-meta{
+  color:#ffebad!important;
+  background:#084783dc!important;
+  border:2px solid #ffd68b!important;
+  border-radius:100px!important;
+  font-weight:950!important;
+  box-shadow:0 3px 0 #062f59!important;
+  padding:4px 9px!important;
+}
+#chiodo121.ch65 .ch-top>.playing-card,#chiodo121-online.ch65 .ch-top>.playing-card,
+#chiodo121.ch65 .ch-hand button .playing-card,#chiodo121-online.ch65 .ch-hand button .playing-card{
+  border:2px solid #fff8df!important;
+  border-radius:10px!important;
+  box-shadow:0 2px 0 #cc9251,0 4px 0 #84502b,0 7px 11px #001e4670!important;
+  filter:saturate(1.12) contrast(1.06);
+}
+#chiodo121.ch65 .ch-hand button:not(:disabled):active .playing-card,
+#chiodo121-online.ch65 .ch-hand button:not(:disabled):active .playing-card{
+  box-shadow:0 2px 0 #a66a27,0 3px 0 #74451e,0 0 13px #fff3c5!important;
+}
+#chiodo121.ch65 .ch-status,#chiodo121-online.ch65 .ch-status{
+  background:linear-gradient(120deg,#0c5aa5e9,#0b3d83e9)!important;
+  border:2px solid #ffdf94!important;
+  color:#fff7dc!important;
+  border-radius:15px!important;
+  font-weight:850!important;
+  padding:6px 10px!important;
+  box-shadow:0 3px 0 #063267!important;
+}
+#chiodo121.ch65 .ch-status.mine,#chiodo121-online.ch65 .ch-status.mine{
+  background:linear-gradient(#138f69,#0b684d)!important;
+  border-color:#96ffac!important;
+  color:#fffac7!important;
+  box-shadow:0 0 0 2px #1dce82,0 3px 0 #064d3b!important
+}
+#chiodo121.ch65 .ch-timer,#chiodo121-online.ch65 .ch-timer{
+  background:conic-gradient(#4bec91 var(--ch-time,100%),#244e79 0)!important;
+  border:3px solid #ffe39b!important;
+  color:#fff8cc!important;
+  border-radius:50%!important;
+  box-shadow:0 3px 0 #945a1e!important;
+  font-weight:1000!important
+}
+#chiodo121.ch65 .ch-controls,#chiodo121-online.ch65 .ch-controls{gap:7px!important;padding:3px!important;min-height:44px}
+#chiodo121.ch65 .ch-controls button,#chiodo121-online.ch65 .ch-controls button,
+#chiodo121.ch65 .ch-btn,#chiodo121-online.ch65 .ch-btn{
+  min-height:44px!important;
+  border:2px solid #fff1bb!important;
+  border-radius:15px!important;
+  background:linear-gradient(#ffeaa4,#f8b947 70%,#e88e2b)!important;
+  color:#5c330e!important;
+  font-weight:950!important;
+  box-shadow:0 4px 0 #94591f,0 6px 10px #012b5988!important;
+  padding:8px 11px!important;
+}
+#chiodo121.ch65 .ch-controls button[data-contest],#chiodo121-online.ch65 .ch-controls button[data-contest]{
+  background:linear-gradient(#fa8a70,#cc4c48)!important;
+  color:#fff9ed!important;
+  box-shadow:0 4px 0 #84252e!important
+}
+#chiodo121.ch65 .ch-controls button[data-call],#chiodo121-online.ch65 .ch-controls button[data-call]{
+  background:linear-gradient(#fff29c,#ffc853)!important;
+  color:#6a3b0b!important
+}
+#chiodo121.ch65 .ch-controls button[data-suit],#chiodo121-online.ch65 .ch-controls button[data-suit]{
+  color:#fff9de!important;
+  background:linear-gradient(#1687c6,#0b5096)!important;
+  box-shadow:0 4px 0 #083564!important
+}
+#chiodo121.ch65 .ch-controls button:disabled,#chiodo121-online.ch65 .ch-controls button:disabled{
+  opacity:.55!important;box-shadow:none!important;filter:saturate(.7)!important
+}
+#chiodo121.ch65 .ch-bubble,#chiodo121-online.ch65 .ch-bubble{
+  background:#fff4bc!important;
+  border:3px solid #e29b38!important;
+  border-radius:18px 18px 18px 5px!important;
+  color:#754516!important;
+  box-shadow:0 3px 0 #9b5a22,0 8px 10px #052a5d66!important;
+  text-shadow:none!important;
+  font-weight:1000!important;
+  max-width:min(150px,40vw)!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+#chiodo121.ch65 .ch-live,#chiodo121-online.ch65 .ch-live{
+  background:linear-gradient(#0965a5ec,#06396dea)!important;
+  border:2px solid #ffe0a1!important;
+  border-radius:18px!important;
+  box-shadow:0 4px 0 #073665!important
+}
+#chiodo121.ch65 .ch-live input,#chiodo121-online.ch65 .ch-live input{
+  background:#fff7e2;color:#183b63;border-radius:10px;border:2px solid #f4c96e;padding:9px;font-size:14px
+}
+#chiodo121.ch65 .ch65-summary,#chiodo121-online.ch65 .ch65-summary,
+#chiodo121.ch65 .ch-settings-panel,#chiodo121-online.ch65 .ch-settings-panel{
+  color:#fff6da!important;
+  background:linear-gradient(150deg,#0e70abeF,#073c86f5)!important;
+  border:4px solid #ffdf94!important;
+  border-radius:23px!important;
+  box-shadow:0 8px 0 #05376c,0 14px 22px #011f4da8!important
+}
+#chiodo121.ch65 .ch65-summary h2,#chiodo121-online.ch65 .ch65-summary h2,
+#chiodo121.ch65 .ch-settings-panel h2,#chiodo121-online.ch65 .ch-settings-panel h2{
+  color:#ffe59b!important;font-weight:1000!important;text-shadow:0 2px #06427c!important
+}
+#chiodo121.ch65 .ch65-summary td,#chiodo121-online.ch65 .ch65-summary td{color:#fff5d5!important}
+#chiodo121.ch65 .ch65-summary th,#chiodo121-online.ch65 .ch65-summary th{color:#ffe2a4!important}
+#chiodo121.ch65 .ch-hand-label,#chiodo121-online.ch65 .ch-hand-label{color:#dbf7e4!important}
+.ch-rules{
+ background:linear-gradient(#0c62a6da,#061f59f2),url("nc96-cartoon-golfo.svg") center/cover fixed!important;
+ color:#fff8e5!important
+}
+.ch-rules .ch-rule-step{
+ background:linear-gradient(145deg,#125da0,#0b3b7c)!important;
+ border:3px solid #ffe29d!important;
+ border-radius:21px!important;
+ box-shadow:0 5px 0 #082d5d,0 10px 16px #021b488a!important
+}
+.ch-rules .ch-rule-step h2{color:#ffe08d!important}
+.ch-rules .ch-rule-visual{background:#0c7859c9!important;border:2px solid #ffdb8e!important}
+@media(max-width:520px){
+ #chiodo121,#chiodo121-online{padding:7px!important;background-attachment:scroll!important}
+ #chiodo121 .ch-lobby{padding:17px 12px!important;border-radius:23px!important}
+ #chiodo121.ch65 .ch-score,#chiodo121-online.ch65 .ch-score{padding:4px!important;gap:3px!important}
+ #chiodo121.ch65 .ch-score-item,#chiodo121-online.ch65 .ch-score-item{padding:4px 2px!important;border-width:1px!important}
+ #chiodo121.ch65 .ch-head,#chiodo121-online.ch65 .ch-head{padding:5px!important;gap:5px}
+ #chiodo121.ch65 .ch-head strong,#chiodo121-online.ch65 .ch-head strong{font-size:17px!important}
+ #chiodo121.ch65 .ch-head .ch-btn,#chiodo121-online.ch65 .ch-head .ch-btn{padding:6px!important;font-size:11px!important}
+ #chiodo121.ch65 .ch-arena::before,#chiodo121-online.ch65 .ch-arena::before{inset:10% 2% 9%;border-width:2px}
+ #chiodo121.ch65 .ch-avatar,#chiodo121-online.ch65 .ch-avatar{width:46px;height:46px}
+ #chiodo121.ch65 .ch-controls button,#chiodo121-online.ch65 .ch-controls button{font-size:12px!important;padding:7px 10px!important}
+}
+@media(max-height:520px) and (orientation:landscape){
+ #chiodo121.ch65 .ch-head,#chiodo121-online.ch65 .ch-head{min-height:45px;margin-bottom:2px}
+ #chiodo121.ch65 .ch-score,#chiodo121-online.ch65 .ch-score{padding:3px!important}
+ #chiodo121.ch65 .ch-controls,#chiodo121-online.ch65 .ch-controls{margin:1px auto!important}
+ #chiodo121.ch65 .ch-arena::before,#chiodo121-online.ch65 .ch-arena::before{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ #chiodo121 *,#chiodo121-online *,#chiodo121 *::before,#chiodo121-online *::before{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}

@@ -5,10 +5,10 @@
   const entries = new Map();
   const reduced = g.matchMedia ? g.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
   const themes = {
-    royal: ['#276b50', '#113e30', '#66452f'], gold: ['#38443e', '#16251e', '#654a30'],
-    ocean: ['#28627c', '#163447', '#69523d'], napoli: ['#783f50', '#391f2b', '#604532'],
-    palazzo: ['#3f7053', '#1c3d30', '#775332'], sunset: ['#80543c', '#442e25', '#785031'],
-    diamond: ['#484d64', '#222b3c', '#685039'], antica: ['#59704b', '#2c3e28', '#674d32']
+    royal: ['#40d591', '#0a865b', '#d88c35'], gold: ['#f4be68', '#a77834', '#da9a41'],
+    ocean: ['#43b4df', '#1469aa', '#d9a64c'], napoli: ['#ec8d81', '#c95470', '#d5914e'],
+    palazzo: ['#66d8a3', '#198d65', '#d9a54a'], sunset: ['#f4b46b', '#d37a55', '#c18445'],
+    diamond: ['#8aaee2', '#5a7dbb', '#e2ad5e'], antica: ['#a7c77b', '#4f985d', '#d3a34d']
   };
   const css = document.createElement('style');
   css.textContent = '.ch65 .ch65-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none!important}.ch65 .ch-arena{isolation:isolate}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]{background:transparent!important}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]>svg{visibility:hidden}.ch65.ch65-rendered .ch-felt{visibility:hidden!important}.ch65.ch65-rendered .ch65-tablemark{display:none}.ch65:not(.ch65-rendered) .ch-felt{visibility:visible!important}.ch65 .ch-seat,.ch65 .ch-center{z-index:3}';
@@ -76,11 +76,17 @@
   function labelTexture(gl) {
     const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
     const c = cv.getContext('2d');
-    c.clearRect(0, 0, 512, 256); c.strokeStyle = '#d6ba79'; c.fillStyle = '#d6ba79'; c.lineWidth = 1.2;
-    c.beginPath(); c.moveTo(38, 115); c.lineTo(125, 115); c.moveTo(387, 115); c.lineTo(474, 115); c.stroke();
-    c.textAlign = 'center'; c.font = '600 38px Georgia, serif'; c.fillText('CHIODO', 256, 103);
-    c.font = '500 54px Georgia, serif'; c.fillText('121', 256, 163);
-    c.font = '600 10px sans-serif'; c.fillText('CARTE NAPOLETANE', 256, 191);
+    c.clearRect(0, 0, 512, 256);
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineJoin = 'round'; c.lineWidth = 8;
+    c.strokeStyle = '#075c65'; c.fillStyle = '#ffea9f';
+    c.font = '900 46px system-ui, sans-serif'; c.strokeText('CHIODO', 256, 92); c.fillText('CHIODO', 256, 92);
+    c.lineWidth = 10; c.strokeStyle = '#084d7c'; c.fillStyle = '#ffe28a';
+    c.font = '1000 85px system-ui, sans-serif'; c.strokeText('121', 256, 154); c.fillText('121', 256, 154);
+    c.font = '900 14px system-ui, sans-serif'; c.fillStyle = '#fff4ca';
+    c.fillText('NAPOLI CARTOON CLUB', 256, 206);
+    c.lineWidth = 6; c.strokeStyle = '#ffe4a0';
+    c.beginPath(); c.moveTo(35, 127); c.lineTo(118, 127); c.moveTo(394, 127); c.lineTo(477, 127); c.stroke();
     for (const x of [22, 490]) { c.beginPath(); c.moveTo(x, 109); c.lineTo(x + 4, 115); c.lineTo(x, 121); c.lineTo(x - 4, 115); c.closePath(); c.fill(); }
     const tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, cv);
@@ -111,8 +117,12 @@
       else if(material==6.){vec4 tex=texture2D(imprint,vLocal.xz*.5+.5);base=tex.rgb;a*=tex.a;shine=0.;}
       else if(material==7.){float edge=clamp(1.-length(vLocal.xz),0.,1.);gl_FragColor=vec4(tint,a*edge*edge);return;}
       else if(material==8.){base=mix(dark,tint,clamp(vLocal.y*.35+.55,0.,1.));gl_FragColor=vec4(base,a);return;}
-      float lightness=.44+.49*diffuse+.14*fill;
-      vec3 outColor=base*lightness+vec3(1.,.91,.74)*spec*shine;
+      // Cel shading keeps the 3D characters and the table readable on small screens.
+      float band=diffuse>.78?1.0:(diffuse>.42?.78:.58);
+      float bounce=fill>.52?.14:.07;
+      float lightness=.22+.64*band+bounce;
+      float edge=pow(1.-max(dot(n,v),0.),2.);
+      vec3 outColor=base*lightness+vec3(1.,.92,.71)*spec*shine+vec3(.06,.10,.12)*edge;
       gl_FragColor=vec4(outColor,a);
     }`;
 
@@ -158,9 +168,9 @@
   }
 
   const skins = ['#c9906c', '#e4b194', '#ad7658', '#d6a077'].map(color);
-  const cloths = ['#244e50', '#684455', '#334663', '#71503d'].map(color);
+  const cloths = ['#097cbc', '#c64f59', '#825fc8', '#e19037'].map(color);
   const hairs = ['#30251f','#4b3021','#211f21','#5b3925'].map(color);
-  const brass = color('#bfa371'), linen = color('#e4dfce'), pupil = color('#181b1c');
+  const brass = color('#f1c75e'), linen = color('#fff3da'), pupil = color('#1b273c');
   function draw(rec, name, mat, tint, material, alpha, dark) {
     const { gl, u, meshes } = rec, m = meshes[name];
     gl.bindBuffer(gl.ARRAY_BUFFER, m.b); gl.enableVertexAttribArray(rec.p); gl.vertexAttribPointer(rec.p,3,gl.FLOAT,false,24,0); gl.enableVertexAttribArray(rec.n); gl.vertexAttribPointer(rec.n,3,gl.FLOAT,false,24,12);
@@ -228,7 +238,7 @@
     draw(rec,'disc',model(0,.022,0,1.687,.026,rz*.891),felt,3,1,dark);
     draw(rec,'ring',model(0,.036,0,1.669,.28,rz*.881),mix(brass,felt,.48),2,.8);
     // Imprint on the near edge, leaving the active piles unobstructed.
-    draw(rec,'plane',model(0,.039,rz*.53,.52,1,Math.min(.27,rz*.22)),brass,6,.32);
+    draw(rec,'plane',model(0,.039,rz*.53,.52,1,Math.min(.27,rz*.22)),brass,6,.57);
     const n=s.n||s.players.length, me=s.seat||0;
     const positions=n===2?[[50,78],[50,23]]:n===3?[[50,78],[24,30],[76,30]]:[[50,78],[23,48],[50,23],[77,48]];
     s.players.forEach((p,i)=>{

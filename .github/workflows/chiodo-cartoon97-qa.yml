@@ -1,0 +1,29 @@
+name: NAPOLI CARTE 3D — Chiodo 121 Cartoon 9.7 QA
+on:
+  push:
+    branches: [feature/chiodo121-cartoon97]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-chiodo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify 3D WebGL and Chiodo cartoon sources
+        run: |
+          set -euo pipefail
+          node --check app/src/main/assets/chiodo-scene65.js
+          node --check app/src/main/assets/nc90-premium.js
+          node --check server/verify-expansion-ui.cjs
+          node --test server/test-chiodo-cartoon97.js server/test-chiodo-pairs91.js server/test-lobby95.js server/test-cartoon96.js server/test-expansion-session.js server/test-premium90.js server/test-club84.js server/test-banco91.js server/test-banco92-ui.js
+      - name: Verify all 19 games and Android 9.7 source bundle
+        run: |
+          set -euo pipefail
+          node tools/prepare-expansion-index.cjs
+          bash server/restore_bass_audio.sh
+          node tools/verify-expansion-bundle.cjs /tmp/chiodo97-report.json

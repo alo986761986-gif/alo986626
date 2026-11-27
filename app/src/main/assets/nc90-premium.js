@@ -66,6 +66,13 @@ function loadCartoonEdition(){
  link.href='nc96-cartoon.css';
  d.head.appendChild(link);
  d.body.classList.add('nc96-cartoon');
+ if(!d.getElementById('nc97-chiodo-theme')){
+  const chiodo=d.createElement('link');
+  chiodo.id='nc97-chiodo-theme';
+  chiodo.rel='stylesheet';
+  chiodo.href='nc97-chiodo-cartoon.css';
+  d.head.appendChild(chiodo);
+ }
 }
 if(d.readyState==='complete')loadCartoonEdition();
 else w.addEventListener('load',loadCartoonEdition,{once:true});
