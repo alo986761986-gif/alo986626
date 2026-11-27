@@ -29,14 +29,15 @@ jobs:
           $z=[System.IO.Compression.ZipFile]::OpenRead($archive)
           $base=[System.IO.Path]::GetFullPath('windows-edition/app/src/main/assets')
           [System.IO.Directory]::CreateDirectory($base) | Out-Null
-          $prefix=$base.TrimEnd('\\')+'\\'
+          $sep=[System.IO.Path]::DirectorySeparatorChar
+          $prefix=$base.TrimEnd($sep)+$sep
           $count=0
           try {
             foreach($entry in $z.Entries){
               if(-not $entry.FullName.StartsWith('assets/')){continue}
               $rel=$entry.FullName.Substring(7)
               if(-not $rel -or $rel.EndsWith('/')){continue}
-              $target=[System.IO.Path]::GetFullPath((Join-Path $base $rel.Replace('/','\\')))
+              $target=[System.IO.Path]::GetFullPath((Join-Path $base $rel.Replace('/',$sep)))
               if(-not $target.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe APK resource path'}
               [System.IO.Directory]::CreateDirectory([System.IO.Path]::GetDirectoryName($target)) | Out-Null
               $inputStream=$entry.Open()
