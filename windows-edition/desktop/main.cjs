@@ -2,7 +2,7 @@
 const {app,BrowserWindow,ipcMain,protocol,net,shell,dialog,session,safeStorage,Menu,Notification} = require('electron');
 const fs=require('node:fs');
 const path=require('node:path');
-const {URLS,socialRequest,fileIn,paths,firebaseKey}=require('./settings.cjs');
+const {URLS,socialRequest,remoteRequest,fileIn,paths,firebaseKey}=require('./settings.cjs');
 const {clientConfigured,openGoogleOAuth}=require('./google-auth.cjs');
 const MIME={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.ico':'image/x-icon','.mp3':'audio/mpeg','.wav':'audio/wav','.webp':'image/webp','.woff2':'font/woff2'};
 protocol.registerSchemesAsPrivileged([{scheme:'napoli',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,codeCache:true}}]);
@@ -75,6 +75,14 @@ async function classicFetch(args){
  const body=typeof args.body==='string'?args.body:'';if(body.length>50000)throw Error('Payload eccessivo');
  return limitedFetch(url.toString(),{method,headers:{accept:'application/json',...(method==='POST'?{'content-type':'application/json'}:{})},...(method==='POST'?{body}:{}),timeout:35000},1024000);
 }
+async function expansionRequest(args){
+ const {url,method,body,token}=remoteRequest(args);
+ try{return await limitedFetch(url,{method,headers:{accept:'application/json',
+  ...(token?{authorization:'Bearer '+token}:{}),
+  ...(method==='POST'?{'content-type':'application/json'}:{})},
+  ...(method==='POST'?{body}:{}),timeout:20000},524288);
+ }catch(error){return {status:0,body:JSON.stringify({error:'Servizio partite non raggiungibile'}),error:error.message};}
+}
 function showAuthDialog(){navigate(screenFile());}
 function enterGuest(){identity=null;saveSession();if(window)window._prevUnread=0;navigate(BASE+'/index.html');return {ok:true};}
 async function googleLogin(){
@@ -144,6 +152,7 @@ if(!app.requestSingleInstanceLock()){app.quit();}else app.whenReady().then(async
  ipcMain.handle('napoli:chiodo',async(event,args)=>{assertLocal(event);return chiodoRequest(args);});
  ipcMain.handle('napoli:social',async(event,args)=>{assertLocal(event);return socialCall(args);});
  ipcMain.handle('napoli:classic',async(event,args)=>{assertLocal(event);return classicFetch(args);});
+ ipcMain.handle('napoli:remote',async(event,args)=>{assertLocal(event);return expansionRequest(args);});
  ipcMain.handle('napoli:external',async(event,which)=>{assertLocal(event);const urls={privacy:URLS.classic+'/privacy',delete:URLS.classic+'/account-deletion'};if(!urls[which])return false;await shell.openExternal(urls[which]);return true;});
  ipcMain.handle('napoli:notify',async(event,{title,body})=>{assertLocal(event);if(Notification.isSupported()){new Notification({title:String(title).slice(0,90),body:String(body).slice(0,300)}).show();return true;}return false;});
  window=new BrowserWindow({width:1280,height:830,minWidth:800,minHeight:560,backgroundColor:'#082c59',show:false,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,spellcheck:false}});
