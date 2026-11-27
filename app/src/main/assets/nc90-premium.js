@@ -59,39 +59,47 @@ if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',start,{once:tr
 w.NC90_PREMIUM.refresh=schedule;
 // Load the approved Cartoon Edition theme last. This stays presentation-only.
 function loadCartoonEdition(){
+ if(!d.body)return;
+ d.body.classList.add('nc96-cartoon');
  if(d.getElementById('nc96-cartoon-theme'))return;
+ // The original premium CSS is in <body>, not <head>. Append the cartoon
+ // overrides at the END of <body> so the newer illustration wins the cascade.
+ const target=d.body;
  const link=d.createElement('link');
  link.id='nc96-cartoon-theme';
  link.rel='stylesheet';
  link.href='nc96-cartoon.css';
- d.head.appendChild(link);
- d.body.classList.add('nc96-cartoon');
+ target.appendChild(link);
  if(!d.getElementById('nc97-chiodo-theme')){
   const chiodo=d.createElement('link');
   chiodo.id='nc97-chiodo-theme';
   chiodo.rel='stylesheet';
   chiodo.href='nc97-chiodo-cartoon.css';
-  d.head.appendChild(chiodo);
+  target.appendChild(chiodo);
  }
  if(!d.getElementById('nc98-game-launch-style')){
-  const style=d.createElement('link');style.id='nc98-game-launch-style';style.rel='stylesheet';style.href='nc98-launcher.css';d.head.appendChild(style);
+  const style=d.createElement('link');style.id='nc98-game-launch-style';style.rel='stylesheet';style.href='nc98-launcher.css';target.appendChild(style);
  }
  if(!d.getElementById('nc98-chiodo-layout-style')){
-  const layout=d.createElement('link');layout.id='nc98-chiodo-layout-style';layout.rel='stylesheet';layout.href='nc98-chiodo-layout.css';d.head.appendChild(layout);
+  const layout=d.createElement('link');layout.id='nc98-chiodo-layout-style';layout.rel='stylesheet';layout.href='nc98-chiodo-layout.css';target.appendChild(layout);
  }
  if(!d.getElementById('nc913-hd-theme')){
   const hd=d.createElement('link');hd.id='nc913-hd-theme';hd.rel='stylesheet';
-  hd.href='nc913-hd-motion.css';d.head.appendChild(hd);
+  hd.href='nc913-hd-motion.css';target.appendChild(hd);
  }
  if(!d.getElementById('nc913-motion-script')){
   const motion=d.createElement('script');motion.id='nc913-motion-script';motion.src='nc913-hd-motion.js';
-  motion.defer=true;d.head.appendChild(motion);
+  motion.defer=true;target.appendChild(motion);
  }
  if(!d.getElementById('nc98-game-launcher-script')){
-  const script=d.createElement('script');script.id='nc98-game-launcher-script';script.src='nc98-launcher.js';d.head.appendChild(script);
+  const script=d.createElement('script');script.id='nc98-game-launcher-script';script.src='nc98-launcher.js';target.appendChild(script);
  }
 }
-if(d.readyState==='complete')loadCartoonEdition();
-else w.addEventListener('load',loadCartoonEdition,{once:true});
+// Activate as soon as the document is parsed, not only after window.load.
+// Android WebView may defer the load event because of an unrelated asset.
+if(d.readyState==='loading')d.addEventListener('DOMContentLoaded',loadCartoonEdition,{once:true});
+else loadCartoonEdition();
+w.addEventListener('load',loadCartoonEdition,{once:true});
+w.addEventListener('pageshow',loadCartoonEdition,{passive:true});
 
 })(window,document);
