@@ -186,3 +186,33 @@
 @media(prefers-reduced-motion:reduce){
  #chiodo121.ch65 .ch-hand *,#chiodo121-online.ch65 .ch-hand *{animation:none!important;transition:none!important}
 }
+
+/* Compact 4-inch screens: portrait 320x568 / 360x640 and larger CSS viewports.
+   Applies equally to CPU and world multiplayer; does not modify card rules. */
+@media (max-width: 380px) and (orientation: portrait) {
+ #chiodo121.ch65,#chiodo121-online.ch65{--ch65-card:clamp(44px,13vw,54px);padding:4px 5px max(7px,env(safe-area-inset-bottom))!important}
+ #chiodo121.ch65 .ch-head,#chiodo121-online.ch65 .ch-head{grid-template-columns:44px minmax(0,1fr) 88px!important;min-height:45px!important;padding:3px 4px!important;margin-bottom:3px!important}
+ #chiodo121.ch65 .ch-head button,#chiodo121-online.ch65 .ch-head button{width:44px!important;min-width:44px!important;min-height:44px!important;height:44px!important}
+ #chiodo121.ch65 .ch-head strong,#chiodo121-online.ch65 .ch-head strong{font-size:clamp(14px,4.4vw,18px)!important;letter-spacing:0!important}
+ #chiodo121.ch65 .ch-score,#chiodo121-online.ch65 .ch-score{padding:3px!important;gap:2px!important;margin-bottom:3px!important}
+ #chiodo121.ch65 .ch-score-item,#chiodo121-online.ch65 .ch-score-item{padding:3px 1px!important;border-width:1px!important;border-radius:8px!important}
+ #chiodo121.ch65 .ch-score-item b,#chiodo121-online.ch65 .ch-score-item b{font-size:9px!important}
+ #chiodo121.ch65 .ch-score-item strong,#chiodo121-online.ch65 .ch-score-item strong{font-size:16px!important;line-height:19px!important}
+ #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{height:clamp(190px,35dvh,265px)!important;min-height:190px!important;max-height:265px!important;margin-bottom:3px!important}
+ #chiodo121.ch65 .ch-seat,#chiodo121-online.ch65 .ch-seat{min-height:50px!important;max-width:29%!important}
+ #chiodo121.ch65 .ch-avatar,#chiodo121-online.ch65 .ch-avatar{width:40px!important;height:40px!important}
+ #chiodo121.ch65 .ch-center,#chiodo121-online.ch65 .ch-center{gap:3px!important}
+ #chiodo121.ch65 .ch-piles,#chiodo121-online.ch65 .ch-piles{gap:8px!important}
+ #chiodo121.ch65 .ch-deck,#chiodo121-online.ch65 .ch-deck,
+ #chiodo121.ch65 .ch-top .playing-card,#chiodo121-online.ch65 .ch-top .playing-card{width:40px!important;height:66px!important}
+ #chiodo121.ch65 .ch-status,#chiodo121-online.ch65 .ch-status{min-height:30px!important;padding:4px 6px!important;margin:2px auto!important;font-size:11px!important}
+ #chiodo121.ch65 .ch-controls,#chiodo121-online.ch65 .ch-controls{padding:4px!important;gap:4px!important;margin:3px auto!important}
+ #chiodo121.ch65 .ch-controls button,#chiodo121-online.ch65 .ch-controls button{min-height:44px!important;padding:6px 8px!important}
+ #chiodo121.ch65 .ch-hand-label,#chiodo121-online.ch65 .ch-hand-label{margin:3px auto 1px!important}
+ #chiodo121.ch65 .ch-hand,#chiodo121-online.ch65 .ch-hand{padding:5px 6px 11px!important;margin-bottom:5px!important}
+ #chiodo121.ch65 .ch-hand button,#chiodo121-online.ch65 .ch-hand button{min-width:44px!important}
+}
+@media (max-height: 620px) and (orientation: portrait) {
+ #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{height:clamp(185px,32dvh,245px)!important;min-height:185px!important}
+ #chiodo121.ch65 .ch-status,#chiodo121-online.ch65 .ch-status{min-height:28px!important}
+}
