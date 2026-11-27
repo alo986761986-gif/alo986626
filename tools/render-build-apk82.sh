@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Existing Render APK builder, upgraded to 9.6. This script publishes only a
+# Existing Render APK builder, upgraded to 9.7. This script publishes only a
 # verified release and never substitutes a debug APK for the final artifact.
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -32,7 +32,7 @@ trap 'exit 143' TERM
 rm -rf -- "$DIST"
 mkdir -p "$DIST/qa"
 SOURCE_COMMIT="$(git rev-parse HEAD)"
-printf 'NAPOLI CARTE 3D 9.6 build source: %s\n' "$SOURCE_COMMIT"
+printf 'NAPOLI CARTE 3D 9.7 build source: %s\n' "$SOURCE_COMMIT"
 
 fetch() {
   local url="$1" destination="$2"
@@ -131,7 +131,7 @@ assert.equal(r.onlinePassed,m.uiQa.expectedOnlineCases);
 assert.ok(String(r.browserVersion).includes(m.toolchain.chrome.version));
 for(const key of ['errors','pageErrors','localFailures'])assert.equal(r[key].length,0,key);
 NODE
-printf '%s\n' 'NC96_PREDEPLOY_QA_PASSED: rule tests, app/server parity and fresh browser UI checks are green.'
+printf '%s\n' 'NC97_PREDEPLOY_QA_PASSED: rule tests, app/server parity and fresh browser UI checks are green.'
 
 # Pin a complete JDK instead of relying on a partial Java runtime in the image.
 verified_archive "$(config toolchain.jdk.url)" "$TOOLS/jdk17.tar.gz" "$(config toolchain.jdk.sha256)"
@@ -230,32 +230,32 @@ const summary={
 };
 fs.writeFileSync(path.join(dist,'qa/release.json'),JSON.stringify(summary,null,2)+'\n');
 fs.writeFileSync(path.join(dist,'README.txt'),[
-  'NAPOLI CARTE 3D 9.6.0 — 19 giochi in stile cartoon',
+  'NAPOLI CARTE 3D 9.7.0 — Chiodo 121 Cartoon Offline e Multiplayer',
   'APK release: '+m.app.apkFile,
-  'Certificato identico alla versione 9.5 pubblicata.',
+  'Certificato identico alla versione 9.6 pubblicata.',
   'Verifiche: regole, parità app/server, interfaccia, asset, musica, firma e tavolo HTTPS privato a due.',
-  'Il file 9.5 resta soltanto come archivio e riferimento per il certificato.',
+  'Il file 9.6 resta soltanto come archivio e riferimento per il certificato.',
   'Il collaudo su telefoni Android fisici non è incluso in questa build.',
   'Rapporto completo: qa/release.json',
   'Sorgente: '+commit,''
 ].join('\n'));
 const html='<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-  '<title>NAPOLI CARTE 3D 9.6</title><style>body{margin:0;background:#082937;color:#f5f4ed;font:18px system-ui;line-height:1.6}'+
+  '<title>NAPOLI CARTE 3D 9.7</title><style>body{margin:0;background:#082937;color:#f5f4ed;font:18px system-ui;line-height:1.6}'+
   'main{max-width:760px;margin:auto;padding:56px 24px}h1{line-height:1.15}a{color:#ffc966}'+
   '.download{display:inline-block;padding:14px 22px;background:#ffd06f;color:#142d36;border-radius:12px;font-weight:700;text-decoration:none}'+
   'code{overflow-wrap:anywhere;font-size:.8em}small{color:#c3d6da}</style><main><p>NAPOLI CARTE 3D</p>'+
-  '<h1>19 giochi. Versione 9.6. Edizione Cartoon.</h1><p>APK Android firmato con lo stesso certificato della versione 9.5.</p>'+
-  '<p><a class="download" href="'+m.app.apkFile+'">Scarica NAPOLI CARTE 3D 9.6</a></p>'+
+  '<h1>19 giochi. Versione 9.7. Chiodo 121 Cartoon 3D.</h1><p>APK Android firmato con lo stesso certificato della versione 9.6.</p>'+
+  '<p><a class="download" href="'+m.app.apkFile+'">Scarica NAPOLI CARTE 3D 9.7</a></p>'+
   '<p>Verifiche completate: regole dei giochi, interfaccia, musica, firma e un tavolo online privato con due partecipanti.</p>'+
   '<p><a href="qa/release.json">Rapporto delle verifiche</a> · <a href="SHA256SUMS.txt">SHA-256 dei file APK</a></p>'+
   '<p><small>La verifica su telefoni Android fisici resta da eseguire.</small></p>'+
   '<details><summary>Archivio 9.2</summary><p>Questa versione precedente è conservata per confrontare il certificato.</p>'+
-  '<a href="'+m.previousRelease.file+'">APK 9.5 precedente</a></details></main></html>\n';
+  '<a href="'+m.previousRelease.file+'">APK 9.6 precedente</a></details></main></html>\n';
 fs.writeFileSync(path.join(dist,'index.html'),html);
 NODE
 (
   cd "$DIST"
   sha256sum "$APK_NAME" "$PREVIOUS_NAME" > SHA256SUMS.txt
 )
-printf '%s\n' 'NC96_RELEASE_QA_PASSED: signed release APK and public QA reports are ready.'
+printf '%s\n' 'NC97_RELEASE_QA_PASSED: signed release APK and public QA reports are ready.'
 ls -lh "$DIST"
