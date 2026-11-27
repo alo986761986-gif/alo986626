@@ -73,6 +73,15 @@ function loadCartoonEdition(){
   chiodo.href='nc97-chiodo-cartoon.css';
   d.head.appendChild(chiodo);
  }
+ if(!d.getElementById('nc98-game-launch-style')){
+  const style=d.createElement('link');style.id='nc98-game-launch-style';style.rel='stylesheet';style.href='nc98-launcher.css';d.head.appendChild(style);
+ }
+ if(!d.getElementById('nc98-chiodo-layout-style')){
+  const layout=d.createElement('link');layout.id='nc98-chiodo-layout-style';layout.rel='stylesheet';layout.href='nc98-chiodo-layout.css';d.head.appendChild(layout);
+ }
+ if(!d.getElementById('nc98-game-launcher-script')){
+  const script=d.createElement('script');script.id='nc98-game-launcher-script';script.src='nc98-launcher.js';d.head.appendChild(script);
+ }
 }
 if(d.readyState==='complete')loadCartoonEdition();
 else w.addEventListener('load',loadCartoonEdition,{once:true});
