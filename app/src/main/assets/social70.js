@@ -250,3 +250,15 @@ const style=el('style');style.textContent=`
 // Do not create floating actions while a game is running.
 window.NC70_SOCIAL={open,openTab:open,close,call,openInvite:(id)=>{open('invites');return !!id;}};
 })();
+
+/* Load cross-platform audience/touch presentation after the authenticated social bridge.
+   Kept out of the pinned, reproducibly generated index.html used by the APK release. */
+(function(d){
+ 'use strict';
+ if(d.getElementById('nc85-audience-loader'))return;
+ const script=d.createElement('script');
+ script.id='nc85-audience-loader';
+ script.src='touch-audience85.js';
+ script.async=false;
+ d.body.appendChild(script);
+})(document);
