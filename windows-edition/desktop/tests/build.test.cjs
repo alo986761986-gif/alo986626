@@ -11,8 +11,8 @@ test('setup and portable do not overwrite each other',()=>{
  assert.notEqual(pkg.build.nsis.artifactName,pkg.build.portable.artifactName);
 });
 test('Windows builder uses short paths and extracts only approved source folders',()=>{
- assert.match(build,/NC3D5/);
- assert.match(build,/napoli-9-12\.apk/);
+ assert.match(build,/NC3D6/);
+ assert.match(build,/napoli-9-13\.apk/);
  assert.match(build,/ZipFile\]::OpenRead/);
  assert.match(build,/StartsWith\(\$assetsPrefix/);
  assert.match(build,/Get-FileHash -Algorithm SHA256/);
