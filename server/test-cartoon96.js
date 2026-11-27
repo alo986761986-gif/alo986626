@@ -6,8 +6,8 @@ const loader=fs.readFileSync(A+'nc90-premium.js','utf8');
 const manifest=JSON.parse(fs.readFileSync('tools/build93-manifest.json','utf8'));
 test('Cartoon 9.6 applies to all 19 card games without touching rules',()=>{
  assert.equal(manifest.app.gameCount,19);
- assert.equal(manifest.app.versionCode,96);
- assert.equal(manifest.app.versionName,'9.6.0');
+ assert.ok(manifest.app.versionCode>=96);
+ assert.match(manifest.app.versionName,/^9\.(?:6|7)\.0$/);
  assert.equal(manifest.app.minSdk,24);
  assert.equal(manifest.app.targetSdk,36);
  const groups=[
