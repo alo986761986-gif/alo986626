@@ -11,7 +11,7 @@ test('setup and portable do not overwrite each other',()=>{
  assert.notEqual(pkg.build.nsis.artifactName,pkg.build.portable.artifactName);
 });
 test('Windows builder uses short paths and extracts only approved source folders',()=>{
- assert.match(build,/NC3D2/);
+ assert.match(build,/NC3D3/);
  assert.match(build,/app\/src\/main\/assets\//);
  assert.match(build,/server\/bass_audio_parts\//);
  assert.match(build,/StartsWith\(\$destRoot/);
