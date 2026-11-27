@@ -216,3 +216,225 @@
  #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{height:clamp(185px,32dvh,245px)!important;min-height:185px!important}
  #chiodo121.ch65 .ch-status,#chiodo121-online.ch65 .ch-status{min-height:28px!important}
 }
+
+
+/* Chiodo 121 9.10: distinct, non-overlapping avatar lanes on phones.
+   Replaces percentage/absolute seating, not the offline or online rule engine.
+   Intentionally allows vertical scrolling on 4-inch screens instead of crushing
+   a four-player table into the same ~190px as the cards and status. */
+@media (max-width: 900px), (max-height: 600px) {
+  #chiodo121.ch65,#chiodo121-online.ch65 {
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena {
+    display:grid!important;
+    grid-template-columns:minmax(64px,1fr) minmax(112px,1.5fr) minmax(64px,1fr)!important;
+    grid-template-rows:105px minmax(158px,1fr) 105px!important;
+    gap:7px 5px!important;
+    align-items:center!important;
+    justify-items:center!important;
+    box-sizing:border-box!important;
+    padding:8px 6px!important;
+    width:100%!important;
+    height:clamp(400px,60dvh,470px)!important;
+    min-height:400px!important;
+    max-height:none!important;
+    overflow:visible!important;
+    position:relative!important;
+    isolation:isolate;
+    margin:5px auto 10px!important;
+  }
+  /* Keep the 3D scene or its CSS fallback under the three visible seating rows. */
+  #chiodo121.ch65 .ch-felt,#chiodo121-online.ch65 .ch-felt {
+    position:absolute!important;
+    inset:20% 4% 22%!important;
+    pointer-events:none!important;
+  }
+  #chiodo121.ch65 .ch65-canvas,#chiodo121-online.ch65 .ch65-canvas {
+    position:absolute!important;
+    inset:0!important;
+    pointer-events:none!important;
+    z-index:0!important;
+  }
+  #chiodo121.ch65 .ch-seat,#chiodo121-online.ch65 .ch-seat {
+    position:relative!important;
+    inset:auto!important;
+    left:auto!important;
+    right:auto!important;
+    top:auto!important;
+    bottom:auto!important;
+    transform:none!important;
+    width:min(100%,102px)!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    padding:0 2px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    align-self:center!important;
+    justify-self:center!important;
+    overflow:visible!important;
+    z-index:4!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="top"],
+  #chiodo121-online.ch65 .ch-seat[data-position="top"] {
+    grid-column:2!important;grid-row:1!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="own"],
+  #chiodo121-online.ch65 .ch-seat[data-position="own"] {
+    grid-column:2!important;grid-row:3!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="upper-left"],
+  #chiodo121-online.ch65 .ch-seat[data-position="upper-left"] {
+    grid-column:1!important;grid-row:1!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="upper-right"],
+  #chiodo121-online.ch65 .ch-seat[data-position="upper-right"] {
+    grid-column:3!important;grid-row:1!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="left"],
+  #chiodo121-online.ch65 .ch-seat[data-position="left"] {
+    grid-column:1!important;grid-row:2!important;
+  }
+  #chiodo121.ch65 .ch-seat[data-position="right"],
+  #chiodo121-online.ch65 .ch-seat[data-position="right"] {
+    grid-column:3!important;grid-row:2!important;
+  }
+  #chiodo121.ch65 .ch-avatar,#chiodo121-online.ch65 .ch-avatar {
+    display:grid!important;
+    place-items:center!important;
+    flex:0 0 auto!important;
+    width:clamp(39px,9.5vw,48px)!important;
+    height:clamp(39px,9.5vw,48px)!important;
+    min-height:39px!important;
+    margin:2px auto!important;
+  }
+  #chiodo121.ch65 .ch65-seat-caption,
+  #chiodo121-online.ch65 .ch65-seat-caption {
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:1px!important;
+    max-width:100%!important;
+    min-width:0!important;
+    width:100%!important;
+    overflow:visible!important;
+  }
+  #chiodo121.ch65 .ch-seat b,#chiodo121-online.ch65 .ch-seat b {
+    display:block!important;
+    font-size:clamp(9px,2.5vw,12px)!important;
+    line-height:15px!important;
+    width:100%!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    white-space:nowrap!important;
+    text-overflow:ellipsis!important;
+    text-align:center!important;
+    padding:2px!important;
+  }
+  #chiodo121.ch65 .ch-seat small,#chiodo121-online.ch65 .ch-seat small {
+    width:100%!important;
+    max-width:100%!important;
+    text-align:center!important;
+    font-size:9px!important;
+    line-height:13px!important;
+    white-space:normal!important;
+  }
+  #chiodo121.ch65 .ch-backs,#chiodo121-online.ch65 .ch-backs {
+    min-height:10px!important;
+    height:11px!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+    margin:1px auto!important;
+  }
+  /* Keep the mic toggle accessible but outside the central cards lane. */
+  #chiodo121.ch65 .ch-seat>.nc64-voice,
+  #chiodo121-online.ch65 .ch-seat>.nc64-voice {
+    position:absolute!important;
+    top:0!important;
+    bottom:auto!important;
+    left:auto!important;
+    right:-3px!important;
+    transform:scale(.84)!important;
+    transform-origin:top right!important;
+  }
+  #chiodo121.ch65 .ch-seat:is([data-position="left"],[data-position="right"])>.nc64-voice,
+  #chiodo121-online.ch65 .ch-seat:is([data-position="left"],[data-position="right"])>.nc64-voice {
+    top:100%!important;
+    right:auto!important;
+    left:50%!important;
+    transform:translateX(-50%) scale(.84)!important;
+    transform-origin:top center!important;
+  }
+  /* Deck and played card occupy their own center grid cell. */
+  #chiodo121.ch65 .ch-center,
+  #chiodo121-online.ch65 .ch-center,
+  #chiodo121.ch65 .ch-arena.ch-rendered .ch-center,
+  #chiodo121-online.ch65 .ch-arena.ch-rendered .ch-center {
+    grid-column:2!important;
+    grid-row:2!important;
+    position:relative!important;
+    inset:auto!important;
+    left:auto!important;
+    top:auto!important;
+    right:auto!important;
+    bottom:auto!important;
+    transform:none!important;
+    margin:0 auto!important;
+    width:100%!important;
+    max-width:160px!important;
+    min-width:0!important;
+    align-self:center!important;
+    justify-self:center!important;
+    z-index:6!important;
+    gap:7px!important;
+  }
+  #chiodo121.ch65 .ch-piles,#chiodo121-online.ch65 .ch-piles {
+    width:100%!important;
+    max-width:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:clamp(6px,2vw,14px)!important;
+  }
+  #chiodo121.ch65 .ch-deck,#chiodo121-online.ch65 .ch-deck,
+  #chiodo121.ch65 .ch-top .playing-card,#chiodo121-online.ch65 .ch-top .playing-card {
+    width:clamp(41px,11vw,53px)!important;
+    height:clamp(67px,18vw,86px)!important;
+  }
+  #chiodo121.ch65 .ch-meta,#chiodo121-online.ch65 .ch-meta {
+    box-sizing:border-box!important;
+    min-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
+    font-size:10px!important;
+    line-height:15px!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    text-align:center!important;
+  }
+  #chiodo121.ch65 .ch65-tablemark,#chiodo121-online.ch65 .ch65-tablemark {
+    pointer-events:none!important;
+    opacity:.35!important;
+    z-index:0!important;
+  }
+  #chiodo121.ch65 .ch-controls button,
+  #chiodo121-online.ch65 .ch-controls button {
+    min-height:44px!important;
+  }
+}
+@media (max-width: 350px) {
+  #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena {
+    grid-template-columns:minmax(59px,1fr) minmax(108px,1.55fr) minmax(59px,1fr)!important;
+    gap:6px 3px!important;
+    padding:7px 3px!important;
+  }
+}
