@@ -165,7 +165,7 @@ if (require.main === module) {
     const report = checkApk(options);
     fs.mkdirSync(path.dirname(path.resolve(options.report)), { recursive: true });
     fs.writeFileSync(options.report, JSON.stringify(report, null, 2) + '\n');
-    console.log('PASS APK 9.7.0: release signature matches version 9.6, ' + report.checkedAssetCount +
+    console.log('PASS APK 9.8.0: release signature matches version 9.7, ' + report.checkedAssetCount +
       ' source assets match, music and five launcher icons verified');
   } catch (error) {
     if (options && options.report) {

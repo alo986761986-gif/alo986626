@@ -1,0 +1,32 @@
+name: Napoli Carte 3D 9.8 — Launcher and Chiodo layout QA
+on:
+  push:
+    branches: [feature/nc98-launch-loader-chiodo-layout]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and regression tests
+        run: |
+          set -euo pipefail
+          node --check app/src/main/assets/nc98-launcher.js
+          node --check app/src/main/assets/nc90-premium.js
+          node --check app/src/main/assets/online-hub72.js
+          node --check app/src/main/assets/chiodo.js
+          node --check app/src/main/assets/chiodo-network.js
+          node --check server/verify-expansion-ui.cjs
+          node --test server/test-nc98-launch.js server/test-chiodo-cartoon97.js server/test-chiodo-pairs91.js server/test-lobby95.js server/test-cartoon96.js server/test-expansion-session.js server/test-premium90.js server/test-club84.js server/test-banco91.js server/test-banco92-ui.js
+      - name: Check full APK bundle
+        run: |
+          set -euo pipefail
+          node tools/prepare-expansion-index.cjs
+          bash server/restore_bass_audio.sh
+          node tools/verify-expansion-bundle.cjs /tmp/nc98-report.json

@@ -52,6 +52,7 @@ async function presence(){
 function enter(i){
  if(i!==0){info('Sala non ancora attiva: il server deve gestire categorie separate e verifiche crediti. Nessun credito viene scalato.');return;}
  const chosen=selected;close();
+ if(window.NC98_LAUNCHER?.open?.(chosen,'online'))return;
  if(expansionIds.has(chosen)){if(window.NC_EXPANSION?.open?.(chosen,'online'))return;open();info('Il tavolo non è disponibile. Riapri il gioco.');return;}
  if(chosen==='banco'){if(typeof window.NC_BANCO_ONLINE_OPEN==='function')window.NC_BANCO_ONLINE_OPEN();else{open();info('Il Banco online non è disponibile.');}return;}
  if(chosen==='chiodo121'){const b=document.querySelector('#chiodo-online-entry');if(b)b.click();else{window.drawLobby?.();setTimeout(()=>document.querySelector('#chiodo-online-entry')?.click(),100);}return;}
@@ -134,6 +135,7 @@ window.NC72_ONLINE_SELECT=function(id){if(games.some(g=>g[0]===id)){selected=id;
   if(!match||opening)return;
   e.preventDefault();e.stopImmediatePropagation();
   if(typeof w.setGame!=='function'||typeof w.setMode!=='function'||typeof w.joinGame!=='function')return;
+  if(w.NC98_LAUNCHER?.open?.(match[1]))return;
   opening=true;
   try{
    w.setGame(match[1]);
