@@ -88,3 +88,6 @@ body.nc90-in-game #root .board{border-width:8px!important}
 }
 @media(max-width:360px){body.nc90-in-lobby #root button.game{min-height:119px!important}body.nc90-in-lobby #root button.game strong{font-size:12px!important}.ncx-player{padding:6px!important}}
 @media(prefers-reduced-motion:reduce){body.nc90 *,body.nc90 *:before,body.nc90 *:after,.ncx-screen *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Priority lock against original 9.0 runtime backgrounds. */
+body.nc90.nc96-cartoon,body.nc90.nc96-cartoon.nc90-in-lobby,body.nc90.nc96-cartoon.nc90-in-game{background-image:url("nc96-cartoon-golfo.svg")!important;background-color:#2b99db!important;background-position:center top!important;background-size:cover!important;background-attachment:fixed!important}
