@@ -438,3 +438,234 @@
     padding:7px 3px!important;
   }
 }
+
+
+/* NAPOLI 9.11 / Desktop + Android. Single shared layout for 2, 3, 4 players
+   in BOTH CPU and online Chiodo 121 modes. The previous 9.10 grid was inside a
+   max-width 900px media query, so it never ran on normal desktop windows.
+   Use actual CSS grid tracks rather than percentage seat coordinates.
+   Reserve the near and far edges for avatars and personal-photo controls.
+   WebGL keeps painting the 3D green table underneath the middle row. */
+#chiodo121.ch65,#chiodo121-online.ch65{
+ --ch911-seat-width:clamp(84px,23vw,190px);
+ overflow-y:auto!important;
+ overflow-x:hidden!important;
+ scroll-padding-bottom:28px;
+}
+#chiodo121.ch65 .ch-arena,
+#chiodo121-online.ch65 .ch-arena{
+ display:grid!important;
+ grid-template-columns:minmax(68px,1fr) minmax(122px,2.5fr) minmax(68px,1fr)!important;
+ grid-template-rows:108px minmax(210px,1fr) 132px!important;
+ column-gap:6px!important;row-gap:6px!important;
+ align-items:center!important;justify-items:center!important;
+ box-sizing:border-box!important;
+ width:100%!important;
+ height:clamp(490px,63dvh,530px)!important;
+ min-height:490px!important;max-height:none!important;
+ padding:8px 7px!important;
+ margin:7px auto 12px!important;
+ position:relative!important;isolation:isolate!important;
+ overflow:visible!important;
+}
+#chiodo121.ch65 .ch-felt,
+#chiodo121-online.ch65 .ch-felt{
+ position:absolute!important;
+ inset:27% 5% 27%!important;
+ border-radius:46% / 36%!important;
+ pointer-events:none!important;
+ z-index:0!important;
+}
+#chiodo121.ch65 .ch65-canvas,
+#chiodo121-online.ch65 .ch65-canvas{
+ position:absolute!important;
+ inset:0!important;
+ width:100%!important;height:100%!important;
+ pointer-events:none!important;
+ z-index:0!important;
+}
+#chiodo121.ch65 .ch65-tablemark,
+#chiodo121-online.ch65 .ch65-tablemark{
+ position:absolute!important;
+ top:63%!important;left:50%!important;
+ pointer-events:none!important;
+ z-index:1!important;opacity:.25!important;
+}
+/* Avatar placement: no percentage transforms or absolute coordinates,
+   including any inline values set by the old fitArena routine. */
+#chiodo121.ch65 .ch-arena > .ch-seat,
+#chiodo121-online.ch65 .ch-arena > .ch-seat{
+ position:relative!important;
+ inset:auto!important;top:auto!important;left:auto!important;
+ right:auto!important;bottom:auto!important;
+ transform:none!important;
+ align-self:center!important;justify-self:center!important;
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;
+ gap:1px!important;
+ width:min(100%,var(--ch911-seat-width))!important;
+ min-width:0!important;max-width:100%!important;
+ height:auto!important;min-height:0!important;
+ margin:0!important;padding:2px!important;
+ z-index:10!important;
+ overflow:visible!important;
+ box-sizing:border-box!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="top"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="top"]{
+ grid-column:1 / 4!important;grid-row:1!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="own"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="own"]{
+ grid-column:1 / 4!important;grid-row:3!important;
+ width:min(100%,250px)!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="upper-left"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="upper-left"]{
+ grid-column:1!important;grid-row:1!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="upper-right"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="upper-right"]{
+ grid-column:3!important;grid-row:1!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="left"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="left"]{
+ grid-column:1!important;grid-row:2!important;
+}
+#chiodo121.ch65 .ch-arena > .ch-seat[data-position="right"],
+#chiodo121-online.ch65 .ch-arena > .ch-seat[data-position="right"]{
+ grid-column:3!important;grid-row:2!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat .ch-avatar,
+#chiodo121-online.ch65 .ch-arena .ch-seat .ch-avatar{
+ width:46px!important;height:46px!important;min-height:46px!important;
+ margin:1px auto!important;flex:0 0 auto!important;
+}
+#chiodo121.ch65 .ch-arena .ch65-seat-caption,
+#chiodo121-online.ch65 .ch-arena .ch65-seat-caption{
+ display:flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ gap:1px!important;overflow:visible!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat b,
+#chiodo121-online.ch65 .ch-arena .ch-seat b{
+ display:block!important;
+ box-sizing:border-box!important;
+ width:auto!important;max-width:100%!important;
+ font-size:clamp(11px,1.15vw,13px)!important;
+ font-weight:850!important;line-height:17px!important;
+ padding:0px 5px!important;
+ white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ text-align:center!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat small,
+#chiodo121-online.ch65 .ch-arena .ch-seat small{
+ width:100%!important;max-width:100%!important;
+ font-size:10px!important;line-height:13px!important;
+ white-space:normal!important;overflow-wrap:anywhere!important;
+ text-align:center!important;margin:0!important;
+}
+#chiodo121.ch65 .ch-arena .ch-backs,
+#chiodo121-online.ch65 .ch-arena .ch-backs{
+ display:flex!important;max-width:100%!important;
+ height:11px!important;min-height:11px!important;
+ margin:1px auto!important;overflow:hidden!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat > .ch69-edit,
+#chiodo121-online.ch65 .ch-arena .ch-seat > .ch69-edit{
+ position:relative!important;display:inline-flex!important;
+ justify-content:center!important;align-items:center!important;
+ margin:2px auto 1px!important;
+ padding:2px 9px!important;min-height:28px!important;
+ min-width:72px!important;max-width:100%!important;
+ z-index:11!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat > .ch69-caption,
+#chiodo121-online.ch65 .ch-arena .ch-seat > .ch69-caption{
+ display:block!important;
+ line-height:12px!important;font-size:10px!important;
+ text-align:center!important;max-width:100%!important;
+ overflow-wrap:anywhere!important;white-space:normal!important;
+}
+#chiodo121.ch65 .ch-arena .ch-seat > .nc64-voice,
+#chiodo121-online.ch65 .ch-arena .ch-seat > .nc64-voice{
+ position:absolute!important;top:1px!important;right:-6px!important;
+ left:auto!important;bottom:auto!important;
+ transform:scale(.78)!important;transform-origin:top right!important;
+ z-index:15!important;
+}
+#chiodo121.ch65 .ch-arena .ch-center,
+#chiodo121-online.ch65 .ch-arena .ch-center,
+#chiodo121.ch65 .ch-arena.ch-rendered .ch-center,
+#chiodo121-online.ch65 .ch-arena.ch-rendered .ch-center{
+ position:relative!important;
+ grid-column:2!important;grid-row:2!important;
+ top:auto!important;left:auto!important;
+ right:auto!important;bottom:auto!important;
+ inset:auto!important;transform:none!important;
+ box-sizing:border-box!important;
+ margin:0 auto!important;padding:5px 1px!important;
+ width:100%!important;max-width:260px!important;min-width:0!important;
+ display:flex!important;flex-direction:column!important;
+ align-items:center!important;justify-content:center!important;
+ gap:10px!important;
+ align-self:center!important;justify-self:center!important;
+ z-index:12!important;
+}
+#chiodo121.ch65 .ch-arena .ch-center .ch-piles,
+#chiodo121-online.ch65 .ch-arena .ch-center .ch-piles{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ gap:clamp(10px,2vw,24px)!important;width:100%!important;
+ max-width:100%!important;min-width:0!important;overflow:visible!important;
+}
+#chiodo121.ch65 .ch-center .ch-deck,
+#chiodo121-online.ch65 .ch-center .ch-deck,
+#chiodo121.ch65 .ch-center .ch-top > .playing-card,
+#chiodo121-online.ch65 .ch-center .ch-top > .playing-card{
+ width:clamp(43px,8vw,58px)!important;
+ height:clamp(70px,13vw,94px)!important;
+ flex:0 0 auto!important;
+}
+#chiodo121.ch65 .ch-center .ch-meta,
+#chiodo121-online.ch65 .ch-center .ch-meta{
+ width:100%!important;max-width:100%!important;
+ min-height:28px!important;
+ font-size:11px!important;line-height:17px!important;
+ text-align:center!important;overflow-wrap:anywhere!important;
+}
+/* Do not squeeze the hand to make the board fit: it remains a separate,
+   horizontally scrollable zone beneath the action and status rows. */
+#chiodo121.ch65 .ch-hand,
+#chiodo121-online.ch65 .ch-hand{
+ min-height:calc(var(--ch65-card)*1.68 + 22px)!important;
+ overflow-x:auto!important;scrollbar-width:thin;
+}
+#chiodo121.ch65 .ch-controls button,
+#chiodo121-online.ch65 .ch-controls button{min-height:44px!important}
+@media(max-width:430px){
+ #chiodo121.ch65,#chiodo121-online.ch65{--ch911-seat-width:92px}
+ #chiodo121.ch65 .ch-arena,#chiodo121-online.ch65 .ch-arena{
+   grid-template-columns:minmax(61px,1fr) minmax(122px,2fr) minmax(61px,1fr)!important;
+   grid-template-rows:108px minmax(210px,1fr) 132px!important;
+   height:490px!important;min-height:490px!important;
+   gap:4px 2px!important;padding:7px 3px!important;
+ }
+ #chiodo121.ch65 .ch-arena .ch-seat .ch-avatar,
+ #chiodo121-online.ch65 .ch-arena .ch-seat .ch-avatar{
+   width:43px!important;height:43px!important;min-height:43px!important;
+ }
+ #chiodo121.ch65 .ch-arena .ch-seat b,
+ #chiodo121-online.ch65 .ch-arena .ch-seat b{font-size:10px!important}
+ #chiodo121.ch65 .ch-arena .ch-seat > .ch69-edit,
+ #chiodo121-online.ch65 .ch-arena .ch-seat > .ch69-edit{
+   min-height:28px!important;
+ }
+ #chiodo121.ch65 .ch-center .ch-deck,
+ #chiodo121-online.ch65 .ch-center .ch-deck,
+ #chiodo121.ch65 .ch-center .ch-top > .playing-card,
+ #chiodo121-online.ch65 .ch-center .ch-top > .playing-card{
+   width:43px!important;height:70px!important;
+ }
+}
