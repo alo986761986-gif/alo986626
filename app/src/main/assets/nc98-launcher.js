@@ -15,7 +15,7 @@ const catalog=[
  ['trentuno','Trentuno','31'],['cucu','Cucù','🐦'],['cirulla','Cirulla','✨'],['asino','Asino','🐴'],['dubito','Dubito','🎭'],
  ['tressette_morto','Tressette col Morto','👤'],['mercante','Mercante in Fiera','🎪']
 ];
-let overlay=null,chosen='',opponent='cpu',format='all',players=2,launching=false,focused=null,request=0,dispatching=false;
+let overlay=null,chosen='',opponent='cpu',format='all',privacy='public',players=2,launching=false,focused=null,request=0,dispatching=false,invitationCode='';
 const names=new Map(catalog.map(v=>[v[0],v]));
 function el(tag,cls,text){const e=d.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function gameData(id){return names.get(id)||null;}
@@ -31,6 +31,7 @@ function render(){
  if(chosen==='scopone'){format='pairs';players=4;}
  if(!canPairs(chosen)&&format==='pairs')format='individual';
  if(format==='pairs')players=4;
+ const currentCode=overlay.querySelector('#nc99-invite-code');if(currentCode)invitationCode=currentCode.value.trim().toUpperCase();
  const buttons=(entries,selected,group)=>entries.map(([value,title,desc,disabled])=>'<button type="button" data-'+group+'="'+value+'" aria-pressed="'+(selected===value)+'" '+(disabled?'disabled title="Questa variante non è prevista dalle regole del gioco"':'')+'><strong>'+title+'</strong>'+ (desc?'<small>'+desc+'</small>':'')+'</button>').join('');
  const variants=[
   ['all','Tutti','Scelta automatica',chosen==='scopone'],
@@ -47,11 +48,14 @@ function render(){
   +buttons(variants,format,'format')+'</div><p class="nc98-help">'+onlineNote+'</p>'
   +'<h4>3 · Giocatori al tavolo</h4><div class="nc98-seats" role="group" aria-label="Numero giocatori">'
   +seats.map(n=>'<button type="button" data-seats="'+n+'" aria-pressed="'+(players===n)+'" '+(format==='pairs'&&n!==4||chosen==='scopone'&&n!==4?'disabled':'')+'>'+n+(n===1?' cartella':' giocatori')+'</button>').join('')+'</div>'
+  +(opponent==='online'?'<section class="nc99-privacy"><h4>4 · Tipo di partita online</h4><div class="nc98-options nc99-privacy-buttons" role="group" aria-label="Visibilità della stanza">'+buttons([['public','🌍 Pubblica','Cerca tutti i giocatori'],['private','🔒 Privata','Solo con codice e invito']],privacy,'privacy')+'</div><label class="nc99-invite-label">Hai ricevuto un codice invito?<input id="nc99-invite-code" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" placeholder="Codice stanza · opzionale" aria-label="Codice stanza privata" value="'+invitationCode.replace(/[^A-Z0-9]/g,'')+'"></label><button type="button" class="nc99-choose" id="nc99-select-friends">👥 Invita amici</button><p class="nc99-explain">'+(privacy==='private'?'La stanza non compare nella ricerca pubblica. Seleziona gli amici: riceveranno un invito quando la sala sarà creata.':'Gli inviti si possono inviare dopo aver creato una stanza privata.')+'</p></section>':'')
   +'<p id="nc98-error" role="alert" class="nc98-error" hidden></p>'
   +'<div class="nc98-progress" id="nc98-progress" hidden><div class="nc98-progress-label" id="nc98-status" role="status">Preparazione del gioco…</div><div class="nc98-track" role="progressbar" aria-label="Caricamento del gioco"><span></span></div></div>'
   +'<div class="nc98-actions"><button type="button" id="nc98-start">▶ '+(opponent==='online'?'Continua online':'Avvia partita')+'</button><button type="button" id="nc98-cancel">Annulla</button></div></div></div>';
  overlay.querySelector('#nc98-back').onclick=close;overlay.querySelector('#nc98-cancel').onclick=close;
  overlay.querySelectorAll('[data-opponent]').forEach(b=>b.onclick=()=>{opponent=b.dataset.opponent;render();});
+ overlay.querySelectorAll('[data-privacy]').forEach(b=>b.onclick=()=>{privacy=b.dataset.privacy;render();});
+ const friendsButton=overlay.querySelector('#nc99-select-friends');if(friendsButton)friendsButton.onclick=()=>{if(privacy!=='private'){privacy='private';render();}w.NC99_INVITES?.open?.({game:chosen});};
  overlay.querySelectorAll('[data-format]').forEach(b=>b.onclick=()=>{if(!b.disabled){format=b.dataset.format;if(format==='pairs')players=4;render();}});
  overlay.querySelectorAll('[data-seats]').forEach(b=>b.onclick=()=>{if(!b.disabled){players=Number(b.dataset.seats);render();}});
  overlay.querySelector('#nc98-start').onclick=start;overlay.querySelector('#nc98-start').focus();
@@ -59,7 +63,9 @@ function render(){
 function reportError(error){if(!overlay)return;const b=overlay.querySelector('#nc98-error');if(b){b.hidden=false;b.textContent=String(error?.message||error||'Il gioco non è disponibile.');}launching=false;overlay.classList.remove('nc98-loading');overlay.querySelector('#nc98-progress').hidden=true;overlay.querySelectorAll('button').forEach(b=>b.disabled=false);}
 async function start(){
  if(launching||!overlay)return;launching=true;const mine=++request;
- const selected=chosen,kind=opponent,rule=getFormat(),n=players;
+ const selected=chosen,kind=opponent,rule=getFormat(),n=players,chosenPrivacy=privacy;
+ const invite=(overlay.querySelector('#nc99-invite-code')?.value||'').trim().toUpperCase();invitationCode=invite;
+ if(kind==='online'&&invite&&!/^[A-Z0-9]{6,8}$/.test(invite)){reportError('Il codice stanza deve contenere 6 o 8 caratteri.');return;}
  const progress=overlay.querySelector('#nc98-progress');progress.hidden=false;overlay.classList.add('nc98-loading');
  overlay.querySelectorAll('button').forEach(b=>b.disabled=true);
  setStage('Preparazione delle risorse e del tavolo…');
@@ -71,6 +77,7 @@ async function start(){
   if(classicIds.includes(selected)){
    if(typeof w.setGame!=='function'||typeof w.setSeats!=='function'||typeof w.setFormat!=='function'||typeof w.setMode!=='function'||typeof w.joinGame!=='function')throw Error('Il motore del gioco non è disponibile.');
    if(kind==='online'&&w.NC3D_OFFLINE&&!w.NC3D_SERVER_URL)throw Error('Il server mondiale per questo gioco non è configurato. Puoi giocare contro bot.');
+   w.NC99_ACTIVE_GAME=selected;w.NC3D_PRIVATE=chosenPrivacy==='private'&&!invite;w.NC3D_INVITE=invite;
    w.setGame(selected);w.setSeats(n);
    w.setFormat(rule);w.setMode(kind==='online'?'online':'bot');
    setStage(kind==='online'?'Apertura della ricerca online…':'Creazione della partita contro bot…');
@@ -80,10 +87,12 @@ async function start(){
   }else if(expansionIds.includes(selected)){
    setStage('Apertura del tavolo '+(kind==='online'?'online':'offline')+'…');
    launched=!!w.NC_EXPANSION?.open?.(selected,kind==='online'?'online':'cpu');
-   if(launched){const seat=w.document.getElementById('ncx-seats');if(seat&&Array.from(seat.options).some(x=>Number(x.value)===n))seat.value=String(n);}
+   if(launched){const seat=w.document.getElementById('ncx-seats');if(seat&&Array.from(seat.options).some(x=>Number(x.value)===n))seat.value=String(n);
+    if(kind==='online'){const priv=w.document.getElementById('ncx-private');if(priv)priv.checked=chosenPrivacy==='private'&&!invite;const code=w.document.getElementById('ncx-invite');if(code&&invite)code.value=invite;}}
   }else if(selected==='chiodo121'){
    setStage('Caricamento del tavolo Chiodo 121…');
    const b=d.getElementById(kind==='online'?'chiodo-online-entry':'chiodo-entry');if(!b)throw Error('Chiodo 121 non è disponibile.');
+   if(kind==='online')w.NC99_CHIODO_OPTIONS={private:chosenPrivacy==='private'&&!invite,invite};
    dispatching=true;try{b.click();}finally{dispatching=false;}launched=!!d.getElementById(kind==='online'?'chiodo121-online':'chiodo121');
    if(launched&&kind==='cpu'){
     const fmt=d.getElementById('ch-format');if(fmt){fmt.value=rule;fmt.dispatchEvent(new Event('change',{bubbles:true}));}
@@ -98,7 +107,9 @@ async function start(){
    }
   }else if(selected==='banco'){
    setStage('Apertura delle cartelle della Tombola…');
-   if(kind==='online'){const fn=w.NC_BANCO_ONLINE_OPEN;if(typeof fn==='function'){fn();launched=!!d.getElementById('nc92-online');}}
+   if(kind==='online'){const fn=w.NC_BANCO_ONLINE_OPEN;if(typeof fn==='function'){fn();launched=!!d.getElementById('nc92-online');
+    if(launched&&(chosenPrivacy==='private'||invite)){if(invite){const field=d.getElementById('nc92-invite');if(field)field.value=invite;d.querySelector('#nc92-online [data-action=code]')?.click();}
+     else d.querySelector('#nc92-online [data-action=private]')?.click();}}}
    else{const b=d.querySelector('#root .games .nc91-launch');if(b){dispatching=true;try{b.click();}finally{dispatching=false;}launched=!!d.getElementById('nc91-banco');}}
   }
   if(!launched)throw Error('Impossibile aprire il tavolo. Riprova dalla schermata dei giochi.');
@@ -108,7 +119,7 @@ async function start(){
 function open(id,op){
  if(!gameData(id))return false;
  if(overlay)close();
- focused=d.activeElement;chosen=id;opponent=op==='online'?'online':'cpu';format=id==='scopone'?'pairs':'all';players=possible(id)[0];if(id==='scopone')players=4;
+ focused=d.activeElement;chosen=id;opponent=op==='online'?'online':'cpu';privacy='public';invitationCode='';format=id==='scopone'?'pairs':'all';players=possible(id)[0];if(id==='scopone')players=4;
  overlay=el('section','nc98-overlay');overlay.id='nc98-launcher';d.body.append(overlay);
  render();return true;
 }
@@ -132,5 +143,5 @@ d.addEventListener('click',e=>{
  open(id,tile.id==='chiodo-online-entry'||tile.classList.contains('nc92-launch')?'online':'cpu');
 },true);
 d.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay){e.preventDefault();close();}});
-w.NC98_LAUNCHER={version:'9.8.0',open,close,catalog:()=>catalog.map(x=>({id:x[0],title:x[1],pairs:canPairs(x[0]),seats:possible(x[0])}))};
+w.NC98_LAUNCHER={version:'9.9.0',open,close,catalog:()=>catalog.map(x=>({id:x[0],title:x[1],pairs:canPairs(x[0]),seats:possible(x[0])}))};
 })(window,document);

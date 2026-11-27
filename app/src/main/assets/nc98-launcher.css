@@ -97,3 +97,13 @@
   background:linear-gradient(90deg,#ffa743,#fff2a1,#6ce3ad);
   box-shadow:0 0 10px #ffdb8b;
 }
+
+/* NC99 public/private selector, Android 4 inch+ and desktop. */
+#nc98-launcher .nc99-privacy{margin-top:16px;padding:10px;border:1px solid #ffe6a166;border-radius:15px;background:#063c6c75}
+#nc98-launcher .nc99-privacy h4{margin-top:2px}
+#nc98-launcher .nc99-privacy-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#nc98-launcher .nc99-invite-label{display:block;font-size:12px;margin:12px 0 7px;color:#fff1cd;font-weight:750}
+#nc98-launcher #nc99-invite-code{display:block;width:100%;min-width:0;min-height:44px;margin:7px 0 10px;padding:10px;background:#073b70;border:2px solid #c9ddf4;border-radius:11px;color:#fff5d0;font-size:16px;text-transform:uppercase;letter-spacing:1.4px}
+#nc98-launcher .nc99-choose{display:block;width:100%;min-height:44px;padding:10px;background:linear-gradient(#fff3b5,#fbc36e);border:2px solid #fff2ca;border-radius:13px;color:#513216;font-weight:900}
+#nc98-launcher .nc99-explain{font-size:11px;line-height:1.35;color:#ffefc6;margin:9px 0 2px}
+@media(max-width:400px){#nc98-launcher .nc99-privacy{padding:8px}#nc98-launcher .nc99-privacy-buttons button{min-height:56px;font-size:11px}}

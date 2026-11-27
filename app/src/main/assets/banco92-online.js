@@ -49,7 +49,7 @@ function roomView(){
  const time=live?Math.max(0,Math.ceil((snapshot.nextDrawAt-(snapshot.serverNow+(Date.now()-(snapshotReceivedAt||Date.now()))))/1000)):
   s==='waiting'&&snapshot.waitUntil?Math.max(0,Math.ceil((snapshot.waitUntil-(snapshot.serverNow+(Date.now()-(snapshotReceivedAt||Date.now()))))/1000)):0;
  const meaning=core.getMeaning(snapshot.lastNumber);
- const code=info.code?'<div class="nc92-welcome"><p>Codice invito: <strong class="nc92-roomcode">'+esc(info.code)+'</strong></p><p>Comunicalo agli amici per entrare prima dell’inizio della partita.</p></div>':'';
+ const code=info.code?'<div class="nc92-welcome"><p>Codice invito: <strong class="nc92-roomcode">'+esc(info.code)+'</strong></p><p>Comunicalo agli amici per entrare prima dell’inizio della partita.</p><button type="button" class="nc99-banco-invite" data-action="invite-friends">👥 INVITA AMICI</button></div>':'';
  const headStats='<div class="nc92-toolbar"><span class="nc92-pill">👥 '+snapshot.joined+' / '+info.capacity+' giocatori</span><span class="nc92-livemark">'+(live?'● LIVE':done?'★ CONCLUSA':'● IN ATTESA')+'</span>'+
  '<span class="nc92-clock">'+(live?'Prossima estrazione: '+time+' s':s==='waiting'?(snapshot.joined<2?'Servono almeno 2 giocatori':'Partenza tra '+time+' s'):'Partita terminata')+'</span>'+
  '<button type="button" data-action="leave">↩ Esci dalla sala</button></div>';
@@ -72,6 +72,7 @@ function render(){
  '<p id="nc92-status" class="nc91-status" role="status" aria-live="polite">'+esc(notice)+'</p>'+
  '<p class="nc91-footer">IL BANCO ONLINE · GAMES STUDIOS · Sala pubblica o privata · Solo divertimento con crediti virtuali.</p></div>';
  root.scrollTop=scroll;
+ if(snapshot?.room?.mode==='private'&&snapshot?.room?.code&&snapshot?.room?.status==='waiting')w.NC99_INVITES?.roomReady?.({game:'banco',code:snapshot.room.code,channel:'chat'});
 }
 async function refresh(){
  if(fetching||!root)return;fetching=true;
@@ -123,6 +124,7 @@ function onclick(e){
  const b=e.target.closest('button[data-action]');if(!b||!root?.contains(b))return;
  const act=b.dataset.action;
  if(act==='close'){close();return;}
+ if(act==='invite-friends'){w.NC99_INVITES?.open?.({game:'banco',code:snapshot?.room?.code||'',channel:'chat'});return;}
  if(act==='refresh'){refresh();return;}
  if(act==='leave'){leave();return;}
  if(act==='start'){start();return;}

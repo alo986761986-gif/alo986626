@@ -36,3 +36,12 @@
 /* Keep the menu reachable even on full-screen game layers (including Chiodo). */
 #nc76-menu-open{position:fixed;top:max(10px,env(safe-area-inset-top));right:10px;z-index:2147483510}
 .nc76-header-actions{padding-right:56px}
+
+/* NC99: right-hand menu fades and slides, without covering the game when closed. */
+#nc76-overlay{opacity:0;visibility:hidden;pointer-events:none;transition:opacity 230ms ease,visibility 0s linear 300ms}
+#nc76-overlay.nc99-open{opacity:1;visibility:visible;pointer-events:auto;transition:opacity 230ms ease,visibility 0s}
+#nc76-overlay .nc76-scrim{opacity:0;transition:opacity 260ms ease}
+#nc76-overlay.nc99-open .nc76-scrim{opacity:1}
+#nc76-overlay .nc76-panel{transform:translate3d(104%,0,0);opacity:.45;transition:transform 300ms cubic-bezier(.2,.8,.2,1),opacity 260ms ease;will-change:transform}
+#nc76-overlay.nc99-open .nc76-panel{transform:translate3d(0,0,0);opacity:1}
+@media(prefers-reduced-motion:reduce){#nc76-overlay,#nc76-overlay .nc76-scrim,#nc76-overlay .nc76-panel{transition:none!important}}

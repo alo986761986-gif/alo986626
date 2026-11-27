@@ -1,0 +1,69 @@
+name: Napoli Carte 3D 9.11 - Android APK inviti privati
+on:
+  push:
+    branches:
+      - feature/nc99-inviti-privati-android-20261127
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-debug-apk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Gradle 8.13
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.13'
+      - name: Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install compile SDK and build tools
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;35.0.0" "platform-tools"
+      - name: Verify NC99 frontend files
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root=Path('app/src/main/assets')
+          expected={
+            'index.html':'456f910d0af544f8960bc49ba1acc31636fb2e613b8d7eb60642ae6dbfae7eda',
+            'nc99-invites.css':'35642e4411b6a87a6b5531223b4b9818a1fe9d89ec4cfe8ed3ec65108ce6a4e0',
+            'settings76.css':'9c887eaa4662cabc46bd41e7320d00943656fcc5e0a9e0b847b2f734f0d17ee9',
+            'chiodo-network.js':'3650f91879fa81dff5f87b081b63e0618ff02373faf42ac112aa34b8c5434ee2',
+            'expansion-ui.js':'de271d9f3835652472c349448779e55a8d2356bdacb1d8746b1d4a009be42406',
+            'banco92-online.js':'5d99ea028b1157e991bd65f0a3b60f9cb8f4ea8c3ed672d952253bedaedea3ed',
+            'settings76.js':'c56cd16192234872e9d8fcb5a337021d508f28af259aa5268868cda179405fd8',
+            'nc98-launcher.js':'a3626948f63aeb8ec136f8042dc1e7a49c8c32d079b8105692d7db16e853672c',
+            'nc98-launcher.css':'b5ea20580cb169c9ca9ec936949506ee02c8047f415f810df788047dd3c2b27c'
+          }
+          for f, sha in expected.items():
+            blob=(root/f).read_bytes()
+            assert hashlib.sha256(blob).hexdigest()==sha, f+' mismatch'
+          assert (root/'nc99-invites.js').is_file()
+          assert b'NC99_INVITES' in (root/'nc99-invites.js').read_bytes()
+          assert b'nc99-invites.js' in (root/'index.html').read_bytes()
+          print('NC99 frontend verified')
+          PY
+      - name: Build Android debug installable APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Verify APK
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          unzip -t app/build/outputs/apk/debug/app-debug.apk | tail -n 3
+          sha256sum app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAPOLI-CARTE-3D-9-11-ANDROID-DEBUG
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

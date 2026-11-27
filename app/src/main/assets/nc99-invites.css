@@ -1,0 +1,19 @@
+/* NC99: modal invitation chooser, compatible with touch and keyboard. */
+.nc99-invite-overlay{position:fixed;inset:0;z-index:2147483640;display:grid;place-items:center;padding:12px;background:#00172ac9;backdrop-filter:blur(3px);font-family:system-ui,sans-serif;color:#fff5d7}
+.nc99-invite-card{width:min(490px,100%);max-height:94dvh;display:flex;flex-direction:column;padding:17px;border:3px solid #ffe1a0;border-radius:22px;background:linear-gradient(145deg,#1974ae,#084d87 70%,#07356c);box-shadow:0 16px 50px #001126ba}
+.nc99-invite-card header{display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent!important}
+.nc99-invite-card header h2{font-size:clamp(16px,4.4vw,22px);margin:0;color:#ffe7a4}
+.nc99-invite-card .nc99-close{width:44px;height:44px;flex-shrink:0;background:#174a7d;border:2px solid #ffeab3;border-radius:12px;color:white;font-size:25px}
+.nc99-invite-card p{font-size:12px;line-height:1.45;margin:12px 0;color:#f9ebce}
+.nc99-friend-list{min-height:72px;max-height:48dvh;overflow-y:auto;overscroll-behavior:contain;display:grid;gap:7px;margin:9px 0;padding:6px}
+.nc99-friend{display:flex;align-items:center;gap:9px;min-height:54px;padding:11px;border:1px solid #fff1cc7e;border-radius:12px;background:#06396d}
+.nc99-friend input{width:22px;height:22px;accent-color:#eeb454}
+.nc99-friend span{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:750}
+.nc99-friend small{color:#d5e9f2;font-size:10px}
+.nc99-invite-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.nc99-invite-actions button{min-height:44px;border-radius:12px;border:2px solid #ffe6af;font-weight:900;padding:9px;color:#553216;background:linear-gradient(#fff2b5,#f6c06d)}
+.nc99-invite-actions button:last-child{color:white;background:linear-gradient(#2987c7,#08467c)}
+.nc99-invite-feedback{min-height:22px;font-size:12px;color:#fff0c2;white-space:pre-wrap}
+.nc99-banco-invite{border:2px solid #fff0c0;background:linear-gradient(#ffecaa,#eab35f);color:#58391f;padding:10px 18px;margin:8px auto;border-radius:13px;font-weight:900}
+@media(max-width:350px){.nc99-invite-actions{grid-template-columns:1fr}.nc99-invite-card{padding:12px}}
+@media(prefers-reduced-motion:reduce){.nc99-invite-overlay{backdrop-filter:none}}

@@ -28,7 +28,7 @@ action('feedback','🛠️','Segnala un problema','Scrivi al supporto del gioco'
 '</section><button type="button" class="nc76-home" data-action="home" id="nc76-home" hidden>← Torna al menu principale</button>'+
 '</div><div class="nc76-bottom">GAMES STUDIOS · NAPOLI CARTE 3D</div></aside>';
 d.body.append(wrap);
-let opened=false,previousOverflow='',lastFocused=null;
+let opened=false,previousOverflow='',lastFocused=null,hideTimer=null,animationFrame=null;
 const closeButton=wrap.querySelector('.nc76-close');
 function refresh(){
  const music=w.NC74_MUSIC?.isEnabled?.()!==false;
@@ -45,15 +45,19 @@ function refresh(){
 function open(){
  if(opened)return;
  lastFocused=d.activeElement;
- previousOverflow=d.body.style.overflow;
+ // If reopened during the fade-out, retain the original page overflow.
+ if(hideTimer===null)previousOverflow=d.body.style.overflow;
  d.body.style.overflow='hidden';
- opened=true;wrap.hidden=false;trigger.setAttribute('aria-expanded','true');
- refresh();closeButton.focus();
+ opened=true;clearTimeout(hideTimer);hideTimer=null;if(animationFrame)cancelAnimationFrame(animationFrame);
+ wrap.hidden=false;trigger.setAttribute('aria-expanded','true');
+ refresh();animationFrame=requestAnimationFrame(()=>{if(opened)wrap.classList.add('nc99-open')});closeButton.focus();
 }
 function close(){
  if(!opened)return;
- opened=false;wrap.hidden=true;d.body.style.overflow=previousOverflow;
- trigger.setAttribute('aria-expanded','false');
+ opened=false;if(animationFrame)cancelAnimationFrame(animationFrame);
+ wrap.classList.remove('nc99-open');trigger.setAttribute('aria-expanded','false');
+ const done=()=>{if(opened)return;hideTimer=null;wrap.hidden=true;d.body.style.overflow=previousOverflow;};
+ if(w.matchMedia?.('(prefers-reduced-motion: reduce)').matches)done();else hideTimer=setTimeout(done,310);
  if(lastFocused&&lastFocused.isConnected&&typeof lastFocused.focus==='function')lastFocused.focus();
  else trigger.focus();
 }
@@ -111,4 +115,5 @@ d.addEventListener('keydown',e=>{
 });
 w.addEventListener('nc74:music-change',refresh);
 w.NC76_MENU={open,close,refresh,isOpen:()=>opened};
+w.NC99_CLOSE_MENU=()=>{if(opened){close();return true;}return false;};
 })(window,document);

@@ -820,7 +820,7 @@ public final class MainActivity extends Activity {
     private void handleGameBack(){
         if(web==null){showExitPrompt();return;}
         try{
-            web.evaluateJavascript("Boolean(window.NC81_BACK && NC81_BACK.back())",result->{
+            web.evaluateJavascript("Boolean((window.NC99_CLOSE_MENU && window.NC99_CLOSE_MENU()) || (window.NC81_BACK && NC81_BACK.back()))",result->{
                 if(!"true".equals(result))showExitPrompt();
             });
         }catch(RuntimeException ex){showExitPrompt();}
