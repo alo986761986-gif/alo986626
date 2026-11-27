@@ -178,7 +178,8 @@
     "server/test-cartoon96.js",
     "server/test-chiodo-cartoon97.js",
     "server/test-nc98-launch.js",
-    "server/test-startup-compact99.js"
+    "server/test-startup-compact99.js",
+    "server/test-google-hd913.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",
