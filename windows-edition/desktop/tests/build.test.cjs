@@ -12,9 +12,9 @@ test('setup and portable do not overwrite each other',()=>{
 });
 test('Windows builder uses short paths and extracts only approved source folders',()=>{
  assert.match(build,/NC3D3/);
- assert.match(build,/app\/src\/main\/assets\//);
- assert.match(build,/server\/bass_audio_parts\//);
- assert.match(build,/StartsWith\(\$destRoot/);
+ assert.match(build,/napoli-9-10\.apk/);
+ assert.match(build,/ZipFile\]::OpenRead/);
+ assert.match(build,/StartsWith\(\$assetsPrefix/);
  assert.match(build,/Get-FileHash -Algorithm SHA256/);
  assert.match(build,/npm\.cmd'\) run pack:win/);
 });
