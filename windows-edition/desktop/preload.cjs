@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('NCDesktop',Object.freeze({
  chiodo:args=>ipcRenderer.invoke('napoli:chiodo',args),
  social:args=>ipcRenderer.invoke('napoli:social',args),
  classic:args=>ipcRenderer.invoke('napoli:classic',args),
+ remote:args=>ipcRenderer.invoke('napoli:remote',args),
  external:kind=>ipcRenderer.invoke('napoli:external',kind),
  notify:(title,body)=>ipcRenderer.invoke('napoli:notify',{title,body})
 }));
