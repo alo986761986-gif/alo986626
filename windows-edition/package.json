@@ -1,8 +1,8 @@
 {
   "name": "napoli-carte-3d-windows",
   "private": true,
-  "version": "0.2.0",
-  "description": "NAPOLI CARTE 3D Windows Edition 0.2 - 19-game Electron port with secure desktop authentication",
+  "version": "0.3.0",
+  "description": "NAPOLI CARTE 3D Windows Edition 0.3 - 19-game Electron port with restricted multiplayer transport",
   "main": "desktop/main.cjs",
   "scripts": {
     "start": "electron .",
