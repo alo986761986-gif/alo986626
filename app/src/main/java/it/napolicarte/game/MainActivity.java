@@ -566,6 +566,7 @@ public final class MainActivity extends Activity {
             return;
         }
         web.setBackgroundColor(Color.rgb(4,21,17));
+        web.setAlpha(0f); // Reveal only after duplicate HTML boot is removed.
         WebSettings settings=web.getSettings();
         settings.setJavaScriptEnabled(true);
         web.addJavascriptInterface(new ChiodoTransport(),"NCChiodoNative");
@@ -600,7 +601,11 @@ public final class MainActivity extends Activity {
                 if(url.startsWith(BASE_URL)){
                     // The studio intro already ran natively before the account screen.
                     // The integrity-pinned web asset retains its legacy overlay for older builds.
-                    view.evaluateJavascript("(function(){var e=document.getElementById('nc-studio-boot');if(e)e.remove()})()",null);
+                    // Do not expose the old web-only studio overlay for even one frame.
+                    view.evaluateJavascript("(function(){var e=document.getElementById('nc-studio-boot');if(e)e.remove()})()",ignored->{
+                        if(view==web)view.setAlpha(1f);
+                    });
+                    view.postDelayed(()->{if(view==web&&view.getAlpha()<1f)view.setAlpha(1f);},1500);
                     if(pageProgress!=null)pageProgress.setVisibility(android.view.View.GONE);
                     if(pageProgressLabel!=null)pageProgressLabel.setVisibility(android.view.View.GONE);
                     deliverPushDestination();
