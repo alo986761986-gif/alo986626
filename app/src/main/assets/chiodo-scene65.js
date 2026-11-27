@@ -11,7 +11,7 @@
     diamond: ['#8aaee2', '#5a7dbb', '#e2ad5e'], antica: ['#a7c77b', '#4f985d', '#d3a34d']
   };
   const css = document.createElement('style');
-  css.textContent = '.ch65 .ch65-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none!important}.ch65 .ch-arena{isolation:isolate}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]{background:transparent!important}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]>svg{visibility:hidden}.ch65.ch65-rendered .ch-felt{visibility:hidden!important}.ch65.ch65-rendered .ch65-tablemark{display:none}.ch65:not(.ch65-rendered) .ch-felt{visibility:visible!important}.ch65 .ch-seat,.ch65 .ch-center{z-index:3}';
+  css.textContent = '.ch65 .ch65-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none!important}.ch65 .ch-arena{isolation:isolate}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]{background:radial-gradient(circle at 30% 20%,#789d88,#172d28)!important}.ch65.ch65-rendered .ch-avatar[data-ch65-portrait="1"]>svg{visibility:visible}.ch65.ch65-rendered .ch-felt{visibility:hidden!important}.ch65.ch65-rendered .ch65-tablemark{display:none}.ch65:not(.ch65-rendered) .ch-felt{visibility:visible!important}.ch65 .ch-seat,.ch65 .ch-center{z-index:3}';
   document.head.appendChild(css);
 
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -221,7 +221,7 @@
     const q=quality(rec);
     if(q==='low'){rec.canvas.hidden=true;rec.root.dataset.ch65Render='low';rec.root.classList.remove('ch65-rendered');clearPortraits(rec.root);rec.arena.classList.remove('ch-rendered');return;}
     rec.canvas.hidden=false;
-    const w=rec.arena.clientWidth,h=rec.arena.clientHeight;if(w<1||h<1)return;
+    const w=rec.canvas.clientWidth||rec.arena.clientWidth,h=rec.canvas.clientHeight||rec.arena.clientHeight;if(w<1||h<1)return;
     const ratio=Math.min(g.devicePixelRatio||1,q==='ultra'?2:q==='medium'?1.15:1.65);
     const cw=Math.round(w*ratio),ch=Math.round(h*ratio);
     if(rec.canvas.width!==cw)rec.canvas.width=cw;if(rec.canvas.height!==ch)rec.canvas.height=ch;
@@ -243,23 +243,11 @@
     // Each 3D avatar is still rendered in the dedicated player portrait circle below.
     // Keep the original green felt and wooden 3D table unchanged.
     const n=s.n||s.players.length, me=s.seat||0;
-    // A single WebGL context also paints each avatar inside its existing UI circle.
-    // The green turn ring, seconds, names and audio buttons remain normal DOM controls.
-    const arenaRect=rec.arena.getBoundingClientRect();
+    // 9.12: portraits MUST remain visible in their own DOM SVG or private photo.
+    // Drawing them into a full-table WebGL canvas placed beneath the seats cannot
+    // visibly replace the SVGs: their CSS visibility was previously hidden.
+    // Render ONLY the real 3D felt and wood here; don't mask the player portraits.
     clearPortraits(root);
-    root.querySelectorAll('.ch-seat[data-seat] .ch-avatar').forEach(el=>{
-      if(el.querySelector('.ch69-personal-photo'))return;
-      const host=el.closest('.ch-seat'),i=Number(host.dataset.seat),p=s.players[i];if(!p||p.name==='Posto libero')return;
-      const b=el.getBoundingClientRect(),x=Math.round((b.left-arenaRect.left)*ratio),y=Math.round((arenaRect.bottom-b.bottom)*ratio),size=Math.round(Math.min(b.width,b.height)*ratio);
-      if(size<2||x+size<0||y+size<0||x>=cw||y>=ch)return;
-      gl.enable(gl.SCISSOR_TEST);gl.scissor(Math.max(0,x),Math.max(0,y),Math.min(size,cw-Math.max(0,x)),Math.min(size,ch-Math.max(0,y)));gl.viewport(x,y,size,size);gl.clear(gl.DEPTH_BUFFER_BIT);
-      gl.uniform4f(u.clipCircle,x+size/2,y+size/2,size/2,size/2);
-      gl.uniformMatrix4fv(u.camera,false,multiply(ortho(.53,.53),view([0,.24,3],[0,.24,0])));gl.uniform3fv(u.eye,[0,.24,3]);
-      const id=i===me?Number(prefs.avatar)||0:i;
-      draw(rec,'portrait',model(0,.24,-.8,.7,.7,1),mix(cloths[id%4],color('#b4a884'),.15),8,1,color('#132c28'));
-      bust(rec,model(0,-.15,0,1,1,1,0),id,moved&&actor===i?gesture*.30:0,q!=='medium',0);
-      el.dataset.ch65Portrait='1';
-    });
     gl.disable(gl.SCISSOR_TEST);root.dataset.ch65Render='webgl';root.classList.add('ch65-rendered');rec.arena.classList.add('ch-rendered');
     rec.canvas.dataset.scene='ready';rec.canvas.dataset.draws=String(rec.draws);
     if(elapsed<1)rec.raf=requestAnimationFrame(t=>frame(rec,t));
