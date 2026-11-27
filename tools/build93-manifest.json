@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "app": {
     "packageName": "it.napolicarte.game",
-    "versionCode": 102,
-    "versionName": "9.12.0",
+    "versionCode": 103,
+    "versionName": "9.13.0",
     "minSdk": 24,
     "targetSdk": 36,
     "gameCount": 19,
@@ -32,12 +32,12 @@
       "dubito",
       "mercante"
     ],
-    "apkFile": "NAPOLI_CARTE_3D_9_12_AVATAR_VISIBILI_TAVOLO_CORRETTO_FIRMATO.apk"
+    "apkFile": "NAPOLI_CARTE_3D_9_13_GOOGLE_HD_ANIMAZIONI_FIRMATO.apk"
   },
   "previousRelease": {
-    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_11_CHIODO_LAYOUT_LEGGIBILE_FIRMATO.apk",
-    "file": "NAPOLI_CARTE_3D_9_11_CHIODO_LAYOUT_LEGGIBILE_FIRMATO.apk",
-    "versionCode": 101
+    "url": "https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_12_AVATAR_VISIBILI_TAVOLO_CORRETTO_FIRMATO.apk",
+    "file": "NAPOLI_CARTE_3D_9_12_AVATAR_VISIBILI_TAVOLO_CORRETTO_FIRMATO.apk",
+    "versionCode": 102
   },
   "toolchain": {
     "jdk": {
@@ -178,7 +178,8 @@
     "server/test-cartoon96.js",
     "server/test-chiodo-cartoon97.js",
     "server/test-nc98-launch.js",
-    "server/test-startup-compact99.js"
+    "server/test-startup-compact99.js",
+    "server/test-google-hd913.js"
   ],
   "excludedDatabaseTests": [
     "chiodo-server/test-formats-feedback78.js",

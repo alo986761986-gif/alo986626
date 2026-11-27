@@ -7,7 +7,7 @@ const manifest=JSON.parse(fs.readFileSync('tools/build93-manifest.json','utf8'))
 test('Cartoon 9.6 applies to all 19 card games without touching rules',()=>{
  assert.equal(manifest.app.gameCount,19);
  assert.ok(manifest.app.versionCode>=96);
- assert.match(manifest.app.versionName,/^9\.(?:6|7|8|9|10|11|12)\.0$/);
+ assert.match(manifest.app.versionName,/^9\.(?:6|7|8|9|10|11|12|13)\.0$/);
  assert.equal(manifest.app.minSdk,24);
  assert.equal(manifest.app.targetSdk,36);
  const groups=[

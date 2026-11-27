@@ -9,7 +9,24 @@ protocol.registerSchemesAsPrivileged([{scheme:'napoli',privileges:{standard:true
 const BASE='napoli://game';
 const isLocal=url=>url===BASE || url.startsWith(BASE+'/');
 let window,identity=null,apiKey='',appPaths,notificationTimer,googleBusy=false;
-const googleDesktopClient=process.env.NAPOLI_GOOGLE_DESKTOP_CLIENT_ID||'';
+let googleDesktopClient=process.env.NAPOLI_GOOGLE_DESKTOP_CLIENT_ID||'';
+function oauthClientFile(){return path.join(app.getPath('userData'),'google-oauth-client.json');}
+function loadGoogleClient(){
+ if(clientConfigured(googleDesktopClient))return googleDesktopClient;
+ try{
+  const json=JSON.parse(fs.readFileSync(oauthClientFile(),'utf8'));
+  if(clientConfigured(json.clientId))googleDesktopClient=json.clientId;
+ }catch{}
+ return googleDesktopClient;
+}
+function configureGoogleClient(id){
+ if(typeof id!=='string'||!clientConfigured(id.trim()))
+  throw Error('Inserisci un Client ID OAuth di tipo Applicazione desktop del progetto Google Cloud collegato a Firebase.');
+ const value=id.trim();
+ fs.writeFileSync(oauthClientFile(),JSON.stringify({clientId:value})+'\n',{mode:0o600});
+ googleDesktopClient=value;
+ return true;
+}
 function screenFile(){return BASE+'/desktop/login.html';}
 function splashFile(){return BASE+'/desktop/splash.html';}
 function emitScript(name,...args){
@@ -87,7 +104,7 @@ function showAuthDialog(){navigate(screenFile());}
 function enterGuest(){identity=null;saveSession();if(window)window._prevUnread=0;navigate(BASE+'/index.html');return {ok:true};}
 async function googleLogin(){
  if(googleBusy)throw Error('Accesso Google gia in corso');
- if(!clientConfigured(googleDesktopClient))throw Error('Il client OAuth Desktop Google non e configurato.');
+ if(!clientConfigured(loadGoogleClient()))throw Error('Configura il Client ID OAuth Desktop dalla schermata di accesso.');
  googleBusy=true;
  try{
   const session=await openGoogleOAuth({clientId:googleDesktopClient,openExternal:url=>shell.openExternal(url)});
@@ -143,7 +160,8 @@ if(!app.requestSingleInstanceLock()){app.quit();}else app.whenReady().then(async
  });
  ipcMain.on('napoli:identity',(event)=>{assertLocal(event);event.returnValue={uid:identity?.uid||'',email:identity?.email||'',displayName:identity?.displayName||'',providers:identity?.providers||[]};});
  ipcMain.handle('napoli:login',async(event,mode,email,password)=>{assertLocal(event);return authenticate(mode,email,password);});
- ipcMain.handle('napoli:google-available',async event=>{assertLocal(event);return clientConfigured(googleDesktopClient);});
+ ipcMain.handle('napoli:google-available',async event=>{assertLocal(event);return clientConfigured(loadGoogleClient());});
+ ipcMain.handle('napoli:google-configure',async(event,clientId)=>{assertLocal(event);return configureGoogleClient(clientId);});
  ipcMain.handle('napoli:google-login',async event=>{assertLocal(event);return googleLogin();});
  ipcMain.handle('napoli:guest',async event=>{assertLocal(event);return enterGuest();});
  ipcMain.handle('napoli:reset',async(event,email)=>{assertLocal(event);if(typeof email!=='string'||email.length>254||!/^\S+@\S+\.\S+$/.test(email))throw Error('Inserisci una email valida');const r=await firebaseCall('sendOobCode',{requestType:'PASSWORD_RESET',email});if(r.status!==200)throw Error(firebaseError(r.body));return {ok:true};});

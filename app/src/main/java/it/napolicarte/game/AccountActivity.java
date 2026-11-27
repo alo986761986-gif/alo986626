@@ -20,6 +20,8 @@ public final class AccountActivity extends Activity {
  private boolean register,busy;
  private GoogleSignInClient google;
  private static final int GOOGLE=707;
+ private boolean googleBusy=false;
+ private androidx.credentials.CredentialManager credentialManager;
  @Override public void onCreate(Bundle b){super.onCreate(b);try{auth=FirebaseAuth.getInstance();}catch(Exception e){auth=null;}render();}
  private TextView label(String s,int size){TextView t=new TextView(this);t.setText(s==null?"":s);t.setTextSize(size);t.setTextColor(size>=22?GOLD:0xfff3e5c8);t.setPadding(0,dp(6),0,dp(8));panel.addView(t);return t;}
  private EditText field(String hint,int type){EditText e=new EditText(this);e.setHint(hint);e.setSingleLine(true);e.setInputType(type);e.setTextColor(0xff123a31);e.setHintTextColor(0xff657e72);e.setTextSize(16);e.setPadding(dp(17),dp(10),dp(17),dp(10));android.graphics.drawable.GradientDrawable d=bg(0xfffff8e9,0xfff2e5ca,17);d.setStroke(dp(2),0xffbc9a5b);e.setBackground(d);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(54));lp.bottomMargin=dp(11);panel.addView(e,lp);return e;}
@@ -45,7 +47,62 @@ public final class AccountActivity extends Activity {
  label("La pagina di eliminazione spiega come inviare una richiesta all’assistenza. Aprire il link non elimina automaticamente account o dati.",13);
  FirebaseUser u=auth==null?null:auth.getCurrentUser();
  if(u!=null){label("Account personale",22);label(u.getDisplayName()==null?"Giocatore":u.getDisplayName(),18);label(u.getEmail(),16);button("Entra nel gioco",this::enter);if(!u.isEmailVerified())button("Invia email di verifica",()->u.sendEmailVerification().addOnCompleteListener(t->status.setText(t.isSuccessful()?"Email inviata.":"Invio non riuscito.")));button("Disconnetti",()->{busy=true;status.setText("Disconnessione in corso…");PushDeviceManager.unlinkOnLogout(()->{auth.signOut();try{client().signOut();}catch(Exception e){}busy=false;render();});});return;}
- label(register?"✨ Registrazione":"🎮 Accedi e gioca",22);if(register)name=field("Nome giocatore",1);email=field("Email",33);password=field("Password",129);if(register)confirm=field("Conferma password",129);CheckBox check=new CheckBox(this);check.setText("Mostra password");check.setTextColor(0xfff3dfb8);panel.addView(check);check.setOnCheckedChangeListener((v,on)->{password.setTransformationMethod(on?null:PasswordTransformationMethod.getInstance());password.setSelection(password.length());if(register){confirm.setTransformationMethod(on?null:PasswordTransformationMethod.getInstance());confirm.setSelection(confirm.length());}check.setText(on?"Nascondi password":"Mostra password");});button(register?"Crea account":"Accedi",this::submit);button(register?"Ho già un account":"Registrati",()->{register=!register;render();});if(!register)button("Password dimenticata",()->{if(!ready())return;String e=email.getText().toString().trim();if(e.isEmpty()){status.setText("Inserisci email.");return;}auth.sendPasswordResetEmail(e).addOnCompleteListener(t->status.setText(t.isSuccessful()?"Controlla la tua email.":"Richiesta non riuscita."));});button("Continua con Google",()->{if(!ready())return;try{startActivityForResult(client().getSignInIntent(),GOOGLE);}catch(Exception e){status.setText("Accesso Google non disponibile.");}});button("Gioca come ospite",this::enter);}
+ label(register?"✨ Registrazione":"🎮 Accedi e gioca",22);if(register)name=field("Nome giocatore",1);email=field("Email",33);password=field("Password",129);if(register)confirm=field("Conferma password",129);CheckBox check=new CheckBox(this);check.setText("Mostra password");check.setTextColor(0xfff3dfb8);panel.addView(check);check.setOnCheckedChangeListener((v,on)->{password.setTransformationMethod(on?null:PasswordTransformationMethod.getInstance());password.setSelection(password.length());if(register){confirm.setTransformationMethod(on?null:PasswordTransformationMethod.getInstance());confirm.setSelection(confirm.length());}check.setText(on?"Nascondi password":"Mostra password");});button(register?"Crea account":"Accedi",this::submit);button(register?"Ho già un account":"Registrati",()->{register=!register;render();});if(!register)button("Password dimenticata",()->{if(!ready())return;String e=email.getText().toString().trim();if(e.isEmpty()){status.setText("Inserisci email.");return;}auth.sendPasswordResetEmail(e).addOnCompleteListener(t->status.setText(t.isSuccessful()?"Controlla la tua email.":"Richiesta non riuscita."));});button("Continua con Google",this::googleAccess);button("Gioca come ospite",this::enter);}
+ private void googleAccess(){
+  if(!ready()||googleBusy)return;
+  final String serverId;
+  try{serverId=getString(R.string.default_web_client_id).trim();}
+  catch(Exception e){status.setText("Client OAuth web mancante: verifica google-services.json in Firebase.");return;}
+  if(serverId.isEmpty()||!serverId.endsWith(".apps.googleusercontent.com")){
+    status.setText("Client OAuth web non valido: aggiorna google-services.json da Firebase.");return;
+  }
+  googleBusy=true;busy=true;status.setText("Apertura accesso Google...");
+  try{
+   if(credentialManager==null)credentialManager=androidx.credentials.CredentialManager.create(this);
+   com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption option=
+      new com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption.Builder(serverId).build();
+   androidx.credentials.GetCredentialRequest request=
+      new androidx.credentials.GetCredentialRequest.Builder().addCredentialOption(option).build();
+   credentialManager.getCredentialAsync(this,request,new android.os.CancellationSignal(),
+      androidx.core.content.ContextCompat.getMainExecutor(this),
+      new androidx.credentials.CredentialManagerCallback<androidx.credentials.GetCredentialResponse,androidx.credentials.exceptions.GetCredentialException>(){
+       @Override public void onResult(androidx.credentials.GetCredentialResponse response){
+        try{
+         androidx.credentials.Credential cred=response.getCredential();
+         if(!(cred instanceof androidx.credentials.CustomCredential)||
+            !com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(cred.getType()))
+            throw new IllegalArgumentException("Credenziale Google inattesa");
+         String idToken=com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(
+           ((androidx.credentials.CustomCredential)cred).getData()).getIdToken();
+         completeGoogle(idToken);
+        }catch(Exception ex){googleBusy=false;busy=false;status.setText("Token Google non valido: "+ex.getClass().getSimpleName());}
+       }
+       @Override public void onError(androidx.credentials.exceptions.GetCredentialException error){
+        googleBusy=false;busy=false;
+        if(error instanceof androidx.credentials.exceptions.GetCredentialCancellationException){
+          status.setText("Accesso Google annullato.");return;
+        }
+        status.setText("Google non disponibile ("+error.getClass().getSimpleName()+
+          "). Controlla Play Services, provider Google e impronte SHA in Firebase.");
+       }
+      });
+  }catch(Exception error){
+   googleBusy=false;busy=false;
+   status.setText("Avvio Google non riuscito: "+error.getClass().getSimpleName());
+  }
+ }
+ private void completeGoogle(String idToken){
+  if(auth==null||idToken==null||idToken.isEmpty()){
+   googleBusy=false;busy=false;status.setText("Firebase o token Google non disponibile.");return;
+  }
+  auth.signInWithCredential(GoogleAuthProvider.getCredential(idToken,null)).addOnCompleteListener(t->{
+   googleBusy=false;busy=false;
+   if(t.isSuccessful()){render();return;}
+   Exception ex=t.getException();
+   String code=ex instanceof FirebaseAuthException?((FirebaseAuthException)ex).getErrorCode():"AUTH_FAILED";
+   status.setText("Firebase Google ("+code+"). Abilita Google in Firebase Authentication e verifica il client OAuth web.");
+  });
+ }
  private void submit(){if(!ready())return;String e=email.getText().toString().trim(),p=password.getText().toString();if(e.isEmpty()||p.length()<6){status.setText("Inserisci email e password di almeno 6 caratteri.");return;}if(register&&(!p.equals(confirm.getText().toString())||name.getText().toString().trim().isEmpty())){status.setText("Controlla nome e conferma password.");return;}busy=true;status.setText("Connessione in corso...");if(register){String n=name.getText().toString().trim();auth.createUserWithEmailAndPassword(e,p).addOnCompleteListener(t->{busy=false;if(t.isSuccessful()){FirebaseUser u=auth.getCurrentUser();if(u!=null)u.updateProfile(new UserProfileChangeRequest.Builder().setDisplayName(n).build()).addOnCompleteListener(x->{u.sendEmailVerification();render();});else render();}else status.setText("Registrazione non riuscita. Controlla i dati e la connessione.");});}else auth.signInWithEmailAndPassword(e,p).addOnCompleteListener(t->{busy=false;if(t.isSuccessful())render();else status.setText("Accesso non riuscito. Controlla i dati e la connessione.");});}
  @Override protected void onActivityResult(int req,int result,Intent data){super.onActivityResult(req,result,data);if(req!=GOOGLE)return;try{GoogleSignInAccount a=GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException.class);if(a==null||a.getIdToken()==null||auth==null)throw new IllegalStateException();busy=true;auth.signInWithCredential(GoogleAuthProvider.getCredential(a.getIdToken(),null)).addOnCompleteListener(t->{busy=false;if(t.isSuccessful())render();else {Exception ex=t.getException();status.setText("Firebase: "+(ex instanceof FirebaseAuthException?((FirebaseAuthException)ex).getErrorCode():"autenticazione non riuscita"));}});}catch(ApiException e){busy=false;int code=e.getStatusCode();status.setText(code==10?"Google: configurazione OAuth o certificato SHA non corrispondente (10).":code==12501?"Accesso Google annullato.":"Accesso Google non riuscito (codice "+code+").");}catch(Exception e){busy=false;status.setText("Accesso Google non riuscito: "+e.getClass().getSimpleName());}}
 }
