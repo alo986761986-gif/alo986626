@@ -2,12 +2,12 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 try {
   $root = Split-Path -Parent $MyInvocation.MyCommand.Path
-  $work = Join-Path $env:TEMP 'NC3D3'
+  $work = Join-Path $env:TEMP 'NC3D4'
   $nodeDir = Join-Path $work 'node'
   $projectDir = Join-Path $work 'p'
   $output = Join-Path $root 'OUTPUT'
   New-Item -ItemType Directory -Force -Path $work,$output | Out-Null
-  Write-Host 'NAPOLI CARTE 3D - WINDOWS EDITION 0.3' -ForegroundColor Yellow
+  Write-Host 'NAPOLI CARTE 3D - WINDOWS EDITION 0.4' -ForegroundColor Yellow
   Write-Host 'Controllo Node.js 24 ufficiale e impronta SHA256...'
   $nodeExe = Join-Path $nodeDir 'node.exe'
   if (-not (Test-Path $nodeExe)) {
@@ -33,9 +33,9 @@ try {
   }
   $env:PATH = "$nodeDir;$env:PATH"
   & $nodeExe --version
-  Write-Host 'Download del pacchetto Android 9.10 firmato e verifica risorse...' -ForegroundColor Yellow
-  $apkUrl = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_10_CHIODO_TAVOLO_ORDINATO_CARTOON_FIRMATO.apk'
-  $apkFile = Join-Path $work 'napoli-9-10.apk'
+  Write-Host 'Download del pacchetto Android 9.11 firmato e verifica risorse...' -ForegroundColor Yellow
+  $apkUrl = 'https://napoli-carte-82-apk-build.onrender.com/NAPOLI_CARTE_3D_9_11_CHIODO_LAYOUT_LEGGIBILE_FIRMATO.apk'
+  $apkFile = Join-Path $work 'napoli-9-11.apk'
   Invoke-WebRequest -Uri $apkUrl -OutFile $apkFile
   if ((Get-Item $apkFile).Length -lt 10000000) { throw 'APK Android incompleto' }
   if (Test-Path $projectDir) { Remove-Item $projectDir -Recurse -Force }
