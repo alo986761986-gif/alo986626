@@ -53,7 +53,7 @@ jobs:
           print('NC99 frontend verified')
           PY
       - name: Build Android debug installable APK
-        run: gradle --no-daemon --stacktrace :app:assembleDebug
+        run: gradle --no-daemon --stacktrace :app:assembleDebug -x :app:prepareExpansionIndex
       - name: Verify APK
         run: |
           test -s app/build/outputs/apk/debug/app-debug.apk
