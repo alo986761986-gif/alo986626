@@ -12,37 +12,37 @@ body.nc90 #chiodo121.ch65 .ch-controls,
 body.nc90 #chiodo121-online.ch65 .ch-controls,
 body.nc90 #root .actions,
 body.nc90 #nc98-launcher .nc98-actions{
- background:#092f28!important;border:2px solid #bd9657!important;
- box-shadow:0 3px 10px #0005!important;color:#fff2d5!important;
+ background:#0b4e9c!important;border:2px solid #ffe08d!important;
+ box-shadow:0 3px 10px #0005!important;color:#fff8df!important;
 }
 body.nc90 #chiodo121.ch65 .ch-controls button,
 body.nc90 #chiodo121-online.ch65 .ch-controls button,
 body.nc90 #root .actions .choice,
 body.nc90 #nc98-launcher .nc98-actions button{
- background:#124638!important;color:#fff0ca!important;
- border:1px solid #cba766!important;border-radius:11px!important;
+ background:#0a58a6!important;color:#fff8df!important;
+ border:1px solid #ffe08d!important;border-radius:11px!important;
  text-shadow:none!important;filter:none!important;min-height:48px!important;
  box-shadow:0 2px 4px #0005!important;
 }
 body.nc90 #chiodo121.ch65 .ch-controls button:active,
 body.nc90 #chiodo121-online.ch65 .ch-controls button:active,
 body.nc90 #nc98-launcher .nc98-actions button:active{
- background:#20624f!important;transform:scale(.97);
+ background:#177ac9!important;transform:scale(.97);
 }
 body.nc90 #nc98-launcher .nc98-actions button:disabled{opacity:.5;transform:none!important}
 body.nc90 #chiodo121.ch65 .ch-controls:empty,
 body.nc90 #chiodo121-online.ch65 .ch-controls:empty{display:none!important}
 
 .actions,.ch65 .ch-controls,.ch65 .ch-actions,.nc83-match-type{
-  background:#092f28!important;border:1px solid #bd9657!important;
-  color:#fff2d5!important;box-sizing:border-box;
+  background:#0b4e9c!important;border:1px solid #ffe08d!important;
+  color:#fff8df!important;box-sizing:border-box;
 }
 .actions .choices,.ch65 .ch-controls,.ch65 .ch-actions{gap:8px!important;align-items:center;justify-content:center;flex-wrap:wrap}
 .actions button.choice,.ch65 .ch-controls button,.ch65 .ch-actions button,
 .nc83-match-type button,.footeractions button{
   -webkit-appearance:none;appearance:none;
-  background:#124638!important;color:#fff0ca!important;
-  border:1px solid #cba766!important;border-radius:11px!important;
+  background:#0a58a6!important;color:#fff8df!important;
+  border:1px solid #ffe08d!important;border-radius:11px!important;
   box-shadow:inset 0 1px 0 #ffffff1c,0 2px 4px #0004!important;
   text-shadow:none!important;filter:none!important;
   min-height:46px;min-width:46px;line-height:1.25;
@@ -51,12 +51,12 @@ body.nc90 #chiodo121-online.ch65 .ch-controls:empty{display:none!important}
 }
 .actions button.choice:active,.ch65 .ch-controls button:active,
 .ch65 .ch-actions button:active,.nc83-match-type button:active{
-  background:#20624f!important;transform:scale(.97)
+  background:#177ac9!important;transform:scale(.97)
 }
 .nc83-match-type button[aria-pressed=true],
 .ch65 .ch-controls button[aria-pressed=true],
 .ch65 .ch-actions button[aria-pressed=true]{
-  background:#e7bb6d!important;color:#252014!important;border-color:#ffe5a2!important
+  background:#ffce68!important;color:#56300e!important;border-color:#fff2bd!important
 }
 .actions button:disabled,.ch65 .ch-controls button:disabled,
 .ch65 .ch-actions button:disabled{opacity:.48;cursor:default;transform:none!important}
@@ -82,10 +82,10 @@ button,[role=button]{user-select:none;-webkit-user-select:none}
 @media(prefers-reduced-motion:reduce){.actions button,.ch65 .ch-controls button,.playing-card.user-card{transition:none!important}}
 .nc85-audience{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:5px 9px;
   width:fit-content;max-width:calc(100% - 24px);margin:7px auto 12px;
-  color:#fff0d1;background:#103c31;border:1px solid #cba766;border-radius:999px;
+  color:#fff0d1;background:#124c91;border:1px solid #ffe08d;border-radius:999px;
   padding:9px 13px;font:700 12px/1.35 system-ui,sans-serif;text-align:center}
-.nc85-audience strong{color:#ffe2a4;font-variant-numeric:tabular-nums}
-.nc85-audience .nc85-secondary{color:#caddcf;font-weight:500}
+.nc85-audience strong{color:#ffe79e;font-variant-numeric:tabular-nums}
+.nc85-audience .nc85-secondary{color:#edf8ff;font-weight:500}
 `;
 d.head.appendChild(style);
 const AUDIENCE_KEY='nc85-installation-id';
