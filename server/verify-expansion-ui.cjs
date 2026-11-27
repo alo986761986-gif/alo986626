@@ -151,6 +151,43 @@ async function smokeCPU(page, game, viewport) {
   await exitGame(page);
   report.games.push({ game, title, viewport, action:actionLabel, layout:dimensions, ok:true });
 }
+async function smokeChiodoCartoon() {
+  const ctx=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  await prepare(ctx);
+  const page=await load(ctx);
+  try {
+    await page.waitForFunction(() => {
+      const sheet=document.querySelector('#nc97-chiodo-theme');
+      return !!sheet && !!sheet.sheet && sheet.sheet.cssRules.length>40;
+    });
+    await page.locator('#chiodo-entry').click();
+    await page.locator('#chiodo121 .ch-lobby').waitFor();
+    if(await page.locator('.ch-rules [data-rule="close"]').count())
+      await page.locator('.ch-rules [data-rule="close"]').click();
+    const lobby=await page.locator('#chiodo121').evaluate(el=>({
+      background:getComputedStyle(el).backgroundImage,
+      badge:getComputedStyle(el.querySelector('.ch-lobby'),'::before').backgroundImage
+    }));
+    assert.match(lobby.background,/nc96-cartoon-golfo\\.svg/);
+    assert.match(lobby.badge,/nc97-chiodo-emblem\\.svg/);
+    await shot(page,'chiodo97-offline-cartoon-lobby');
+    await page.locator('#chiodo121 [data-n="2"]').click();
+    await page.locator('#chiodo121.ch65 .ch-arena').waitFor({timeout:8000});
+    const felt=await page.locator('#chiodo121 .ch-felt').evaluate(el=>getComputedStyle(el).backgroundImage);
+    assert.match(felt,/gradient/i);
+    await shot(page,'chiodo97-offline-cartoon-table');
+    await page.locator('#chiodo121 #ch-back').click();
+    await page.locator('#chiodo121').waitFor({state:'detached'});
+    await page.locator('#chiodo-online-entry').click();
+    await page.locator('#chiodo121-online #co-name').waitFor({timeout:8000});
+    const online=await page.locator('#chiodo121-online').evaluate(el=>getComputedStyle(el).backgroundImage);
+    assert.match(online,/nc96-cartoon-golfo\\.svg/);
+    await shot(page,'chiodo97-online-cartoon-lobby');
+    await page.locator('#chiodo121-online #co-close').click();
+    await page.locator('#chiodo121-online').waitFor({state:'detached'});
+    report.chiodoCartoon={ok:true,offline:true,multiplayer:true};
+  } finally { await ctx.close(); }
+}
 async function smokeOnline() {
   const contextA = await browser.newContext({ viewport:{width:360,height:640}, reducedMotion:'reduce' });
   const contextB = await browser.newContext({ viewport:{width:360,height:640}, reducedMotion:'reduce' });
@@ -205,6 +242,7 @@ async function smokeOnline() {
     await context.close();
   }
   try { await smokeOnline(); console.log('PASS two independent online sessions'); } catch (error) { report.errors.push({stage:'online',message:error.message,stack:error.stack}); console.error('FAIL online',error.message); }
+  try { await smokeChiodoCartoon(); console.log('PASS Chiodo 121 offline/online cartoon visual tests'); } catch (error) { report.errors.push({stage:'chiodo97',message:error.message,stack:error.stack}); console.error('FAIL Chiodo 121 cartoon',error.message); }
 })().catch(error => { report.errors.push({stage:'setup',message:error.message,stack:error.stack}); console.error(error); })
   .finally(async () => {
     if (browser) await browser.close();
