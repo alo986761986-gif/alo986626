@@ -26,6 +26,27 @@ function socialRequest(op,data={}){
  if(op==='inviteWatch')url.searchParams.set('id',String(data.id||'').slice(0,128));
  return {url:url.toString(),method:get?'GET':'POST',body:get?undefined:JSON.stringify(data)};
 }
+// The 11 extra card games and lobby use these server routes only.
+const REMOTE_OPS=Object.freeze({
+ '/expansion/catalog':'GET','/expansion/state':'GET','/expansion/join':'POST',
+ '/expansion/move':'POST','/expansion/fill':'POST','/expansion/leave':'POST',
+ '/lobby/status':'GET'
+});
+function remoteRequest(args){
+ if(!args||typeof args.url!=='string'||args.url.length>450)throw Error('Indirizzo remoto non valido');
+ let url;try{url=new URL(args.url);}catch{throw Error('Indirizzo remoto non valido');}
+ if(url.origin!==URLS.social || url.username || url.password || url.search || url.hash || url.pathname.includes('%'))
+  throw Error('Origine remota non consentita');
+ const expected=REMOTE_OPS[url.pathname],method=String(args.method||'GET').toUpperCase();
+ if(!expected||method!==expected)throw Error('Operazione remota non consentita');
+ const token=args.token||'';
+ if(typeof token!=='string'||(token&&!/^[a-f0-9]{48}$/.test(token)))throw Error('Token stanza non valido');
+ const body=args.body||'';
+ if(typeof body!=='string'||body.length>16384)throw Error('Richiesta eccessiva');
+ if(method==='POST'){let json;try{json=JSON.parse(body||'{}');}catch{throw Error('JSON non valido');}
+  if(!json||typeof json!=='object'||Array.isArray(json))throw Error('Payload non valido');}
+ return {url:url.toString(),method,body:method==='POST'?body:undefined,token};
+}
 function fileIn(base, requestPath){
  const name=decodeURIComponent(String(requestPath||'').split('?')[0]).replace(/^\/+/, '');
  if(name.includes('\\')||name.split('/').some(p=>p==='..'||p==='.')||name.includes('\0'))throw Error('Percorso non valido');
@@ -40,4 +61,4 @@ function paths(repoRoot,resourcesPath,isPackaged){
 function firebaseKey(configFile){
  try {const cfg=JSON.parse(fs.readFileSync(configFile,'utf8'));return cfg.client?.[0]?.api_key?.[0]?.current_key||'';}catch{return '';}
 }
-module.exports={URLS,OPERATIONS,socialRequest,fileIn,paths,firebaseKey};
+module.exports={URLS,OPERATIONS,socialRequest,remoteRequest,fileIn,paths,firebaseKey};
