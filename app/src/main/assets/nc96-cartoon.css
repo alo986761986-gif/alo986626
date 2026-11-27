@@ -1,0 +1,90 @@
+/* NAPOLI CARTE 3D 9.6 — CARTOON EDITION
+   Original illustrated Naples theme. Pure presentation: the 19 game engines,
+   turn rules, Firebase, lobby identifiers and network APIs remain unchanged. */
+:root{--nc96-ink:#152d52;--nc96-cobalt:#0959b6;--nc96-deep:#052b6d;--nc96-sky:#33adf0;--nc96-gold:#ffe17f;--nc96-orange:#ed983b;--nc96-cream:#fff4d7;--nc96-green:#0b925e;--nc96-outline:#684326;--nc96-hard-shadow:0 5px 0 #945d20,0 11px 18px #0224526b}
+body.nc90{background:#35aee5 url("nc96-cartoon-golfo.svg") center top/cover fixed no-repeat!important;color:#fff9ec}
+body.nc90:before{background:linear-gradient(180deg,#02347b42 0,#032f744c 55%,#061848b8 100%)!important}
+body.nc90>header{background:linear-gradient(#1a7fcbf5,#0b51aaf5)!important;border-bottom:4px solid #ffe28c!important;box-shadow:0 6px 0 #0a3061,0 10px 20px #071c4aa8!important}
+body.nc90>header .emblem{background:linear-gradient(165deg,#fff4c7,#ffbb48)!important;border:4px solid #fff4d2!important;box-shadow:0 0 0 3px #9b6224,0 5px 0 #6f401f!important}
+body.nc90>header .brand b{font-family:system-ui,-apple-system,"Arial Rounded MT Bold",sans-serif!important;font-weight:1000!important;letter-spacing:.035em!important;color:white!important;-webkit-text-stroke:.35px #14375b;text-shadow:0 3px 0 #173a78,2px 4px 0 #032e63!important}
+body.nc90>header .brand small{color:#ffe39b!important}
+body.nc90>header button,body.nc90>header .online{border:2px solid #fff0c5!important;border-radius:17px!important;box-shadow:0 4px 0 #1b3979!important}
+body.nc90-in-lobby #root>main.wrap{border:4px solid #f9dc86!important;background:linear-gradient(180deg,#0b4eaaeb,#0b326de8 95%)!important;border-radius:34px!important;box-shadow:0 0 0 4px #123875,0 16px 0 #091c46,0 25px 40px #082b62a6!important}
+body.nc90-in-lobby #root .intro{position:relative;background:linear-gradient(180deg,#0e79b9dd,#0850a3e8)!important;border:3px solid #ffe2a0!important;border-radius:24px!important;box-shadow:0 7px 0 #032d65,0 12px 19px #001f558c!important;isolation:isolate}
+body.nc90-in-lobby #root .intro:before{content:"";position:absolute;inset:5px;border:2px dashed #fff2bf69;border-radius:18px;pointer-events:none}
+body.nc90-in-lobby #root .intro h1{color:#fff8d6!important;font-family:system-ui,"Arial Rounded MT Bold",sans-serif!important;font-weight:1000!important;letter-spacing:-.04em!important;text-shadow:0 3px 0 #774520,2px 5px 0 #0c3764!important}
+body.nc90-in-lobby #root .intro h1 span{color:#ffe177!important}
+body.nc90-in-lobby #root .intro .eyebrow,body.nc90-in-lobby #root .intro p{color:#f7f4df!important}
+body.nc90-in-lobby #root .nc90-profilebar{border:3px solid #fff1bc!important;background:linear-gradient(160deg,#125faef2,#082f7fe8)!important;border-radius:24px!important;box-shadow:0 6px 0 #032658,0 12px 20px #001b46a5!important}
+body.nc90-in-lobby #root .nc90-profilebar button{border-radius:16px!important;color:#fff8df!important}
+body.nc90-in-lobby #root .nc90-profilebar .nc90-portrait{background:#44bbee url("nc96-avatar.svg") center/cover no-repeat!important;color:transparent!important;border:3px solid #ffde8a!important;border-radius:50%!important;box-shadow:0 3px 0 #824b25!important}
+body.nc90-in-lobby #root .nc90-balance{background:linear-gradient(#ffe797,#f5ac35)!important;border:2px solid #fff0c7!important;border-radius:100px!important;color:#673514!important;font-weight:1000!important;box-shadow:0 4px 0 #92521e!important}
+body.nc90-in-lobby #root .section-h h2{color:#ffe8ac!important;font-weight:1000!important;text-shadow:0 2px 0 #2d5381!important}
+body.nc90-in-lobby #root .games{gap:12px!important}
+body.nc90-in-lobby #root button.game,body.nc90-in-lobby #root .ncx-entry{border:3px solid #ffeba7!important;border-radius:21px!important;background:linear-gradient(160deg,#fff9e5,#ffe5a5 68%,#f7b454)!important;color:#203c5d!important;box-shadow:inset 0 2px #ffffff,0 5px 0 #a56426,0 9px 17px #0524538c!important;transition:transform .16s,filter .16s,box-shadow .16s!important;overflow:hidden!important;min-height:145px!important}
+body.nc90-in-lobby #root button.game:active,body.nc90-in-lobby #root .ncx-entry:active{transform:translateY(4px)!important;box-shadow:0 1px 0 #91551d,0 3px 8px #053276a0!important}
+body.nc90-in-lobby #root button.game strong{font-family:system-ui,"Arial Rounded MT Bold",sans-serif!important;font-weight:1000!important;font-size:clamp(12px,2.7vw,18px)!important;color:#0b3266!important;text-shadow:0 1px #fffdf1!important}
+body.nc90-in-lobby #root button.game small{color:#446387!important;font-weight:700!important}
+body.nc90-in-lobby #root button.game .sel{background:#0861b4!important;border:1px solid #fff3c1!important;color:#fff9dd!important;border-radius:30px!important}
+body.nc90-in-lobby #root button.game .art{background:radial-gradient(circle at 30% 25%,#fffaf0,#ffda79 65%,#f3ac3d)!important;border:2px solid #f4c163!important;border-radius:19px!important;color:#163e78!important;text-shadow:0 2px #fff4c7!important;font-weight:1000!important;filter:drop-shadow(0 2px 1px #a56e3a5c)}
+body.nc90-in-lobby #root .nc90-sidebar{background:linear-gradient(180deg,#0568bf,#0b357a)!important;border:3px solid #ffe1a4!important;border-radius:22px!important;box-shadow:0 7px 0 #0a3165!important}
+body.nc90-in-lobby #root .nc90-sidebar button{color:#fff8e3!important;border-radius:15px!important}
+body.nc90-in-lobby #root .nc90-sidebar button:hover,body.nc90-in-lobby #root .nc90-sidebar button:focus-visible{background:#267ccc!important}
+body.nc90 #root button.primary,body.nc90 #root .primary,body.nc90 #root button.secondary,body.nc90 #root .choice,
+body.nc90 #root .switch,body.nc90 #root .opt{border:2px solid #fff1bb!important;border-radius:16px!important;box-shadow:0 4px 0 #9b651e,0 6px 10px #09234777!important;font-weight:900!important}
+body.nc90 #root button.primary,body.nc90 #root .primary{background:linear-gradient(#fff2a7,#ffcb4c 62%,#f5a62a)!important;color:#58300d!important}
+body.nc90 #root button.secondary{background:linear-gradient(#317cce,#0b4caa)!important;color:#fff8df!important;box-shadow:0 4px 0 #073365!important}
+body.nc90 #root button:focus-visible,.ncx-screen button:focus-visible,#nc91-banco button:focus-visible,#nc92-online button:focus-visible{outline:3px solid #ffeaa6!important;outline-offset:4px!important}
+body.nc90 #root .board-space{border-radius:28px}
+body.nc90-in-game #root .board{border:11px solid #d99646!important;border-radius:clamp(26px,6vw,75px)!important;outline:4px solid #ffe1a0!important;outline-offset:-8px!important;background:radial-gradient(ellipse at 50% 35%,#33af6d,#158454 60%,#08704c 94%)!important;box-shadow:inset 0 0 0 5px #70451f80,inset 0 8px 25px #c2ffe14a,0 13px 0 #66411e,0 23px 31px #001b337c!important}
+body.nc90-in-game #root .player{background:linear-gradient(#1678b9,#07548c)!important;border:3px solid #ffe1a0!important;border-radius:19px!important;box-shadow:0 5px 0 #062948!important}
+body.nc90-in-game #root .player .avatar{border:3px solid #ffe7ad!important;border-radius:50%!important;box-shadow:0 2px 0 #613f26!important}
+body.nc90-in-game #root .player.turn,body.nc90-in-game #root .player.active{border-color:#6bff92!important;box-shadow:0 0 0 4px #20d66970,0 4px 0 #063850!important}
+body.nc90-in-game #root .roomtitle,body.nc90-in-game #root .myname{font-weight:900!important;color:#fff5cf!important}
+body.nc90-in-game #root .playing-card,body.nc90-in-game #root .user-card{border:3px solid #fff9e9!important;border-radius:11px!important;box-shadow:0 3px 0 #a56e39,0 7px 11px #001e3560!important;transition:transform .16s ease,box-shadow .16s ease!important}
+body.nc90-in-game #root .playing-card:hover,body.nc90-in-game #root .user-card:hover{filter:brightness(1.07);transform:translateY(-3px)}
+body.nc90-in-game #root .opponent-cards .back,body.nc90-in-game #root .back{background:#155bac url("nc96-cardback.svg") center/100% 100% no-repeat!important;border:2px solid #fff3c4!important;border-radius:10px!important}
+body.nc90-in-game #root .hudtop,body.nc90-in-game #root .actions{border-color:#ffdb83!important;border-radius:16px!important}
+body.nc90-in-game #root .scoreboard{border:4px solid #ffdb83!important;border-radius:24px!important;background:linear-gradient(#0864a5,#06306b)!important;box-shadow:0 10px 0 #03305d!important}
+body.nc90 #root .nc90-profilebar .nc90-notif{border-radius:50%!important}
+.ncx-screen{background:linear-gradient(#0a3c81d9,#052765ec),url("nc96-cartoon-golfo.svg") center/cover fixed!important;color:#fff8dc!important}
+.ncx-head{background:linear-gradient(#168bd0,#06549e)!important;border-bottom:4px solid #ffe3a3!important;box-shadow:0 4px 0 #083d7b!important}
+.ncx-head h1{color:#fff8db!important;font-weight:1000!important;text-shadow:0 3px 0 #06376c!important}
+.ncx-icon{background:linear-gradient(#2a91d9,#0b58a0)!important;border:3px solid #ffdc8b!important;border-radius:18px!important;color:#fff8db!important;box-shadow:0 4px 0 #063666!important}
+.ncx-config,.ncx-dialog-panel{background:linear-gradient(160deg,#1168addc,#0b3674f2)!important;border:4px solid #ffe2a0!important;border-radius:26px!important;box-shadow:0 9px 0 #07366d,0 17px 22px #031c4988!important}
+.ncx-hero-icon{background:radial-gradient(circle at 30% 24%,#fff6cb,#ffda6e,#f5a237)!important;border:4px solid #fff0cf!important;box-shadow:0 6px 0 #a6682d!important;color:#113f76!important}
+.ncx-mode button,.ncx-secondary{background:linear-gradient(#2079bc,#10518e)!important;border:2px solid #d9c18b!important;border-radius:16px!important;color:#fff8e3!important;font-weight:900!important;box-shadow:0 3px 0 #07345f!important}
+.ncx-mode button.active{background:linear-gradient(#ffdf8d,#f4ac38)!important;border-color:#ffefbb!important;color:#5b331a!important;box-shadow:0 4px 0 #a76a2e!important}
+.ncx-primary{background:linear-gradient(#fff5b1,#ffd156 62%,#efa02d)!important;border:3px solid #fff5c8!important;border-radius:19px!important;color:#5b3517!important;font-weight:1000!important;box-shadow:0 6px 0 #ad702a,0 9px 15px #031b457e!important}
+.ncx-field input,.ncx-field select{background:#fff8e8!important;color:#183c65!important;border:2px solid #efc46f!important;border-radius:15px!important}
+.ncx-players{gap:9px!important}
+.ncx-player{background:linear-gradient(#177fc2,#094980)!important;border:3px solid #ffdc8e!important;border-radius:19px!important;box-shadow:0 4px 0 #063762!important}
+.ncx-player.active{border:4px solid #74ffa0!important;box-shadow:0 0 0 3px #31d97488,0 5px 0 #063762!important}
+.ncx-table{background:radial-gradient(ellipse at 50% 27%,#36c27c,#168a58 64%,#06683e)!important;border:10px solid #ce8b37!important;outline:4px solid #ffdf96!important;outline-offset:-6px!important;border-radius:clamp(35px,9vw,95px)!important;box-shadow:inset 0 5px 12px #b9ffd353,inset 0 0 0 4px #a06429,0 10px 0 #70421f,0 18px 24px #001b437a!important}
+.ncx-card>.playing-card,.ncx-card>.napoli-authentic,.ncx-simple-card{border:3px solid #fff9df!important;border-radius:12px!important;box-shadow:0 3px 0 #a9783e,0 6px 10px #001e4266!important}
+.ncx-card.selected{border:3px solid #ffda60!important;background:#ffe8923c!important;transform:translateY(-5px)}
+.ncx-message,.ncx-table-hint{color:#f6efc9!important}
+.ncx-chip,.ncx-game-meta{font-weight:900!important}
+.ncx-actions button{border-radius:15px!important}
+#nc91-banco,#nc92-online{background:linear-gradient(#145fb5bf,#06275fe5),url("nc96-cartoon-golfo.svg") center/cover fixed!important}
+#nc91-banco .nc91-frame,#nc92-online .nc91-frame{border:5px solid #ffda8d!important;border-radius:25px!important;box-shadow:0 7px 0 #a46b34,0 14px 23px #052c4d85!important;background:linear-gradient(#177eae,#0b5987)!important}
+#nc91-banco .nc91-head,#nc92-online .nc91-head{border:3px solid #ffdd92!important;border-radius:23px!important;background:linear-gradient(#1b8ac9,#08569b)!important}
+#nc91-banco .nc91-hero,#nc92-online .nc91-hero{background:linear-gradient(#1f73b77c,#07377b8c),url("nc96-cartoon-golfo.svg") center/cover!important;border:4px solid #ffe4a4!important;border-radius:25px!important}
+#nc91-banco button,#nc92-online button{border-radius:15px!important}
+#nc91-banco .nc91-card,#nc92-online .nc91-card{border:3px solid #ffe7aa!important;border-radius:14px!important;box-shadow:0 4px 0 #a87636!important}
+.ch-felt,.ch-arena{border-radius:38px!important;border:9px solid #d59948!important;outline:3px solid #ffe1a3!important;background:radial-gradient(ellipse,#37bb76,#168b56 70%,#076545)!important;box-shadow:0 8px 0 #7e4c27,0 16px 24px #021b3d85!important}
+.ch-avatar{border:3px solid #ffe2a1!important;box-shadow:0 4px 0 #935724!important}
+.ch-backcard{background:#1054ad url("nc96-cardback.svg") center/100% 100% no-repeat!important;border:2px solid #fff8cd!important}
+body.nc90 button:active,.ncx-screen button:active{filter:brightness(.97)}
+@media(max-width:760px){
+body.nc90-in-lobby #root>main.wrap{padding:12px 12px 28px!important;border-width:3px!important;border-radius:24px!important;margin:9px auto 28px!important}
+body.nc90-in-lobby #root .games{gap:8px!important}
+body.nc90-in-lobby #root button.game{min-height:129px!important;border-radius:17px!important;padding:9px 4px!important}
+body.nc90-in-lobby #root button.game .art{width:51px!important;height:51px!important;font-size:29px!important}
+body.nc90-in-lobby #root .nc90-profilebar{padding:9px!important}
+body.nc90-in-game #root .board{border-width:8px!important}
+.ncx-screen{background-attachment:scroll!important}.ncx-table{border-width:7px!important;margin:9px!important;padding:11px 6px!important}
+.ncx-card>.playing-card,.ncx-card>.napoli-authentic{box-shadow:0 2px 0 #b58642!important}
+}
+@media(max-width:360px){body.nc90-in-lobby #root button.game{min-height:119px!important}body.nc90-in-lobby #root button.game strong{font-size:12px!important}.ncx-player{padding:6px!important}}
+@media(prefers-reduced-motion:reduce){body.nc90 *,body.nc90 *:before,body.nc90 *:after,.ncx-screen *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
