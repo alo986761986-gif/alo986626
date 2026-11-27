@@ -1,10 +1,10 @@
-# NAPOLI CARTE 3D — WINDOWS EDITION 0.2
+# NAPOLI CARTE 3D — WINDOWS EDITION 0.3
 
 ## Stato reale (27 novembre 2026)
 
 Questo ZIP contiene il **port desktop Electron** e un compilatore Windows, non un installer `.exe` gia compilato. Riutilizza i **19 giochi** Android 9.10.0 e ne conserva le risorse: tavoli, regole, carte, animazioni, audio originale, menu e grafica. Non include i file Android completi per ragioni di dimensioni: il compilatore li scarica dal commit approvato `a0f632e9ad88bf71590b5e5a5312d92f7995ab1d` di `alo986761986-gif/alo986626`.
 
-### Cosa e stato migliorato nella 0.2
+### Cosa e stato migliorato nella 0.3
 
 - Riparata la modalita *Ospite*: chiude davvero l'eventuale sessione precedente prima di entrare nel gioco.
 - Integrato il flusso facoltativo **Google OAuth Desktop** tramite browser di sistema con PKCE, stato e callback locale sicuro, con scambio Firebase. Per attivarlo occorre un client OAuth **Desktop** registrato nello **stesso progetto Firebase** e il consenso/configurazione Google corretti. Senza configurazione il pulsante Google rimane disabilitato.
@@ -15,12 +15,18 @@ Questo ZIP contiene il **port desktop Electron** e un compilatore Windows, non u
 - Verifica catalogo 19 giochi, integrita dell'index e SHA256 del brano originale prima della build.
 - Test del callback OAuth e del catalogo, verifiche di sicurezza e script di compilazione.
 
+### Miglioramenti introdotti nella versione 0.3
+- Collegate al processo Electron, con endpoint limitati, le richieste multiplayer degli 11 giochi espansi e lo stato lobby. Le API del server rimangono quelle originali; nessun server di gioco modificato.
+- Verifica del protocollo personalizzato `napoli://`, dei permessi microfono, e protezione da accessi a endpoint non autorizzati.
+- Corretta la pipeline Windows remota: usa `windows-edition` come working directory, copia le risorse Android approvate e ricostruisce il brano prima di compilare.
+- Aggiunti test automatici delle richieste multiplayer e della sicurezza IPC. L'EXE resta da produrre e collaudare su Windows.
+  
 ## Come generare i due file EXE
 
 1. Estrai lo ZIP sul tuo PC Windows 10 o Windows 11 a 64 bit, per esempio in `C:\NAPOLI_WINDOWS`.
 2. Apri la cartella `napoli-windows-edition` e fai doppio clic su **BUILD-WINDOWS.cmd**. La prima volta serve Internet.
 3. Lo script scarica Node.js 24 dal sito ufficiale, verifica SHA256, poi scarica dal repository GitHub il codice Android 9.10 del gioco, ripristina l'audio, installa Electron 45.5.0 e electron-builder 26.18.0, esegue i test e costruisce i due programmi.
-4. Se tutto riesce, trovi in **OUTPUT**: `NAPOLI_CARTE_3D_WINDOWS_SETUP_0.2.0_x64.exe` e `NAPOLI_CARTE_3D_WINDOWS_PORTABLE_0.2.0_x64.exe`.
+4. Se tutto riesce, trovi in **OUTPUT**: `NAPOLI_CARTE_3D_WINDOWS_SETUP_0.3.0_x64.exe` e `NAPOLI_CARTE_3D_WINDOWS_PORTABLE_0.3.0_x64.exe`.
 
 Il pacchetto **non ha una firma Authenticode Windows**; una distribuzione al pubblico richiede una firma valida e collaudo antivirus/SmartScreen. Non disabilitare antivirus o SmartScreen per aggirare avvisi.
 
