@@ -25,3 +25,17 @@ test('all nineteen approved game identifiers are pinned to the Windows package',
  assert.equal(new Set(ids).size,19);
  assert.ok(ids.includes('chiodo')&&ids.includes('banco')&&ids.includes('mercante'));
 });
+
+test('desktop expansion transport validates route, token, method and JSON',()=>{
+ const token='a'.repeat(48);
+ assert.equal(x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/expansion/state',token}).method,'GET');
+ assert.equal(x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/expansion/move',method:'POST',body:'{"action":"play"}',token}).method,'POST');
+ assert.equal(x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/lobby/status'}).method,'GET');
+ for(const url of ['https://example.com/expansion/state','http://napoli-chiodo-121.onrender.com/expansion/state',
+  'https://napoli-chiodo-121.onrender.com/private','https://napoli-chiodo-121.onrender.com/expansion/state?debug=1']){
+  assert.throws(()=>x.remoteRequest({url}),/consentit|non valid|remot/i);
+ }
+ assert.throws(()=>x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/expansion/move',method:'GET'}),/non consentita/);
+ assert.throws(()=>x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/expansion/move',method:'POST',body:'{"bad"'}),/JSON/);
+ assert.throws(()=>x.remoteRequest({url:'https://napoli-chiodo-121.onrender.com/expansion/move',method:'POST',body:'{}',token:'guest'}),/Token/);
+});
