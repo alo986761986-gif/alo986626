@@ -1,0 +1,26 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(root,p),'utf8');
+test('9.13 live audience and touch assets are bundled',()=>{
+ const page=read('app/src/main/assets/index.html');
+ const social=read('app/src/main/assets/social70.js');
+ const ui=read('app/src/main/assets/touch-audience85.js');
+ const java=read('app/src/main/java/it/napolicarte/game/MainActivity.java');
+ assert.match(page,/src="social70\.js"/);
+ assert.match(social,/src='touch-audience85\.js'/);
+ assert.match(ui,/NC70_SOCIAL\.call\('audienceVisit'/);
+ assert.match(ui,/localStorage\.setItem\(AUDIENCE_KEY/);
+ assert.match(ui,/crypto\.getRandomValues/);
+ assert.match(java,/operation\.matches\("[^"]*\|audienceVisit\)"/);
+ assert.match(java,/sendAudienceVisit\(String id,String visitorId,String firebaseToken\)/);
+ assert.match(java,/getIdToken\(false\)/);
+ assert.match(java,/x-firebase-token|X-Firebase-Token/);
+ assert.match(ui,/touch-action:pan-x!important/);
+ assert.match(ui,/body\.nc90 #chiodo121\.ch65 \.ch-controls/);
+ assert.doesNotMatch(ui,/Math\.random\(\)/);
+ assert.doesNotThrow(()=>new Function(ui));
+});
