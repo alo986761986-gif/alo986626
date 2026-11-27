@@ -151,6 +151,36 @@ async function smokeCPU(page, game, viewport) {
   await exitGame(page);
   report.games.push({ game, title, viewport, action:actionLabel, layout:dimensions, ok:true });
 }
+async function smokeLaunch98() {
+ const context=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
+ await prepare(context);
+ const page=await load(context);
+ try{
+  await page.waitForFunction(()=>!!window.NC98_LAUNCHER && !!document.getElementById('nc98-chiodo-layout-style'),null,{timeout:12000});
+  const catalog=await page.evaluate(()=>window.NC98_LAUNCHER.catalog());
+  assert.equal(catalog.length,19,'All 19 games have a selectable entry');
+  await page.locator('#root main.wrap .games button.game').first().click();
+  await page.locator('#nc98-launcher').waitFor();
+  assert.equal(await page.locator('#nc98-launcher [data-opponent]').count(),2);
+  assert.equal(await page.locator('#nc98-launcher [data-format]').count(),3);
+  const bar=page.locator('#nc98-progress .nc98-track');
+  assert.equal(await bar.getAttribute('role'),'progressbar');
+  await page.locator('#nc98-launcher [data-opponent="online"]').click();
+  await page.locator('#nc98-launcher [data-format="pairs"]').click();
+  assert.equal(await page.locator('#nc98-launcher [data-seats="4"]').getAttribute('aria-pressed'),'true');
+  await shot(page,'nc98-game-selector-pairs');
+  await page.locator('#nc98-cancel').click();
+  await page.locator('#root .ncx-entry').first().click();
+  await page.locator('#nc98-launcher').waitFor();
+  assert.equal(await page.locator('#nc98-launcher [data-format="pairs"]').isDisabled(),true,'No unsupported expansion pairs');
+  await shot(page,'nc98-expansion-selector');
+  await page.locator('#nc98-start').click();
+  await page.locator('#ncx-screen .ncx-config').waitFor({timeout:12000});
+  await page.locator('#ncx-back').click();
+  await page.locator('#ncx-screen').waitFor({state:'detached'});
+  report.launcher98={ok:true,games:catalog.length,pairsRestricted:true,loadingBar:true};
+ }finally{await context.close();}
+}
 async function smokeChiodoCartoon() {
   const ctx=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await prepare(ctx);
@@ -161,6 +191,8 @@ async function smokeChiodoCartoon() {
       return !!sheet && !!sheet.sheet && sheet.sheet.cssRules.length>40;
     });
     await page.locator('#chiodo-entry').click();
+    await page.locator('#nc98-launcher').waitFor();
+    await page.locator('#nc98-start').click();
     await page.locator('#chiodo121 .ch-lobby').waitFor();
     if(await page.locator('.ch-rules [data-rule="close"]').count())
       await page.locator('.ch-rules [data-rule="close"]').click();
@@ -179,6 +211,8 @@ async function smokeChiodoCartoon() {
     await page.locator('#chiodo121 #ch-back').click();
     await page.locator('#chiodo121').waitFor({state:'detached'});
     await page.locator('#chiodo-online-entry').click();
+    await page.locator('#nc98-launcher').waitFor();
+    await page.locator('#nc98-start').click();
     await page.locator('#chiodo121-online #co-name').waitFor({timeout:8000});
     const online=await page.locator('#chiodo121-online').evaluate(el=>getComputedStyle(el).backgroundImage);
     assert.ok(online.includes('nc96-cartoon-golfo.svg'),'Multiplayer cartoon panorama loaded');
@@ -247,6 +281,7 @@ async function smokeOnline() {
   }
   try { await smokeOnline(); console.log('PASS two independent online sessions'); } catch (error) { report.errors.push({stage:'online',message:error.message,stack:error.stack}); console.error('FAIL online',error.message); }
   try { await smokeChiodoCartoon(); console.log('PASS Chiodo 121 offline/online cartoon visual tests'); } catch (error) { report.errors.push({stage:'chiodo97',message:error.message,stack:error.stack}); console.error('FAIL Chiodo 121 cartoon',error.message); }
+  try { await smokeLaunch98(); console.log('PASS 19-game launcher, loading bar and pair restrictions'); } catch(error) { report.errors.push({stage:'launch98',message:error.message,stack:error.stack}); console.error('FAIL launcher 9.8',error.message); }
 })().catch(error => { report.errors.push({stage:'setup',message:error.message,stack:error.stack}); console.error(error); })
   .finally(async () => {
     if (browser) await browser.close();
