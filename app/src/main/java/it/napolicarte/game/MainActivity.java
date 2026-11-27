@@ -191,8 +191,23 @@ public final class MainActivity extends Activity {
     // Dedicated authenticated transport: Firebase credentials never enter the WebView.
     private final class SocialBridge {
         @android.webkit.JavascriptInterface public void request(String id,String operation,String json){
-            if(id==null||!id.matches("[0-9]{1,10}")||operation==null||!operation.matches("(me|profile|search|friends|request|accept|remove|block|heartbeat|stats|progress|daily|claim|chatThreads|chatMessages|chatAudio|chatSend|chatRead|report|pSummary|pPhoto|pPhotoSave|pMissions|pMissionClaim|pBoostClaim|pNotifications|pNotifRead|pAchievements|pPerformance|pRanking|marketState|marketBuy|marketEquip|b92Rooms|b92State|b92Join|b92Start|b92Leave|inviteList|invitePreferences|inviteCandidates|inviteSend|invitePublish|inviteBrowse|inviteRespond|inviteEnter|inviteWatch)"))return;
+            if(id==null||!id.matches("[0-9]{1,10}")||operation==null||!operation.matches("(me|profile|search|friends|request|accept|remove|block|heartbeat|stats|progress|daily|claim|chatThreads|chatMessages|chatAudio|chatSend|chatRead|report|pSummary|pPhoto|pPhotoSave|pMissions|pMissionClaim|pBoostClaim|pNotifications|pNotifRead|pAchievements|pPerformance|pRanking|marketState|marketBuy|marketEquip|b92Rooms|b92State|b92Join|b92Start|b92Leave|inviteList|invitePreferences|inviteCandidates|inviteSend|invitePublish|inviteBrowse|inviteRespond|inviteEnter|inviteWatch|audienceVisit)"))return;
             if(json==null||json.length()>("chatSend".equals(operation)?375000:"pPhotoSave".equals(operation)?70000:16000))return;
+            if("audienceVisit".equals(operation)){
+                String visitorId;
+                try{visitorId=new org.json.JSONObject(json).getString("visitorId");}
+                catch(Exception e){socialCallback(id,400,"{\"error\":\"Identificatore non valido\"}");return;}
+                if(!visitorId.matches("[a-fA-F0-9]{32}")){socialCallback(id,400,"{\"error\":\"Identificatore non valido\"}");return;}
+                com.google.firebase.auth.FirebaseUser account=rewardUser();
+                if(account==null){sendAudienceVisit(id,visitorId,null);return;}
+                account.getIdToken(false).addOnCompleteListener(task->{
+                    String token=task.isSuccessful()&&task.getResult()!=null?task.getResult().getToken():null;
+                    // Do not silently label a signed-in user as a guest on a token failure.
+                    if(token==null){socialCallback(id,401,"{\"error\":\"Sessione non valida\"}");return;}
+                    sendAudienceVisit(id,visitorId,token);
+                });
+                return;
+            }
             com.google.firebase.auth.FirebaseUser user=rewardUser();
             if(user==null){socialCallback(id,401,"{\"error\":\"Accedi con email o Google\"}");return;}
             user.getIdToken(false).addOnCompleteListener(task->{
@@ -240,6 +255,32 @@ public final class MainActivity extends Activity {
                 });
             });
         }
+    }
+    private void sendAudienceVisit(String id,String visitorId,String firebaseToken){
+        chiodoExecutor.execute(()->{
+            javax.net.ssl.HttpsURLConnection connection=null;int status=0;String result="";
+            try{
+                connection=(javax.net.ssl.HttpsURLConnection)new java.net.URL("https://napoli-chiodo-121.onrender.com/audience/visit").openConnection();
+                connection.setInstanceFollowRedirects(false);
+                connection.setConnectTimeout(10000);connection.setReadTimeout(15000);
+                connection.setRequestMethod("POST");
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Accept","application/json");
+                connection.setRequestProperty("Content-Type","application/json; charset=UTF-8");
+                if(firebaseToken!=null)connection.setRequestProperty("X-Firebase-Token",firebaseToken);
+                byte[] body=("{\"visitorId\":\""+visitorId.toLowerCase(java.util.Locale.ROOT)+"\"}").getBytes("UTF-8");
+                try(java.io.OutputStream output=connection.getOutputStream()){output.write(body);}
+                status=connection.getResponseCode();
+                java.io.InputStream input=status>=200&&status<300?connection.getInputStream():connection.getErrorStream();
+                if(input!=null)try(java.io.InputStream source=input;java.io.ByteArrayOutputStream buffer=new java.io.ByteArrayOutputStream()){
+                    byte[] chunk=new byte[1024];int n;
+                    while((n=source.read(chunk))!=-1){if(buffer.size()+n>8192)break;buffer.write(chunk,0,n);}
+                    result=buffer.toString("UTF-8");
+                }
+            }catch(Exception e){result="{\"error\":\"Contatore non disponibile\"}";}
+            finally{if(connection!=null)connection.disconnect();}
+            socialCallback(id,status,result);
+        });
     }
     private void socialCallback(String id,int status,String payload){
         final String response=org.json.JSONObject.quote(payload==null?"":payload);
